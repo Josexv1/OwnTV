@@ -94,7 +94,7 @@ private sealed interface HlsTestUi {
 }
 
 /** MAG User-Agent presets (plan §7 "Header/UA pickiness") — value goes into the User-Agent field. */
-private data class MagPreset(@StringRes val labelRes: Int, val userAgent: String)
+private data class MagPreset(@param:StringRes val labelRes: Int, val userAgent: String)
 
 private val MAG_UA_PRESETS = listOf(
     MagPreset(R.string.setup_default_mag, ""),
@@ -147,6 +147,10 @@ fun AddSourceScreen(
         name: String,
         portalUrl: String,
         mac: String,
+        serialNumber: String,
+        deviceId: String,
+        deviceId2: String,
+        signature: String,
         userAgent: String,
         autoRefresh: PlaylistAutoRefresh,
         isDefault: Boolean,
@@ -154,7 +158,7 @@ fun AddSourceScreen(
         movies: SyncScopeChoice,
         series: SyncScopeChoice,
     ) -> Unit)? = null,
-    onTestStalker: ((portalUrl: String, mac: String, userAgent: String) -> Unit)? = null,
+    onTestStalker: ((portalUrl: String, mac: String, serialNumber: String, deviceId: String, deviceId2: String, signature: String, userAgent: String) -> Unit)? = null,
     stalkerTest: StalkerTestUi = StalkerTestUi.Idle,
     embedded: Boolean = false,
 ) {
@@ -176,6 +180,10 @@ fun AddSourceScreen(
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
     var portalUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.STALKER) initial.url else "") }
     var mac by remember(initial) { mutableStateOf(initial?.mac ?: "") }
+    var stalkerSerialNumber by remember(initial) { mutableStateOf(initial?.stalkerSerialNumber ?: "") }
+    var stalkerDeviceId by remember(initial) { mutableStateOf(initial?.stalkerDeviceId ?: "") }
+    var stalkerDeviceId2 by remember(initial) { mutableStateOf(initial?.stalkerDeviceId2 ?: "") }
+    var stalkerSignature by remember(initial) { mutableStateOf(initial?.stalkerSignature ?: "") }
     var showUaPresetPicker by remember { mutableStateOf(false) }
     var epgUrl by remember(initial) { mutableStateOf(initial?.epgUrl ?: "") }
     var userAgent by remember(initial) { mutableStateOf(initial?.userAgent ?: "") }
@@ -295,6 +303,10 @@ fun AddSourceScreen(
                 SourceType.STALKER -> {
                     portalUrl = payload.portalUrl
                     mac = payload.mac
+                    stalkerSerialNumber = payload.serialNumber
+                    stalkerDeviceId = payload.deviceId
+                    stalkerDeviceId2 = payload.deviceId2
+                    stalkerSignature = payload.signature
                     syncLive = payload.syncLive
                     syncMovies = payload.syncMovies
                     syncSeries = payload.syncSeries
@@ -395,6 +407,16 @@ fun AddSourceScreen(
                         Spacer(Modifier.height(6.dp))
                         Text(stringResource(R.string.setup_mac_invalid), style = MaterialTheme.typography.bodySmall, color = colors.favorite)
                     }
+                    Spacer(Modifier.height(18.dp))
+                    Text(stringResource(R.string.setup_stalker_advanced_identity), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+                    Spacer(Modifier.height(10.dp))
+                    OwnTVTextField(stalkerSerialNumber, { stalkerSerialNumber = it }, label = stringResource(R.string.setup_stalker_serial_number_optional), modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(10.dp))
+                    OwnTVTextField(stalkerDeviceId, { stalkerDeviceId = it }, label = stringResource(R.string.setup_stalker_device_id_optional), modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(10.dp))
+                    OwnTVTextField(stalkerDeviceId2, { stalkerDeviceId2 = it }, label = stringResource(R.string.setup_stalker_device_id2_optional), modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(10.dp))
+                    OwnTVTextField(stalkerSignature, { stalkerSignature = it }, label = stringResource(R.string.setup_stalker_signature_optional), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(10.dp))
                     OwnTVButton(
                         label = stringResource(R.string.setup_device_model_preset),
@@ -406,7 +428,7 @@ fun AddSourceScreen(
                         Spacer(Modifier.height(10.dp))
                         OwnTVButton(
                             label = if (stalkerTest is StalkerTestUi.Testing) stringResource(R.string.setup_testing) else stringResource(R.string.setup_test_connection),
-                            onClick = { onTestStalker(portalUrl, mac, userAgent) },
+                            onClick = { onTestStalker(portalUrl, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2, stalkerSignature, userAgent) },
                             style = OwnTVButtonStyle.SECONDARY,
                             enabled = canStart && stalkerTest !is StalkerTestUi.Testing,
                             modifier = Modifier.fillMaxWidth(),
@@ -547,7 +569,8 @@ fun AddSourceScreen(
                             SourceKind.XTREAM -> onStartXtream(name, server, username, password, userAgent, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
                             SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, epgUrl, autoRefresh, isDefault)
                             SourceKind.STALKER -> onStartStalker?.invoke(
-                                name, portalUrl, mac, userAgent, autoRefresh, isDefault, syncLive, syncMovies, syncSeries,
+                                name, portalUrl, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2,
+                                stalkerSignature, userAgent, autoRefresh, isDefault, syncLive, syncMovies, syncSeries,
                             )
                         }
                     },

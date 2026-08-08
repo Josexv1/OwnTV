@@ -90,7 +90,7 @@ import tv.own.owntv.core.database.dao.SubtitleDao
         SeriesFtsEntity::class,
         EpisodeFtsEntity::class,
     ],
-    version = 29, // v7: content_order (Move). v8: contentHash + browse/unique indexes. v9: EPG contentHash + natural key. v10: TMDB metadata cache. v11: movies/series rating-sort indexes. v12: metadata_cache trailerKey. v13: metadata_cache logoPath. v14: sources.mac (Stalker portal). v15: external-subtitle cache/selection/timing tables. v16: subtitle_link (downloaded-sub ↔ content). v17: sources.syncLive/Movies/Series (skip-sync enabledScope). v18: series.episodesSyncedAt (episode-cache freshness, S8). v19: epg_channels.iconUrl (XMLTV channel logos). v20: channels (sourceId, number) index for direct tune. v21: series.addedAt + date-added sort indexes. v22: series_sort_order (per-series season/episode order). v23: sources.hlsSupported and sources.preferHls. v24: custom_category_members (user custom categories, #87). v25: sources.livePrerollSecs (per-playlist "Pre-buffer"). v26: channels.catchupType + channels.httpHeaders (M3U catch-up styles + per-channel HTTP headers). v27: sources.maxConnections (Xtream session limit read at sync). v28: movies.httpHeaders + episodes.httpHeaders (per-item M3U HTTP headers). v29: metadata_cache.spokenLanguagesJson (TMDB spoken languages for cinematic detail)
+    version = 30, // v7: content_order (Move). v8: contentHash + browse/unique indexes. v9: EPG contentHash + natural key. v10: TMDB metadata cache. v11: movies/series rating-sort indexes. v12: metadata_cache trailerKey. v13: metadata_cache logoPath. v14: sources.mac (Stalker portal). v15: external-subtitle cache/selection/timing tables. v16: subtitle_link (downloaded-sub ↔ content). v17: sources.syncLive/Movies/Series (skip-sync enabledScope). v18: series.episodesSyncedAt (episode-cache freshness, S8). v19: epg_channels.iconUrl (XMLTV channel logos). v20: channels (sourceId, number) index for direct tune. v21: series.addedAt + date-added sort indexes. v22: series_sort_order (per-series season/episode order). v23: sources.hlsSupported and sources.preferHls. v24: custom_category_members (user custom categories, #87). v25: sources.livePrerollSecs (per-playlist "Pre-buffer"). v26: channels.catchupType + channels.httpHeaders (M3U catch-up styles + per-channel HTTP headers). v27: sources.maxConnections (Xtream session limit read at sync). v28: movies.httpHeaders + episodes.httpHeaders (per-item M3U HTTP headers). v29: metadata_cache.spokenLanguagesJson (TMDB spoken languages for cinematic detail) v30: optional Stalker serial/device IDs/signature.
 
     exportSchema = true,
 )
@@ -718,13 +718,40 @@ abstract class OwnTVDatabase : RoomDatabase() {
          * v28 → v29: nullable `spokenLanguagesJson` on metadata_cache (TMDB spoken/dialogue languages
          * for cinematic detail). Additive only — existing cache rows stay valid and re-fill on next
          * details fetch.
-         *
-         * Last hop, so it carries [healSchema] (standing rule).
          */
         val MIGRATION_28_29 = object : androidx.room.migration.Migration(28, 29) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 if (!hasColumn(db, "metadata_cache", "spokenLanguagesJson")) {
                     db.execSQL("ALTER TABLE `metadata_cache` ADD COLUMN `spokenLanguagesJson` TEXT")
+                }
+                healSchema(db)
+            }
+        }
+
+        /**
+         * v29 → v30: optional Stalker/Ministra second-step device identity. Existing MAC-only
+         * sources remain null in every new column and therefore keep the exact old auth request.
+         *
+         * Upstream shipped these four columns as its own v29 (710e3b5). This fork had already
+         * published a different v29 (metadata_cache.spokenLanguagesJson), so the two collided on the
+         * same version number and the Stalker hop moves to v30 — installs carrying either v29 land
+         * on the same v30 shape.
+         *
+         * Last hop, so it carries [healSchema] (standing rule).
+         */
+        val MIGRATION_29_30 = object : androidx.room.migration.Migration(29, 30) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                if (!hasColumn(db, "sources", "stalkerSerialNumber")) {
+                    db.execSQL("ALTER TABLE `sources` ADD COLUMN `stalkerSerialNumber` TEXT")
+                }
+                if (!hasColumn(db, "sources", "stalkerDeviceId")) {
+                    db.execSQL("ALTER TABLE `sources` ADD COLUMN `stalkerDeviceId` TEXT")
+                }
+                if (!hasColumn(db, "sources", "stalkerDeviceId2")) {
+                    db.execSQL("ALTER TABLE `sources` ADD COLUMN `stalkerDeviceId2` TEXT")
+                }
+                if (!hasColumn(db, "sources", "stalkerSignature")) {
+                    db.execSQL("ALTER TABLE `sources` ADD COLUMN `stalkerSignature` TEXT")
                 }
                 healSchema(db)
             }
