@@ -51,6 +51,8 @@ import tv.own.owntv.features.live.LiveViewModel
 import tv.own.owntv.features.movies.MoviesScreen
 import tv.own.owntv.features.movies.MovieViewModel
 import tv.own.owntv.features.search.SearchScreen
+import tv.own.owntv.features.search.SearchViewModel
+import tv.own.owntv.features.home.TrendingHomeItem
 import tv.own.owntv.features.series.SeriesScreen
 import tv.own.owntv.features.series.SeriesViewModel
 import tv.own.owntv.player.MiniPlayer
@@ -122,6 +124,7 @@ fun OwnTVShell(
 
     val scope = rememberCoroutineScope()
     val sidebarFocus = remember { FocusRequester() }
+    val homeFirstRowFocus = remember { FocusRequester() }
     var focusedLayer by remember { mutableStateOf(ShellLayer.SIDEBAR) }
     var showExit by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
@@ -131,6 +134,8 @@ fun OwnTVShell(
     var openEpgAdd by remember { mutableStateOf(false) }
     // One-shot: set when leaving the player so the returning browse screen re-focuses the item you played.
     var restoreFocus by remember { mutableStateOf(false) }
+    var restoreTrendingSearchFocus by remember { mutableStateOf(false) }
+    var trendingSearchActive by remember { mutableStateOf(false) }
     val player = koinInject<OwnTVPlayer>()
     // Docked mini-player size (% of screen width) + position, configurable in Settings and from the
     // mini-player's own controls. Read straight from settings so both entry points stay in sync.
@@ -152,6 +157,7 @@ fun OwnTVShell(
     val homeVm = org.koin.androidx.compose.koinViewModel<HomeViewModel>()
     val movieVm = org.koin.androidx.compose.koinViewModel<MovieViewModel>()
     val seriesVm = org.koin.androidx.compose.koinViewModel<SeriesViewModel>()
+    val searchVm = org.koin.androidx.compose.koinViewModel<SearchViewModel>()
     // Same activity-scoped instances the Live/Guide screens use — lets the fullscreen HUD zap channels
     // up/down (CH+/CH-). Guide tunes start through LiveViewModel too (they set zapSource = LIVE_TV), so
     // there is exactly ONE zap path: liveVm's. The Guide keeps its own EpgViewModel only for the grid.
@@ -414,7 +420,14 @@ fun OwnTVShell(
           Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Sidebar(
                 selected = selectedSection,
-                onSelect = onSelectSection,
+                onSelect = { section ->
+                    if (trendingSearchActive || section == MainSection.SEARCH) {
+                        searchVm.setQuery("")
+                        trendingSearchActive = false
+                        restoreTrendingSearchFocus = false
+                    }
+                    onSelectSection(section)
+                },
                 visibleSections = visibleSections,
                 avatarId = avatarId,
                 onPickAvatar = { showAvatarPicker = true },
@@ -439,7 +452,12 @@ fun OwnTVShell(
                 // Shown on EVERY section now, including Settings ("top bar same for all").
                 TopBar(
                     sectionLabel = stringResource(selectedSection.labelRes),
-                    onSearchClick = { onSelectSection(MainSection.SEARCH) },
+                    onSearchClick = {
+                        searchVm.setQuery("")
+                        trendingSearchActive = false
+                        restoreTrendingSearchFocus = false
+                        onSelectSection(MainSection.SEARCH)
+                    },
                     // The chip reflects the active filter: "All playlists" when none is chosen (id <= 0),
                     // the chosen playlist's name otherwise. With a single playlist there's nothing to switch,
                     // so just show its name.
@@ -456,6 +474,9 @@ fun OwnTVShell(
                     // The playlist chip becomes a quick-switcher only when there's more than one to pick.
                     playlistInteractive = playlists.size > 1,
                     onPlaylistClick = { showPlaylistPicker = true },
+                    playlistDownFocusRequester = homeFirstRowFocus.takeIf {
+                        selectedSection == MainSection.HOME
+                    },
                     // Batch 7 — shared "Continue" chip: one-press resume of the most-recent item.
                     continueLabel = continueTarget?.let { target ->
                         val action = when (target.action) {
@@ -539,18 +560,51 @@ fun OwnTVShell(
                             onPlayEpisode = { seriesId, epId, pos -> scope.launch { if (seriesVm.playFromHomeAsync(seriesId, epId, pos) && !seriesVm.externalPlayerOn.value) openFullscreen(MainSection.SERIES) } },
                             onPlayChannel = { id, zap -> scope.launch { if (liveVm.ensurePlayingByIdAsync(id, zap)) openFullscreen(MainSection.LIVE_TV) } },
                             onOpenGuide = { onSelectSection(MainSection.EPG) },
+                            onActivateTrending = { selected, onUnavailable ->
+                                scope.launch {
+                                    when (val current = homeVm.revalidateTrendingItem(selected)) {
+                                        is TrendingHomeItem.Movie -> {
+                                            val played = movieVm.playByIdAsync(current.movie.id)
+                                            if (!played) onUnavailable()
+                                            else if (!movieVm.externalPlayerOn.value) openFullscreen(MainSection.MOVIES)
+                                        }
+                                        is TrendingHomeItem.Series -> {
+                                            seriesVm.openSeries(current.series)
+                                            restoreFocus = true
+                                            onSelectSection(MainSection.SERIES)
+                                        }
+                                        null -> onUnavailable()
+                                    }
+                                }
+                            },
+                            onOpenTrendingSearch = { query ->
+                                searchVm.setQuery(query)
+                                trendingSearchActive = true
+                                restoreTrendingSearchFocus = false
+                                onSelectSection(MainSection.SEARCH)
+                            },
                             onChildFocused = { focusedLayer = ShellLayer.CONTENT },
                             restoreFocus = restoreFocus,
-                            onRestored = { restoreFocus = false },
+                            restoreTrendingSearchFocus = restoreTrendingSearchFocus,
+                            onRestored = {
+                                restoreFocus = false
+                                restoreTrendingSearchFocus = false
+                            },
                             previewEnabled = playerMode == PlayerMode.NONE,
+                            firstRowFocusRequester = homeFirstRowFocus,
                             modifier = Modifier.fillMaxSize(),
                         )
 
                         selectedSection == MainSection.SEARCH -> SearchScreen(
+                            vm = searchVm,
                             onFullscreen = { openFullscreen() },
                             // Open the actual series (its episode list), then switch to the Series section —
                             // the screen shares this SeriesViewModel, so it shows the opened show.
-                            onOpenSeries = { series -> seriesVm.openSeries(series); onSelectSection(MainSection.SERIES) },
+                            onOpenSeries = { series ->
+                                trendingSearchActive = false
+                                seriesVm.openSeries(series)
+                                onSelectSection(MainSection.SERIES)
+                            },
                             // A channel found in Search tunes through the same LiveViewModel path as one
                             // opened from Live TV or the Guide (F05) — Prefer HLS, the ExoPlayer→mpv
                             // ladder, compatibility-mode pins, the external-player toggle, and CH+/- zap.
@@ -562,6 +616,13 @@ fun OwnTVShell(
                                 if (playerMode != PlayerMode.MINI && !liveVm.externalPlayerOn.value) playerMode = PlayerMode.FULLSCREEN
                             },
                             onChildFocused = { focusedLayer = ShellLayer.CONTENT },
+                            returnToHomeOnBack = trendingSearchActive,
+                            onReturnToHome = {
+                                trendingSearchActive = false
+                                restoreTrendingSearchFocus = true
+                                restoreFocus = false
+                                onSelectSection(MainSection.HOME)
+                            },
                             modifier = Modifier.fillMaxSize(),
                         )
 

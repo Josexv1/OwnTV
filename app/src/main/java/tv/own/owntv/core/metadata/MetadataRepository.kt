@@ -107,6 +107,33 @@ class MetadataRepository(
         return fetchAndCacheTv(best.result.tmdbId, best.result)
     }
 
+    /** Resolve a provider movie against the exact TMDB id already confirmed by Trending. */
+    suspend fun resolveKnownMovie(movie: MovieEntity, tmdbId: Int): MetadataCacheEntity? {
+        if (!settings.metadataConfig().enabled) return null
+        val localKey = movieLocalKey(movie)
+        val now = System.currentTimeMillis()
+        dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_MOVIE, tmdbId, confidence = 1.0, updatedAt = now))
+        dao.getCache(cacheKey(tmdbId))?.let { cached ->
+            if (now - cached.updatedAt < POSITIVE_TTL_MS) return cached
+        }
+        return fetchAndCache(tmdbId, localKey, confidence = 1.0)
+    }
+
+    /** Series counterpart to [resolveKnownMovie], using the exact Trending TV id. */
+    suspend fun resolveKnownSeries(
+        series: tv.own.owntv.core.database.entity.SeriesEntity,
+        tmdbId: Int,
+    ): MetadataCacheEntity? {
+        if (!settings.metadataConfig().enabled) return null
+        val localKey = seriesLocalKey(series)
+        val now = System.currentTimeMillis()
+        dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_TV, tmdbId, confidence = 1.0, updatedAt = now))
+        dao.getCache(tvCacheKey(tmdbId))?.let { cached ->
+            if (now - cached.updatedAt < POSITIVE_TTL_MS) return cached
+        }
+        return fetchAndCacheTv(tmdbId, fallback = null)
+    }
+
     private suspend fun fetchAndCacheTv(tmdbId: Int, fallback: MetadataSearchResult?): MetadataCacheEntity? {
         val now = System.currentTimeMillis()
         val details = provider.tvDetails(tmdbId)
