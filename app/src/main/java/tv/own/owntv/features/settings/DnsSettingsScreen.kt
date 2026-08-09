@@ -246,7 +246,6 @@ private fun DnsTestLabel(state: SettingsViewModel.DnsTestState) {
         is SettingsViewModel.DnsTestState.Ok -> stringResource(
             R.string.settings_dns_resolved,
             state.millis,
-            state.resolvedIps.joinToString(", "),
         ) to colors.primary
         is SettingsViewModel.DnsTestState.Fail -> state.failure.displayText() to colors.favorite
         else -> null to colors.onSurfaceVariant
