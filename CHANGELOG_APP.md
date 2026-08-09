@@ -20,6 +20,12 @@
 
 ### 🐛 Fixes
 
+- **Guide focus can now move into the docked mini-player (#112)**
+- **Stereo-fallback notices no longer remain over the next video**
+- **Language changes keep focus on the selected language**
+- **Posters and artwork load when a TV's IPv6 route is broken**
+- **Test DNS no longer succeeds through the TV's normal DNS (#111)**
+- **The top-bar Search and playlist controls are compact again**
 - **A channel that is briefly full now waits and starts by itself, instead of dropping you on the error screen**
 - **Live channels that switch themselves to the compatibility player play again instead of turning black**
 - **Prefer HLS no longer applies to catch-up**

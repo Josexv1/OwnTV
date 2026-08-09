@@ -59,6 +59,35 @@
 
 ### 🐛 Fixes
 
+- **Guide focus can now move from a programme row into the docked mini-player (#112).** Opening
+  Picture-in-Picture from the Guide returns focus to the channel as before; Right moves to the whole
+  EPG row, and a second Right now reaches the mini-player controls instead of being swallowed by the
+  Guide. Per-programme timeline browsing keeps its existing Left/Right behaviour.
+- **The stereo-fallback notice no longer remains over the next video.** The surround safety net still
+  explains when a TV audio output fails and OwnTV switches the item to stereo, but repeated notices now
+  replace one another instead of queuing. Stopping playback or opening another item clears the notice,
+  and a late callback from the previous item cannot put the old message over the new video.
+- **Changing the interface language in Settings now keeps focus on the selected language.** OwnTV
+  also preserves the open Language screen when switching between writing systems requires Android to
+  refresh the Activity, instead of dropping focus back onto the main navigation menu.
+- **Posters and other remote artwork no longer stay blank on TVs with a broken IPv6 route.** Image
+  hosts such as TMDB publish both IPv6 and IPv4 addresses, but some Android TVs advertise IPv6 even
+  though they cannot actually reach it. OwnTV stopped after that first failed address while the TV's
+  browser quietly tried IPv4, so valid provider and TMDB artwork opened in a browser but not in the
+  app. Image downloads now try the next resolved address; playlist sync, EPG and playback keep their
+  existing network behaviour.
+- **Test DNS now tests the server you selected instead of sometimes reporting success through the
+  TV's normal DNS (#111).** The temporary check starts with the displayed Google, Cloudflare, Quad9
+  or custom address active immediately, and a failed custom resolver is no longer hidden by the
+  normal system-DNS fallback. A successful check now shows only **Test passed** and its response time,
+  instead of listing the Google destination addresses returned for the test hostname; success means
+  the selected resolver actually answered without presenting technical details that look like the
+  selected DNS server.
+- **The top-bar Search and playlist controls are compact again.** A localization safety change made
+  short labels expand to their maximum allowed widths, so the Search button looked like a text field and
+  the playlist selector occupied too much of the right side. Both now size themselves to their content,
+  as in v4.1.7, while genuinely long translations and playlist names remain bounded and scroll on focus.
+
 - **A channel that is briefly full now waits and starts by itself, instead of dropping you on the error
   screen.** Some providers answer a channel change with "too many connections right now, come back in N
   seconds" — typically because the channel you just left is still counted as open. OwnTV treated that as a
