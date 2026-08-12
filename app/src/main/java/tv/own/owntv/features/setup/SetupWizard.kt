@@ -328,53 +328,53 @@ private fun ImportBackupScreen(
     onBack: () -> Unit,
 ) {
     when (state) {
-        SetupViewModel.ImportState.Running -> Centered {
-            OwnTVSpinner(sizeDp = 56); Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.setup_restoring), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurface)
+        SetupViewModel.ImportState.Running -> SetupScaffold(
+            title = { Text(stringResource(R.string.setup_restoring)) },
+        ) {
+            OwnTVSpinner(sizeDp = 56)
         }
-        is SetupViewModel.ImportState.NeedPassword -> Centered {
+        is SetupViewModel.ImportState.NeedPassword -> {
             var password by remember { mutableStateOf("") }
             val firstFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
-            Text(
-                if (state.retry) stringResource(R.string.setup_wrong_backup_password) else stringResource(R.string.setup_enter_backup_password),
-                style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                when {
-                    state.retry && state.sealed -> stringResource(R.string.setup_password_mismatch_sealed)
-                    state.retry -> stringResource(R.string.setup_password_mismatch)
-                    state.sealed -> stringResource(R.string.setup_backup_encrypted_prompt)
-                    else -> stringResource(R.string.setup_backup_passwords_encrypted_prompt)
+            SetupScaffold(
+                title = {
+                    Text(if (state.retry) stringResource(R.string.setup_wrong_backup_password) else stringResource(R.string.setup_enter_backup_password))
                 },
-                style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant,
-                textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 520.dp),
-            )
-            Spacer(Modifier.height(20.dp))
-            OwnTVTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = stringResource(R.string.setup_backup_password),
-                isPassword = true,
-                focusRequester = firstFocus,
-                modifier = Modifier.widthIn(max = 420.dp),
-            )
-            Spacer(Modifier.height(20.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
-                // No "Skip" for a sealed container: without the password there is nothing to restore.
-                if (!state.sealed) {
-                    OwnTVButton(stringResource(R.string.setup_skip_no_passwords), onClick = { onPassword(state.file, null) }, style = OwnTVButtonStyle.SECONDARY)
+                subtitle = {
+                    Text(
+                        when {
+                            state.retry && state.sealed -> stringResource(R.string.setup_password_mismatch_sealed)
+                            state.retry -> stringResource(R.string.setup_password_mismatch)
+                            state.sealed -> stringResource(R.string.setup_backup_encrypted_prompt)
+                            else -> stringResource(R.string.setup_backup_passwords_encrypted_prompt)
+                        },
+                    )
+                },
+            ) {
+                OwnTVTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = stringResource(R.string.setup_backup_password),
+                    isPassword = true,
+                    focusRequester = firstFocus,
+                    modifier = Modifier.widthIn(max = 420.dp),
+                )
+                Spacer(Modifier.height(20.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
+                    // No "Skip" for a sealed container: without the password there is nothing to restore.
+                    if (!state.sealed) {
+                        OwnTVButton(stringResource(R.string.setup_skip_no_passwords), onClick = { onPassword(state.file, null) }, style = OwnTVButtonStyle.SECONDARY)
+                    }
+                    OwnTVButton(stringResource(R.string.setup_restore), onClick = { onPassword(state.file, password) }, enabled = password.isNotBlank())
                 }
-                OwnTVButton(stringResource(R.string.setup_restore), onClick = { onPassword(state.file, password) }, enabled = password.isNotBlank())
             }
         }
-        is SetupViewModel.ImportState.Failed -> Centered {
-            Text(stringResource(R.string.setup_restore_failed), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
-            Spacer(Modifier.height(8.dp))
-            Text(state.failure.displayText(), style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 520.dp))
-            Spacer(Modifier.height(20.dp))
+        is SetupViewModel.ImportState.Failed -> SetupScaffold(
+            title = { Text(stringResource(R.string.setup_restore_failed)) },
+            subtitle = { Text(state.failure.displayText()) },
+        ) {
             OwnTVButton(stringResource(R.string.common_back), onClick = onBack)
         }
         else -> StorageBrowser(
