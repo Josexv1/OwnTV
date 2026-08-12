@@ -255,24 +255,12 @@ private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBac
 
 @Composable
 private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting: () -> Unit, onImport: () -> Unit, onSkip: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_add_playlist), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_add_playlist_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_add_playlist)) },
+        subtitle = { Text(stringResource(R.string.setup_add_playlist_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.ADD, title = stringResource(R.string.setup_new), desc = stringResource(R.string.setup_add_m3u_xtream), modifier = Modifier.focusRequester(fr), onClick = onNew)
             if (hasExisting) {
