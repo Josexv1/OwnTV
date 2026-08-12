@@ -8,6 +8,13 @@
 
 **Tech Stack:** Kotlin, Jetpack Compose for TV (`androidx.tv:tv-material`), Koin/DataStore (untouched — this is composition/visual only).
 
+## Amendment (controller ruling, 2026-08-12)
+
+`AddSourceChooserScreen`, `RemoteSetupScreen`, and `AddSourceScreen` are **shared with Settings** (`features/settings/ManageSourcesScreen.kt` hosts all three full-screen). To keep the Settings add-source flow free of onboarding chrome:
+- `SetupScaffold` gains **`showBackdrop: Boolean = true`** (in addition to `showLogoBadge`). When false, it renders no ambient backdrop.
+- Each of the three shared screens gains **`embedded: Boolean = false`**. When `embedded`, the screen calls the scaffold with `showBackdrop = false, showLogoBadge = false` (a plain frame — no rings, no badge). Onboarding callers keep the default (`embedded = false` → full treatment).
+- `ManageSourcesScreen.kt` passes **`embedded = true`** to all three call sites (it already passes `modifier = Modifier`; add the flag next to it).
+
 ## Global Constraints
 
 - Work on branch `onboarding-compliance` (exists; spec committed there at `bbd85f7`).
