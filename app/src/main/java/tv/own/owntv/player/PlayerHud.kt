@@ -792,12 +792,13 @@ private fun TopBar(
 /** The channel logo tile, falling back to the first letters of the channel name. */
 @Composable
 private fun ChannelLogo(logoUrl: String?, title: String?, size: Int, modifier: Modifier = Modifier) {
+    val colors = OwnTVTheme.colors
     Box(
-        modifier.size(size.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF004F46)),
+        modifier.size(size.dp).clip(RoundedCornerShape(10.dp)).background(colors.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
         if (!logoUrl.isNullOrBlank()) AsyncImage(model = logoUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
-        else Text((title ?: "?").take(3).uppercase(), style = MaterialTheme.typography.labelMedium, color = Color(0xFF6FF8E4), fontWeight = FontWeight.Bold)
+        else Text((title ?: "?").take(3).uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.onPrimaryContainer, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -821,13 +822,14 @@ private fun ChannelOsdCard(
     logoUrl: String?,
     modifier: Modifier = Modifier,
 ) {
+    val colors = OwnTVTheme.colors
     Row(
         modifier = modifier.widthIn(max = 340.dp).clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.55f)).padding(14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF004F46)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(colors.primaryContainer), contentAlignment = Alignment.Center) {
             if (!logoUrl.isNullOrBlank()) AsyncImage(model = logoUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
-            else Text((title ?: "?").take(3).uppercase(), style = MaterialTheme.typography.labelMedium, color = Color(0xFF6FF8E4), fontWeight = FontWeight.Bold)
+            else Text((title ?: "?").take(3).uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.onPrimaryContainer, fontWeight = FontWeight.Bold)
         }
         Column {
             Text(title ?: "", style = MaterialTheme.typography.titleSmall, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)

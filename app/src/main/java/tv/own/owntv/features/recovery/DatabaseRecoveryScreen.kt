@@ -44,6 +44,7 @@ fun DatabaseRecoveryScreen(
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 
+    // Pre-theme surface: renders when Room fails before DI/theme init — deliberately hardcoded.
     Box(Modifier.fillMaxSize().background(Color(0xFF0B0B0D)), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier.widthIn(max = 760.dp).padding(48.dp),
