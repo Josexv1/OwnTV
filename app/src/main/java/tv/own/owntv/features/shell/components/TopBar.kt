@@ -34,7 +34,6 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
@@ -53,7 +52,7 @@ import java.util.Date
 
 // Top-bar chips: corner matches the nav buttons (14dp, not full-pill) and a lighter frost than the
 // big panels so the small chrome reads as glass without being heavy.
-private val TopBarChipCorner = 14.dp
+private val TopBarChipShape = RoundedCornerShape(50)
 private const val TopBarFrost = 0.45f
 
 /** Always-on faint white glass edge for the display-only chips, only while the top bar is glassy. */
@@ -112,9 +111,9 @@ fun TopBar(
 private fun SectionChip(label: String) {
     val colors = OwnTVTheme.colors
     // Keeps its accent tint (marks the current section) but frosts in glass mode like the other chips.
-    val shape = RoundedCornerShape(TopBarChipCorner)
+    val shape = TopBarChipShape
     Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.primaryContainer, shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
     }
 }
 
@@ -130,7 +129,7 @@ private fun SearchPill(onClick: () -> Unit, visible: Boolean) {
             .widthIn(max = 180.dp)
             .graphicsLayer { this.alpha = alpha }
             .focusProperties { canFocus = visible },
-        shape = RoundedCornerShape(TopBarChipCorner),
+        shape = TopBarChipShape,
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
@@ -168,7 +167,7 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
             .widthIn(max = 240.dp)
             .graphicsLayer { this.alpha = alpha }
             .focusProperties { canFocus = visible },
-        shape = RoundedCornerShape(TopBarChipCorner),
+        shape = TopBarChipShape,
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
@@ -187,7 +186,6 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 color = fg,
-                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
@@ -209,7 +207,7 @@ private fun ClockChip() {
     val formatted = remember(now) { DateFormat.getTimeFormat(context).format(Date(now)) }
     // Display-only (non-focusable) and neutral (no accent), matching the weather chip. Frosts in
     // glass mode (TOPBAR surface) so it reads as glass like the focusable chips.
-    val shape = RoundedCornerShape(TopBarChipCorner)
+    val shape = TopBarChipShape
     Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
         Text(formatted, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
     }
@@ -222,16 +220,16 @@ private fun PlaylistChip(label: String, interactive: Boolean = false, onClick: (
     // when there are 2+, opening the playlist quick-switcher.
     if (!interactive) {
         // Neutral display-only badge (no always-on accent), frosts in glass mode like the other chips.
-        val shape = RoundedCornerShape(TopBarChipCorner)
+        val shape = TopBarChipShape
         Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         return
     }
     FocusableSurface(
         onClick = onClick,
         modifier = Modifier.widthIn(max = 240.dp),
-        shape = RoundedCornerShape(TopBarChipCorner),
+        shape = TopBarChipShape,
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
@@ -250,7 +248,6 @@ private fun PlaylistChip(label: String, interactive: Boolean = false, onClick: (
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 color = fg,
-                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).then(
@@ -271,11 +268,11 @@ private fun WeatherChip(info: WeatherInfo, fahrenheit: Boolean) {
         stringResource(R.string.common_weather_celsius, info.temperatureC.toInt())
     }
     val location = if (info.city.isNotBlank()) stringResource(R.string.common_weather_city, temp, info.city) else temp
-    val shape = RoundedCornerShape(TopBarChipCorner)
+    val shape = TopBarChipShape
     Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             WeatherConditionIcon(info = info, Modifier.size(16.dp))
-            Text(location, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(location, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

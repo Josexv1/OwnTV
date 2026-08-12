@@ -2255,25 +2255,24 @@ private fun QuickToggleChip(
     FocusableSurface(
         onClick = onToggle,
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.CornerSmall),
         contentAlignment = Alignment.Center,
         surface = GlassSurface.CARDS,
     ) { _ ->
         Row(
             modifier = Modifier
-                .background(bg, RoundedCornerShape(12.dp))
-                .then(if (glassy) Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
+                .background(bg, RoundedCornerShape(Dimens.CornerSmall))
+                .then(if (glassy) Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(Dimens.CornerSmall)) else Modifier)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OwnTVIcon(icon = icon, tint = fg, modifier = Modifier.size(18.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, color = fg, fontWeight = FontWeight.SemiBold)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = fg)
             Text(
                 text = if (on) stringResource(R.string.common_on) else stringResource(R.string.common_off),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (on) fg else colors.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -2288,7 +2287,7 @@ private fun ValueChip(text: String, tone: TileTone) {
         color = on,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(Dimens.CornerSmall))
             .background(bg)
             .padding(horizontal = 12.dp, vertical = 6.dp),
     )

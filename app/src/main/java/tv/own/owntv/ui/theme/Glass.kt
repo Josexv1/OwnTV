@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import tv.own.owntv.ui.theme.Dimens
 
 /**
  * Liquid Glass — translucent frosted surface treatment.
@@ -160,7 +161,7 @@ fun Modifier.glass(
     surface: GlassSurface,
     baseFill: Color,
     shape: Shape = RectangleShape,
-    cornerRadius: Dp = 22.dp,
+    cornerRadius: Dp = Dimens.CardCorner,
     // Per-call frost multiplier (0..1) applied on top of the global blurStrength — lets small chrome
     // (e.g. top-bar chips) read as lighter glass than the big panels without changing the global setting.
     frostScale: Float = 1f,
