@@ -47,7 +47,7 @@ object Dimens {
     val HeroBaseWidth = 180.dp
     val HeroMetaHeight = 84.dp
     val HeroGap = 14.dp
-    val HeroCardCorner = 18.dp
+    val HeroCardCorner = 24.dp
     val HeroPosterCorner = 14.dp
     val HeroMaxCardHeight = 354.dp
     val HeroMinCardHeight = 200.dp

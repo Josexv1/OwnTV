@@ -64,10 +64,12 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -448,6 +450,7 @@ private fun HeroRowSection(
 ) {
     val colors = OwnTVTheme.colors
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
     val approxRowWidth = screenWidthDp - Dimens.SidebarWidthCollapsed - Dimens.HomeRowPaddingH
     val maxCardHeight = (approxRowWidth - Dimens.HeroBaseWidth - Dimens.HeroGap) * 9f / 16f
@@ -498,10 +501,9 @@ private fun HeroRowSection(
 
     Column(modifier = modifier) {
         Text(
-            text = stringResource(R.string.home_keep_watching).uppercase(),
-            style = MaterialTheme.typography.titleSmall,
-            color = colors.primary,
-            fontWeight = FontWeight.Bold,
+            text = stringResource(R.string.home_keep_watching),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface,
             modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
         )
         Spacer(Modifier.height(10.dp))
@@ -824,12 +826,24 @@ private fun HeroRowSection(
                                 .fillMaxSize()
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(
-                                            Color.Transparent,
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.86f),
-                                        ),
+                                        0f to Color.Transparent,
+                                        0.55f to Color.Transparent,
+                                        1f to Color.Black.copy(alpha = 0.78f),
                                     ),
+                                )
+                                .background(
+                                    if (layoutDirection == LayoutDirection.Rtl) {
+                                        Brush.horizontalGradient(
+                                            0f to Color.Transparent,
+                                            0.55f to Color.Transparent,
+                                            1f to Color.Black.copy(alpha = 0.55f),
+                                        )
+                                    } else {
+                                        Brush.horizontalGradient(
+                                            0f to Color.Black.copy(alpha = 0.55f),
+                                            0.45f to Color.Transparent,
+                                        )
+                                    },
                                 ),
                         )
 
@@ -856,11 +870,10 @@ private fun HeroRowSection(
                             } else {
                                 Text(
                                     text = title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = colors.onSurface,
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    color = Color.White,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.Bold,
                                 )
                             }
 
@@ -900,9 +913,9 @@ private fun HeroRowSection(
                                 Spacer(Modifier.height(6.dp))
                                 Text(
                                     text = plot,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.onSurfaceVariant,
-                                    maxLines = 3,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
