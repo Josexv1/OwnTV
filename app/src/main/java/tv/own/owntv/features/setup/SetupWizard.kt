@@ -214,24 +214,13 @@ private fun WelcomeScreen(onNext: () -> Unit) {
 
 @Composable
 private fun DisclaimerScreen(onAgree: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_before_you_start), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_disclaimer),
-            style = MaterialTheme.typography.bodyLarge,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    BackHandler { onBack() }
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_before_you_start)) },
+        subtitle = { Text(stringResource(R.string.setup_disclaimer)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OwnTVButton(
                 stringResource(R.string.common_back),
