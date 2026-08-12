@@ -608,7 +608,7 @@ private fun SeriesGrid(
                         Text(cast.take(6).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = OwnTVTheme.colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text(stringResource(R.string.content_press_ok_episodes), style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.primary)
+                    Text(stringResource(R.string.content_press_ok_episodes), style = MaterialTheme.typography.labelMedium, color = OwnTVTheme.colors.onSurfaceVariant)
                 }
                 }
             }
