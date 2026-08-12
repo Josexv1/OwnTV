@@ -90,7 +90,7 @@ private fun ChooserCard(
         unfocusedContainerColor = colors.surfaceContainerHigh,
         contentAlignment = Alignment.Center,
         surface = GlassSurface.CARDS,
-    ) { focused ->
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(colors.primaryContainer),
@@ -99,7 +99,7 @@ private fun ChooserCard(
                 OwnTVIcon(icon, tint = colors.onPrimaryContainer, modifier = Modifier.size(28.dp))
             }
             Spacer(Modifier.height(14.dp))
-            Text(title, style = MaterialTheme.typography.titleLarge, color = if (focused) colors.primary else colors.onSurface)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
             Spacer(Modifier.height(4.dp))
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
         }
