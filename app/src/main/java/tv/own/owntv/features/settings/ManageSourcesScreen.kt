@@ -211,6 +211,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onPayloadReceived = { addMode = AddMode.MANUAL },
                         onBack = { vm.stopRemoteListener(); addMode = null },
                         modifier = Modifier,
+                        embedded = true,
                     )
                     AddMode.MANUAL -> AddSourceScreen(
                         onStartXtream = { n, server, u, p, ua, epg, autoRefresh, live, movies, series, isDefault, preferHls ->
