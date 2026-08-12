@@ -200,6 +200,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onManual = { addMode = AddMode.MANUAL },
                         onBack = { showAdd = false },
                         modifier = Modifier,
+                        embedded = true,
                     )
                     AddMode.REMOTE -> RemoteSetupScreen(
                         state = vm.remoteState.collectAsStateWithLifecycle().value,

@@ -41,6 +41,7 @@ fun AddSourceChooserScreen(
     onManual: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    embedded: Boolean = false,
 ) {
     val firstFocus = remember { FocusRequester() }
     LaunchedEffectRequestFocus(firstFocus)
@@ -49,6 +50,8 @@ fun AddSourceChooserScreen(
     SetupScaffold(
         title = { Text(stringResource(R.string.setup_add_source)) },
         subtitle = { Text(stringResource(R.string.setup_add_source_description)) },
+        showLogoBadge = !embedded,
+        showBackdrop = !embedded,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChooserCard(

@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.LocalContentColor
-import androidx.tv.material3.LocalTextStyle
 import androidx.tv.material3.ProvideTextStyle
 import tv.own.owntv.ui.components.BrandLockup
 import tv.own.owntv.ui.theme.OwnTVTheme
@@ -100,11 +99,14 @@ fun SetupScaffold(
     title: @Composable () -> Unit,
     subtitle: (@Composable () -> Unit)? = null,
     showLogoBadge: Boolean = true,
+    showBackdrop: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = OwnTVTheme.colors
     Box(Modifier.fillMaxSize()) {
-        SetupAmbientBackdrop()
+        if (showBackdrop) {
+            SetupAmbientBackdrop()
+        }
         Box(
             modifier = Modifier.fillMaxSize().padding(48.dp),
             contentAlignment = Alignment.Center,
