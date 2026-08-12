@@ -191,6 +191,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 stalkerTest = stalkerTestUi,
                 onBack = { vm.resetStalkerTest(); editingSource = null },
                 modifier = Modifier,
+                embedded = true,
             )
         } else if (showAdd) {
             when (val s = importState) {
@@ -200,6 +201,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onManual = { addMode = AddMode.MANUAL },
                         onBack = { showAdd = false },
                         modifier = Modifier,
+                        embedded = true,
                     )
                     AddMode.REMOTE -> RemoteSetupScreen(
                         state = vm.remoteState.collectAsStateWithLifecycle().value,
@@ -210,6 +212,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onPayloadReceived = { addMode = AddMode.MANUAL },
                         onBack = { vm.stopRemoteListener(); addMode = null },
                         modifier = Modifier,
+                        embedded = true,
                     )
                     AddMode.MANUAL -> AddSourceScreen(
                         onStartXtream = { n, server, u, p, ua, epg, autoRefresh, live, movies, series, isDefault, preferHls ->
@@ -230,6 +233,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onBack = { vm.resetStalkerTest(); addMode = null },
                         modifier = Modifier,
                         initial = vm.lastFailedSource, // pre-fill on retry — no re-typing after a typo
+                        embedded = true,
                     )
                 }
                 SettingsViewModel.ImportState.Running -> CenterStatus {

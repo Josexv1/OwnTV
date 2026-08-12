@@ -1,16 +1,7 @@
 package tv.own.owntv.features.setup
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,13 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -206,24 +192,13 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
 
 @Composable
 private fun WelcomeScreen(onNext: () -> Unit) {
-    // The wordmark is the single hero: no eyebrow above it and no decorative rule below the tagline
-    // compete for the accent. The only accent fill on the screen is whichever control has focus (the
-    // language selector on entry), so focus — not colour — signals "you are here".
-    // This page is sparse, so it scales up well past the shared shrink-to-fit value to read at 10 feet.
-    MainSetupPage(contentScale = 0.92f) {
-        BrandLockup(markSize = 82, textSize = 62)
-        Spacer(Modifier.height(24.dp))
-        // The one line explaining the app to a first-time sideloader — sized up so it reads from the couch.
-        Text(stringResource(R.string.setup_welcome_tagline), style = MaterialTheme.typography.titleLarge, color = OwnTVTheme.colors.onSurfaceVariant)
-        // Air between the branding block and the two controls, which read as one tight vertical pair below.
-        Spacer(Modifier.height(52.dp))
+    SetupScaffold(
+        title = { BrandLockup(markSize = 82, textSize = 62) },
+        subtitle = { Text(stringResource(R.string.setup_welcome_tagline)) },
+        showLogoBadge = false,
+    ) {
         FirstRunLanguageSelector()
-        // A short gap binds the selector and button into a focus "ladder" (DOWN goes selector → start),
-        // rather than a wider gap that reads as two separate choices.
         Spacer(Modifier.height(12.dp))
-        // SECONDARY (tonal) at rest so it doesn't read as a second bright CTA next to the focused
-        // selector; it lifts to the accent fill only when focus reaches it. The chevron reads as
-        // "proceed" — a play triangle would wrongly imply this button starts playback.
         OwnTVButton(
             stringResource(R.string.setup_get_started),
             onClick = onNext,
@@ -236,24 +211,13 @@ private fun WelcomeScreen(onNext: () -> Unit) {
 
 @Composable
 private fun DisclaimerScreen(onAgree: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_before_you_start), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_disclaimer),
-            style = MaterialTheme.typography.bodyLarge,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    BackHandler { onBack() }
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_before_you_start)) },
+        subtitle = { Text(stringResource(R.string.setup_disclaimer)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OwnTVButton(
                 stringResource(R.string.common_back),
@@ -272,25 +236,13 @@ private fun DisclaimerScreen(onAgree: () -> Unit, onBack: () -> Unit) {
 
 @Composable
 private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_set_up_owntv), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_setup_choice_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_set_up_owntv)) },
+        subtitle = { Text(stringResource(R.string.setup_setup_choice_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.PERSON, title = stringResource(R.string.setup_new_profile), desc = stringResource(R.string.setup_create_profile_add_sources), modifier = Modifier.focusRequester(fr), onClick = onCreate)
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_restore_backup), desc = stringResource(R.string.setup_import_profiles_playlists), onClick = onRestore)
@@ -300,24 +252,12 @@ private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBac
 
 @Composable
 private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting: () -> Unit, onImport: () -> Unit, onSkip: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_add_playlist), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_add_playlist_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_add_playlist)) },
+        subtitle = { Text(stringResource(R.string.setup_add_playlist_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.ADD, title = stringResource(R.string.setup_new), desc = stringResource(R.string.setup_add_m3u_xtream), modifier = Modifier.focusRequester(fr), onClick = onNew)
             if (hasExisting) {
@@ -335,92 +275,6 @@ private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting
     }
 }
 
-@Composable
-private fun SetupAccentRule() {
-    Box(
-        Modifier
-            .width(38.dp)
-            .height(3.dp)
-            .background(OwnTVTheme.colors.primary, RoundedCornerShape(50)),
-    )
-}
-
-private const val MAIN_SETUP_CONTENT_SCALE = 0.62f
-
-@Composable
-private fun MainSetupPage(
-    // Content-heavy pages (add-source form, disclaimer) shrink to fit the frame; the sparse welcome
-    // page overrides this larger so its few elements read from across the room instead of floating
-    // small in a big empty frame.
-    contentScale: Float = MAIN_SETUP_CONTENT_SCALE,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
-) {
-    Box(Modifier.fillMaxSize()) {
-        SetupAmbientBackdrop()
-        Box(
-            modifier = Modifier.fillMaxSize().padding(40.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(
-                modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = contentScale
-                        scaleY = contentScale
-                    }
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                content = content,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SetupAmbientBackdrop() {
-    val primary = OwnTVTheme.colors.primary
-    val transition = rememberInfiniteTransition()
-    val ringScale by transition.animateFloat(
-        initialValue = 0.97f,
-        targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6_000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-    )
-
-    Canvas(Modifier.fillMaxSize()) {
-        val center = Offset(size.width * 0.5f, size.height * 0.48f)
-        val glowRadius = size.minDimension * 0.46f
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    primary.copy(alpha = 0.14f),
-                    primary.copy(alpha = 0.05f),
-                    Color.Transparent,
-                ),
-                center = center,
-                radius = glowRadius,
-            ),
-            radius = glowRadius,
-            center = center,
-        )
-        // The ambient rings are the screen's one atmospheric signature, so give them enough alpha to
-        // actually read on a TV — the old 0.075 was invisible on-panel. Two concentric strokes (the
-        // outer one breathing) add depth without pulling focus from the wordmark.
-        drawCircle(
-            color = primary.copy(alpha = 0.20f),
-            radius = size.minDimension * 0.37f * ringScale,
-            center = center,
-            style = Stroke(width = 1.5.dp.toPx()),
-        )
-        drawCircle(
-            color = primary.copy(alpha = 0.09f),
-            radius = size.minDimension * 0.28f,
-            center = center,
-            style = Stroke(width = 1.dp.toPx()),
-        )
-    }
-}
 
 @Composable
 private fun ExistingSourcesScreen(sources: List<SourceEntity>, onAdd: (Set<Long>) -> Unit, onBack: () -> Unit) {
@@ -429,40 +283,37 @@ private fun ExistingSourcesScreen(sources: List<SourceEntity>, onAdd: (Set<Long>
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
-    Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.Center) {
-        Column(Modifier.widthIn(max = 620.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(R.string.setup_use_existing_playlists), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(stringResource(R.string.setup_pick_playlists), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            Spacer(Modifier.height(20.dp))
-            // Cap to the screen (minus header/footer) so Back/Add stay reachable on small screens.
-            val listMax = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp - 260.dp).coerceIn(140.dp, 320.dp)
-            LazyColumn(Modifier.fillMaxWidth().heightIn(max = listMax), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(sources, key = { it.id }) { src ->
-                    val checked = src.id in selected
-                    FocusableSurface(
-                        onClick = { selected = if (checked) selected - src.id else selected + src.id },
-                        modifier = if (src.id == sources.firstOrNull()?.id) Modifier.fillMaxWidth().focusRequester(fr) else Modifier.fillMaxWidth(),
-                        selected = checked,
-                        shape = RoundedCornerShape(12.dp),
-                        selectedContainerColor = colors.primaryContainer,
-                        contentAlignment = Alignment.CenterStart,
-                    ) { _ ->
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(src.name, style = MaterialTheme.typography.titleMedium, color = if (checked) colors.onPrimaryContainer else colors.onSurface)
-                                Text(src.url, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                            if (checked) OwnTVIcon(OwnTVIcon.STAR, tint = colors.onPrimaryContainer, filled = true, modifier = Modifier.size(18.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_use_existing_playlists)) },
+        subtitle = { Text(stringResource(R.string.setup_pick_playlists)) },
+    ) {
+        // Cap to the screen (minus header/footer) so Back/Add stay reachable on small screens.
+        val listMax = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp - 260.dp).coerceIn(140.dp, 320.dp)
+        LazyColumn(Modifier.widthIn(max = 620.dp).fillMaxWidth().heightIn(max = listMax), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(sources, key = { it.id }) { src ->
+                val checked = src.id in selected
+                FocusableSurface(
+                    onClick = { selected = if (checked) selected - src.id else selected + src.id },
+                    modifier = if (src.id == sources.firstOrNull()?.id) Modifier.fillMaxWidth().focusRequester(fr) else Modifier.fillMaxWidth(),
+                    selected = checked,
+                    shape = RoundedCornerShape(12.dp),
+                    selectedContainerColor = colors.primaryContainer,
+                    contentAlignment = Alignment.CenterStart,
+                ) { _ ->
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(src.name, style = MaterialTheme.typography.titleMedium, color = if (checked) colors.onPrimaryContainer else colors.onSurface)
+                            Text(src.url, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
+                        if (checked) OwnTVIcon(OwnTVIcon.STAR, tint = colors.onPrimaryContainer, filled = true, modifier = Modifier.size(18.dp))
                     }
                 }
             }
-            Spacer(Modifier.height(20.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
-                OwnTVButton(pluralStringResource(R.plurals.setup_add_selected_playlists, selected.size, selected.size), onClick = { onAdd(selected) }, enabled = selected.isNotEmpty())
-            }
+        }
+        Spacer(Modifier.height(20.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
+            OwnTVButton(pluralStringResource(R.plurals.setup_add_selected_playlists, selected.size, selected.size), onClick = { onAdd(selected) }, enabled = selected.isNotEmpty())
         }
     }
 }
@@ -475,53 +326,53 @@ private fun ImportBackupScreen(
     onBack: () -> Unit,
 ) {
     when (state) {
-        SetupViewModel.ImportState.Running -> Centered {
-            OwnTVSpinner(sizeDp = 56); Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.setup_restoring), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurface)
+        SetupViewModel.ImportState.Running -> SetupScaffold(
+            title = { Text(stringResource(R.string.setup_restoring)) },
+        ) {
+            OwnTVSpinner(sizeDp = 56)
         }
-        is SetupViewModel.ImportState.NeedPassword -> Centered {
+        is SetupViewModel.ImportState.NeedPassword -> {
             var password by remember { mutableStateOf("") }
             val firstFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
-            Text(
-                if (state.retry) stringResource(R.string.setup_wrong_backup_password) else stringResource(R.string.setup_enter_backup_password),
-                style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                when {
-                    state.retry && state.sealed -> stringResource(R.string.setup_password_mismatch_sealed)
-                    state.retry -> stringResource(R.string.setup_password_mismatch)
-                    state.sealed -> stringResource(R.string.setup_backup_encrypted_prompt)
-                    else -> stringResource(R.string.setup_backup_passwords_encrypted_prompt)
+            SetupScaffold(
+                title = {
+                    Text(if (state.retry) stringResource(R.string.setup_wrong_backup_password) else stringResource(R.string.setup_enter_backup_password))
                 },
-                style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant,
-                textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 520.dp),
-            )
-            Spacer(Modifier.height(20.dp))
-            OwnTVTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = stringResource(R.string.setup_backup_password),
-                isPassword = true,
-                focusRequester = firstFocus,
-                modifier = Modifier.widthIn(max = 420.dp),
-            )
-            Spacer(Modifier.height(20.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
-                // No "Skip" for a sealed container: without the password there is nothing to restore.
-                if (!state.sealed) {
-                    OwnTVButton(stringResource(R.string.setup_skip_no_passwords), onClick = { onPassword(state.file, null) }, style = OwnTVButtonStyle.SECONDARY)
+                subtitle = {
+                    Text(
+                        when {
+                            state.retry && state.sealed -> stringResource(R.string.setup_password_mismatch_sealed)
+                            state.retry -> stringResource(R.string.setup_password_mismatch)
+                            state.sealed -> stringResource(R.string.setup_backup_encrypted_prompt)
+                            else -> stringResource(R.string.setup_backup_passwords_encrypted_prompt)
+                        },
+                    )
+                },
+            ) {
+                OwnTVTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = stringResource(R.string.setup_backup_password),
+                    isPassword = true,
+                    focusRequester = firstFocus,
+                    modifier = Modifier.widthIn(max = 420.dp),
+                )
+                Spacer(Modifier.height(20.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
+                    // No "Skip" for a sealed container: without the password there is nothing to restore.
+                    if (!state.sealed) {
+                        OwnTVButton(stringResource(R.string.setup_skip_no_passwords), onClick = { onPassword(state.file, null) }, style = OwnTVButtonStyle.SECONDARY)
+                    }
+                    OwnTVButton(stringResource(R.string.setup_restore), onClick = { onPassword(state.file, password) }, enabled = password.isNotBlank())
                 }
-                OwnTVButton(stringResource(R.string.setup_restore), onClick = { onPassword(state.file, password) }, enabled = password.isNotBlank())
             }
         }
-        is SetupViewModel.ImportState.Failed -> Centered {
-            Text(stringResource(R.string.setup_restore_failed), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
-            Spacer(Modifier.height(8.dp))
-            Text(state.failure.displayText(), style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 520.dp))
-            Spacer(Modifier.height(20.dp))
+        is SetupViewModel.ImportState.Failed -> SetupScaffold(
+            title = { Text(stringResource(R.string.setup_restore_failed)) },
+            subtitle = { Text(state.failure.displayText()) },
+        ) {
             OwnTVButton(stringResource(R.string.common_back), onClick = onBack)
         }
         else -> StorageBrowser(
@@ -538,18 +389,13 @@ private fun ImportBackupScreen(
 /** Restore chooser: send the backup from a phone (LAN companion server) or pick a local file. */
 @Composable
 private fun ImportBackupChooserScreen(onRemote: () -> Unit, onLocal: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
-    Centered {
-        Text(stringResource(R.string.setup_restore_a_backup), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            stringResource(R.string.setup_restore_choice_description),
-            style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_restore_a_backup)) },
+        subtitle = { Text(stringResource(R.string.setup_restore_choice_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.PLAYLIST, title = stringResource(R.string.setup_from_phone), desc = stringResource(R.string.setup_upload_from_wifi_device), modifier = Modifier.focusRequester(fr), onClick = onRemote)
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_local_file), desc = stringResource(R.string.setup_pick_backup_local), onClick = onLocal)
@@ -570,13 +416,13 @@ private fun ChoiceCard(icon: OwnTVIcon, title: String, desc: String, modifier: M
         unfocusedContainerColor = colors.surfaceContainerHigh,
         selectedContainerColor = colors.surfaceContainerHigh,
         contentAlignment = Alignment.Center,
-    ) { focused ->
+    ) { _ ->
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(colors.primaryContainer), contentAlignment = Alignment.Center) {
                 OwnTVIcon(icon, tint = colors.onPrimaryContainer, modifier = Modifier.size(28.dp))
             }
             Spacer(Modifier.height(14.dp))
-            Text(title, style = MaterialTheme.typography.titleLarge, color = if (focused) colors.primary else colors.onSurface)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
             Spacer(Modifier.height(4.dp))
             Text(desc, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
         }
@@ -600,7 +446,7 @@ private fun ImportProgressScreen(
         if (state is SetupViewModel.ImportState.Success || state is SetupViewModel.ImportState.Failed) runCatching { fr.requestFocus() }
     }
     BackHandler(enabled = state is SetupViewModel.ImportState.Running || state is SetupViewModel.ImportState.Idle) { onCancel() }
-    Centered {
+    SetupScaffold(title = {}) {
         when (state) {
             SetupViewModel.ImportState.Running, SetupViewModel.ImportState.Idle,
             is SetupViewModel.ImportState.NeedPassword -> {
@@ -612,7 +458,7 @@ private fun ImportProgressScreen(
                 Text(
                     display?.primaryText() ?: stringResource(R.string.setup_preparing_catalog),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = colors.primary,
+                    color = colors.onSurface,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -672,17 +518,5 @@ private fun ImportProgressScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Centered(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.Center) {
-        // Scrollable so wizard steps taller than a small/low-res screen keep all buttons reachable.
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = content,
-        )
     }
 }
