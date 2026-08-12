@@ -215,7 +215,7 @@ private fun buildDownloadRows(downloads: List<DownloadEntity>): List<DownloadLis
 @Composable
 private fun SectionHeader(group: DownloadGroup, count: Int) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-        Text(stringResource(group.labelRes).uppercase(), style = MaterialTheme.typography.titleSmall, color = OwnTVTheme.colors.primary, fontWeight = FontWeight.Bold)
+        Text(stringResource(group.labelRes), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurface)
         Text(stringResource(R.string.content_downloads_count, count), style = MaterialTheme.typography.labelMedium, color = OwnTVTheme.colors.onSurfaceVariant)
     }
 }

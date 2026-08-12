@@ -177,7 +177,7 @@ fun AudioNowPlayingBar(
                 .clip(RoundedCornerShape(18.dp))
                 // AMOLED-dark card (owner spec) in dark; the same "extreme" in light = a crisp pure-white
                 // card. Never a glassy tint in either theme.
-                .background(if (colors.isDark) Color(0xFF080D0C) else Color(0xFFFFFFFF))
+                .background(if (colors.isDark) Color(0xFF0B0D0E) else Color(0xFFFFFFFF))
                 .border(
                     width = if (active) 2.dp else 1.dp,
                     color = if (active) colors.primary else colors.onSurfaceVariant.copy(alpha = 0.18f),

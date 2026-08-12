@@ -85,6 +85,7 @@ import tv.own.owntv.ui.components.displayText
 import tv.own.owntv.ui.components.displayLabel
 import tv.own.owntv.ui.components.dialogPanel
 import tv.own.owntv.ui.theme.GlassSurface
+import tv.own.owntv.ui.theme.HudPictorial
 import tv.own.owntv.ui.theme.LocalActionSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.format.localizedDecimal
@@ -806,7 +807,7 @@ private fun ChannelLogo(logoUrl: String?, title: String?, size: Int, modifier: M
 private fun LiveBadge() {
     val colors = OwnTVTheme.colors
     Row(
-        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(colors.favorite.copy(alpha = 0.8f)).padding(horizontal = 8.dp, vertical = 2.dp),
+        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(HudPictorial.LiveBadge).padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(Modifier.size(6.dp).clip(CircleShape).background(Color.White))
@@ -1040,7 +1041,7 @@ private fun CircleButton(icon: OwnTVIcon, size: Int, primary: Boolean = false, m
         selectedContainerColor = Color.White.copy(alpha = 0.10f),
         contentAlignment = Alignment.Center,
     ) { _ ->
-        OwnTVIcon(icon, tint = if (primary) Color(0xFF0E1513) else Color.White, filled = true, modifier = Modifier.size((size * 0.42f).dp))
+        OwnTVIcon(icon, tint = if (primary) HudPictorial.OnWhiteInk else Color.White, filled = true, modifier = Modifier.size((size * 0.42f).dp))
     }
 }
 

@@ -66,3 +66,11 @@ object WeatherGlyph {
     val Fog = Color(0xFFDDF8FF)
     val Thunder = Color(0xFFFFD166)
 }
+
+/** Pictorial HUD constants — drawn over video, deliberately theme-independent (like [WeatherGlyph]). */
+object HudPictorial {
+    /** The LIVE badge fill — saturated broadcast red; white text/dot on it needs the depth. */
+    val LiveBadge = Color(0xCCDC3232)
+    /** Ink on the white circular transport button. Charcoal-neutral (was the old teal-tinted surface). */
+    val OnWhiteInk = Color(0xFF0B0D0E)
+}
