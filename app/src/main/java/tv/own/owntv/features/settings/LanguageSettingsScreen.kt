@@ -371,9 +371,12 @@ fun LanguageSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * True when [text] contains characters beyond Latin Extended-B (> U+024F) — i.e. CJK, Arabic, Hebrew,
- * Cyrillic, Greek, etc. — which the Latin-only brand font (Figtree) can't render, so the platform
- * sans (with its Noto fallbacks) must be used instead. Latin-script endonyms keep the brand face.
+ * True when [text] contains a character beyond Latin Extended-B (> U+024F) that the brand font
+ * (Figtree) doesn't cover, so the platform sans (with its Noto fallbacks) must render it instead.
+ * This is a font-coverage test, not a strict "script" test: it correctly keeps common Latin diacritics
+ * (Turkish, Polish, Czech, Romanian, Hungarian, …, all ≤ U+024F) in Figtree, and routes CJK / Arabic /
+ * Hebrew / Cyrillic / Greek to the fallback — as well as Vietnamese, whose precomposed vowels live in
+ * Latin Extended Additional (> U+024F) and aren't in Figtree's Latin subset either.
  */
 internal fun needsNonLatinFallback(text: String): Boolean = text.any { it.code > 0x024F }
 
