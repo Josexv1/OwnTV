@@ -195,24 +195,13 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
 
 @Composable
 private fun WelcomeScreen(onNext: () -> Unit) {
-    // The wordmark is the single hero: no eyebrow above it and no decorative rule below the tagline
-    // compete for the accent. The only accent fill on the screen is whichever control has focus (the
-    // language selector on entry), so focus — not colour — signals "you are here".
-    // This page is sparse, so it scales up well past the shared shrink-to-fit value to read at 10 feet.
-    MainSetupPage(contentScale = 0.92f) {
-        BrandLockup(markSize = 82, textSize = 62)
-        Spacer(Modifier.height(24.dp))
-        // The one line explaining the app to a first-time sideloader — sized up so it reads from the couch.
-        Text(stringResource(R.string.setup_welcome_tagline), style = MaterialTheme.typography.titleLarge, color = OwnTVTheme.colors.onSurfaceVariant)
-        // Air between the branding block and the two controls, which read as one tight vertical pair below.
-        Spacer(Modifier.height(52.dp))
+    SetupScaffold(
+        title = { BrandLockup(markSize = 82, textSize = 62) },
+        subtitle = { Text(stringResource(R.string.setup_welcome_tagline)) },
+        showLogoBadge = false,
+    ) {
         FirstRunLanguageSelector()
-        // A short gap binds the selector and button into a focus "ladder" (DOWN goes selector → start),
-        // rather than a wider gap that reads as two separate choices.
         Spacer(Modifier.height(12.dp))
-        // SECONDARY (tonal) at rest so it doesn't read as a second bright CTA next to the focused
-        // selector; it lifts to the accent fill only when focus reaches it. The chevron reads as
-        // "proceed" — a play triangle would wrongly imply this button starts playback.
         OwnTVButton(
             stringResource(R.string.setup_get_started),
             onClick = onNext,
