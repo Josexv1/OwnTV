@@ -1,13 +1,6 @@
 package tv.own.owntv.features.setup
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -37,12 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -375,52 +364,8 @@ private fun MainSetupPage(
     }
 }
 
-@Composable
-private fun SetupAmbientBackdrop() {
-    val primary = OwnTVTheme.colors.primary
-    val transition = rememberInfiniteTransition()
-    val ringScale by transition.animateFloat(
-        initialValue = 0.97f,
-        targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6_000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-    )
-
-    Canvas(Modifier.fillMaxSize()) {
-        val center = Offset(size.width * 0.5f, size.height * 0.48f)
-        val glowRadius = size.minDimension * 0.46f
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    primary.copy(alpha = 0.14f),
-                    primary.copy(alpha = 0.05f),
-                    Color.Transparent,
-                ),
-                center = center,
-                radius = glowRadius,
-            ),
-            radius = glowRadius,
-            center = center,
-        )
-        // The ambient rings are the screen's one atmospheric signature, so give them enough alpha to
-        // actually read on a TV — the old 0.075 was invisible on-panel. Two concentric strokes (the
-        // outer one breathing) add depth without pulling focus from the wordmark.
-        drawCircle(
-            color = primary.copy(alpha = 0.20f),
-            radius = size.minDimension * 0.37f * ringScale,
-            center = center,
-            style = Stroke(width = 1.5.dp.toPx()),
-        )
-        drawCircle(
-            color = primary.copy(alpha = 0.09f),
-            radius = size.minDimension * 0.28f,
-            center = center,
-            style = Stroke(width = 1.dp.toPx()),
-        )
-    }
-}
+// SetupAmbientBackdrop moved to SetupScaffold.kt (visibility internal so MainSetupPage above can
+// still call it cross-file); this comment marks where it used to live.
 
 @Composable
 private fun ExistingSourcesScreen(sources: List<SourceEntity>, onAdd: (Set<Long>) -> Unit, onBack: () -> Unit) {
