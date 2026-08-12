@@ -16,7 +16,7 @@ Token-first cascade, then per-area layout passes. Five phases, each independentl
 - **Phase 0 — tokens:** Type.kt (Figtree + full scale), Color.kt (charcoal neutrals), Dimens shape enforcement, FocusableSurface defaults, PopupTheme unification, hardcoded-color sweep. The whole app restyles in this phase with near-zero layout risk.
 - **Phase 1 — cards & row rhythm.** **Phase 2 — sidebar & top bar.** **Phase 3 — hero carousel.** **Phase 4 — detail/preview panes.**
 
-Every phase ends with a `standard`-flavor build deployed to the Fire TV (10.10.8.96), `adb screencap` review shots of touched screens, and a D-pad navigation check with the real remote before the phase is called done.
+Every phase ends with a debug build deployed to an Android TV emulator (the arm64 ATV image runs the `standard` flavor; an x86_64 image needs the `x86_64` flavor), `adb screencap` review shots of touched screens, and a D-pad navigation check (`adb shell input keyevent` DPAD keys) before the phase is called done.
 
 ## Section 1 — Color
 
@@ -124,5 +124,5 @@ Inline `fontWeight =` overrides in chrome components (top-bar chips, buttons, et
 ## Risks
 
 - **Contrast regressions** from the neutral re-derivation of secondary/tertiary containers → mitigate by matching current contrast ratios and reviewing screenshots per phase.
-- **Focus-order regressions** in Phase 1/2 layout changes → real-remote check on Fire TV per phase.
+- **Focus-order regressions** in Phase 1/2 layout changes → D-pad walkthrough on the Android TV emulator per phase.
 - **Font metrics shift** (Figtree runs slightly wider than Roboto at equal size) → watch for unexpected ellipsizing in chips, the EPG grid, and settings rows during phase review.
