@@ -437,18 +437,13 @@ private fun ImportBackupScreen(
 /** Restore chooser: send the backup from a phone (LAN companion server) or pick a local file. */
 @Composable
 private fun ImportBackupChooserScreen(onRemote: () -> Unit, onLocal: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
-    Centered {
-        Text(stringResource(R.string.setup_restore_a_backup), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            stringResource(R.string.setup_restore_choice_description),
-            style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_restore_a_backup)) },
+        subtitle = { Text(stringResource(R.string.setup_restore_choice_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.PLAYLIST, title = stringResource(R.string.setup_from_phone), desc = stringResource(R.string.setup_upload_from_wifi_device), modifier = Modifier.focusRequester(fr), onClick = onRemote)
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_local_file), desc = stringResource(R.string.setup_pick_backup_local), onClick = onLocal)
