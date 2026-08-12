@@ -105,15 +105,14 @@ private fun ChannelCardsRow(
         modifier = modifier.fillMaxWidth(),
     ) {
         Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.titleSmall,
-            color = OwnTVTheme.colors.primary,
-            fontWeight = FontWeight.Bold,
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = OwnTVTheme.colors.onSurface,
             modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(Dimens.GapSmall))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
             contentPadding = PaddingValues(horizontal = Dimens.HomeRowPaddingH),
             modifier = Modifier.focusGroup(),
         ) {
@@ -265,10 +264,9 @@ private fun OnNowRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResource(R.string.home_on_now_title, title.uppercase()),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = colors.primary,
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.home_on_now_title, title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -285,7 +283,7 @@ private fun OnNowRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(Dimens.GapSmall))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(7.dp),
