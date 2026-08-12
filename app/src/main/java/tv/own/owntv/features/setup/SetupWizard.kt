@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -278,48 +277,6 @@ private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting
     }
 }
 
-@Composable
-private fun SetupAccentRule() {
-    Box(
-        Modifier
-            .width(38.dp)
-            .height(3.dp)
-            .background(OwnTVTheme.colors.primary, RoundedCornerShape(50)),
-    )
-}
-
-private const val MAIN_SETUP_CONTENT_SCALE = 0.62f
-
-@Composable
-private fun MainSetupPage(
-    // Content-heavy pages (add-source form, disclaimer) shrink to fit the frame; the sparse welcome
-    // page overrides this larger so its few elements read from across the room instead of floating
-    // small in a big empty frame.
-    contentScale: Float = MAIN_SETUP_CONTENT_SCALE,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
-) {
-    Box(Modifier.fillMaxSize()) {
-        SetupAmbientBackdrop()
-        Box(
-            modifier = Modifier.fillMaxSize().padding(40.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(
-                modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = contentScale
-                        scaleY = contentScale
-                    }
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                content = content,
-            )
-        }
-    }
-}
-
-// SetupAmbientBackdrop moved to SetupScaffold.kt (visibility internal so MainSetupPage above can
-// still call it cross-file); this comment marks where it used to live.
 
 @Composable
 private fun ExistingSourcesScreen(sources: List<SourceEntity>, onAdd: (Set<Long>) -> Unit, onBack: () -> Unit) {

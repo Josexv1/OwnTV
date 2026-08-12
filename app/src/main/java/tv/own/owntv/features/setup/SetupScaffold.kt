@@ -36,10 +36,8 @@ import tv.own.owntv.ui.theme.OwnTVTypography
 
 /**
  * The animated ambient backdrop shared by every first-run setup page: a soft radial glow plus two
- * concentric rings (the outer one gently breathing) behind the page content. Moved here from
- * SetupWizard.kt so [SetupScaffold] and the legacy `MainSetupPage` frame can both use it; visibility
- * is `internal` (not `private`) because Kotlin top-level `private` is file-scoped and `MainSetupPage`
- * still calls this from SetupWizard.kt until it is retired.
+ * concentric rings (the outer one gently breathing) behind the page content. Called by [SetupScaffold]
+ * to frame each setup step consistently.
  */
 @Composable
 internal fun SetupAmbientBackdrop() {
