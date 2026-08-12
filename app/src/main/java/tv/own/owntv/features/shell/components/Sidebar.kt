@@ -45,7 +45,6 @@ import androidx.tv.material3.Text
 import tv.own.owntv.features.shell.MainSection
 import tv.own.owntv.R
 import tv.own.owntv.ui.components.FocusableSurface
-import tv.own.owntv.ui.components.NavAccentBar
 import tv.own.owntv.ui.components.rememberNavLadderColors
 import tv.own.owntv.ui.components.OwnTVAvatar
 import tv.own.owntv.ui.components.NavDuotoneIcon
@@ -340,15 +339,19 @@ private fun NavItem(
     modifier: Modifier = Modifier,
 ) {
     val colors = OwnTVTheme.colors
-    // A wide, short horizontal "button" (14.dp corners) — reads as a proper button, not a square box.
-    val shape = RoundedCornerShape(14.dp)
+    // Active items are a neutral pill (fully rounded ends) — the container shape IS the active
+    // indicator now, replacing the old accent-filled block + left accent bar. Inactive items keep the
+    // 14.dp "button" corners.
+    val shape = if (active) RoundedCornerShape(50) else RoundedCornerShape(14.dp)
     // Liquid Glass: when the SIDEBAR surface is glassy the focused/active highlight renders as a
     // frosted glass slice (via Modifier.glass) with a bright rim, instead of the flat tonal fill.
     val sidebarGlassy = LocalGlass.current.isGlassy(GlassSurface.SIDEBAR)
     // The nav surface itself is transparent + borderless; the shared 4-state nav ladder (NavLadder.kt)
-    // paints the fill, content tint, focus outline and the persistent left accent bar, so the sidebar
-    // and the folder CategoryRail read identically (#47). FocusableSurface still provides the focus
-    // scale, glow and click.
+    // paints the inactive fills, content tint and focus outline so the sidebar and the folder
+    // CategoryRail agree on the focused-cursor and idle looks (#47). The active state is overridden
+    // below with the neutral-pill treatment (secondaryContainer + primary tint) — accent is reserved
+    // for the focus ring, not the resting "you are here" marker. FocusableSurface still provides the
+    // focus scale, glow and click.
     FocusableSurface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -362,13 +365,16 @@ private fun NavItem(
     ) { focused ->
         val ladder = rememberNavLadderColors(selected = active, focused = focused)
         val highlighted = focused || active
+        val containerFill = if (active) colors.secondaryContainer else ladder.container
+        val contentTint = if (active) colors.primary else ladder.content
+        val iconTint = if (active) colors.primary else ladder.icon
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
                 // Frosted glass fill when the rail is glassy (idle items have a transparent fill,
                 // which glass() skips); plain tonal fill otherwise.
-                .glass(surface = GlassSurface.SIDEBAR, baseFill = ladder.container, shape = shape, cornerRadius = 14.dp)
+                .glass(surface = GlassSurface.SIDEBAR, baseFill = containerFill, shape = shape, cornerRadius = 14.dp)
                 .then(
                     when {
                         sidebarGlassy && highlighted -> Modifier.border(1.dp, Color.White.copy(alpha = 0.35f), shape)
@@ -377,9 +383,6 @@ private fun NavItem(
                     }
                 ),
         ) {
-            // Persistent left accent bar marking the active section, regardless of focus. Hidden in
-            // glass mode — the frosted highlight already marks the active item, and the red bar clashes.
-            NavAccentBar(visible = ladder.showAccentBar && !sidebarGlassy, height = 26.dp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -387,18 +390,19 @@ private fun NavItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = if (expanded) Arrangement.spacedBy(16.dp, Alignment.Start) else Arrangement.Center,
             ) {
-                // Monochrome duotone nav icon — tints via the shared ladder (muted idle, white cursor,
-                // accent when active). No per-frame animation on the always-visible nav.
+                // Monochrome duotone nav icon — tints via the shared ladder when inactive (muted idle,
+                // white cursor), primary when active (the pill's own indicator). No per-frame animation
+                // on the always-visible nav.
                 NavDuotoneIcon(
                     section = section,
-                    color = ladder.icon,
+                    color = iconTint,
                     modifier = Modifier.size(24.dp),
                 )
                 if (expanded) {
                     Text(
                         text = stringResource(section.labelRes),
                         style = MaterialTheme.typography.titleMedium,
-                        color = ladder.content,
+                        color = contentTint,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f).then(

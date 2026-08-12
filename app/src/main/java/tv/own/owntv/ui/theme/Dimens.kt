@@ -10,7 +10,7 @@ object Dimens {
     // Layer 1 — MD3 navigation panel. Expands to a drawer (labels) when focused,
     // collapses to an icon rail when focus moves into a submenu.
     val SidebarWidthExpanded = 272.dp
-    val SidebarWidthCollapsed = 88.dp
+    val SidebarWidthCollapsed = 72.dp
 
     // Layer 2 — category rail (expands to show full names when it holds focus)
     val RailWidth = 92.dp
