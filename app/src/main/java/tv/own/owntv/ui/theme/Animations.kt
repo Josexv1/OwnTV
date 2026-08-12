@@ -1,9 +1,13 @@
 package tv.own.owntv.ui.theme
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -39,3 +43,10 @@ val animationsOn: Boolean
 @ReadOnlyComposable
 fun <T> ownTvTween(durationMs: Int = 200, easing: Easing = FastOutSlowInEasing): TweenSpec<T> =
     tween(LocalAnimationLevel.current.scale(durationMs), easing = easing)
+
+/** Spring for focus scale (M3-expressive feel). AnimationLevel OFF collapses to an instant snap. */
+@Composable
+@ReadOnlyComposable
+fun ownTvFocusSpring(): AnimationSpec<Float> =
+    if (LocalAnimationLevel.current == AnimationLevel.OFF) snap()
+    else spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)

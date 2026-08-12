@@ -27,6 +27,8 @@ import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.LocalGlass
 import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.theme.glass
+import tv.own.owntv.ui.theme.ownTvFocusSpring
+import tv.own.owntv.ui.theme.ownTvTween
 
 @Composable
 fun FocusableSurface(
@@ -65,7 +67,7 @@ fun FocusableSurface(
 
     val scale by animateFloatAsState(
         if (focused) focusedScale else 1f,
-        animationSpec = tv.own.owntv.ui.theme.ownTvTween(140),
+        animationSpec = ownTvFocusSpring(),
         label = "focusScale",
     )
     val container by animateColorAsState(
@@ -74,14 +76,18 @@ fun FocusableSurface(
             selected -> selectedContainerColor
             else -> unfocusedContainerColor
         },
-        animationSpec = tv.own.owntv.ui.theme.ownTvTween(140),
+        animationSpec = ownTvTween(140),
         label = "focusContainer",
     )
-    val showBorder = showFocusBorder && (focused || selected)
-    // Glassy only when a surface is given and it's in the active glass scope. Highlighted glass
-    // rows swap the accent focus border for a bright white glass rim (matches the sidebar).
+    // Glassy only when a surface is given and it's in the active glass scope; feeds the idle-rim
+    // border below (an always-on faint white edge on glass chrome even when unfocused).
     val glassy = surface != null && LocalGlass.current.isGlassy(surface)
-    val borderColor = if (glassy && (focused || selected)) Color.White.copy(alpha = 0.5f) else colors.focusBorder
+    val ringColor = when {
+        focused -> colors.focusBorder // white ring (dark) / ink ring (light)
+        selected -> colors.primary // accent = selected, the only accent on chrome
+        else -> Color.Transparent
+    }
+    val showBorder = showFocusBorder && ringColor != Color.Transparent
 
     Box(
         modifier = modifier
@@ -102,7 +108,7 @@ fun FocusableSurface(
             )
             .then(
                 when {
-                    showBorder -> Modifier.border(Dimens.FocusBorderWidth, borderColor, shape)
+                    showBorder -> Modifier.border(Dimens.FocusBorderWidth, ringColor, shape)
                     // Always-on glass edge for opt-in controls (e.g. buttons) when unfocused.
                     glassy && glassIdleRimAlpha > 0f ->
                         Modifier.border(1.dp, Color.White.copy(alpha = glassIdleRimAlpha), shape)
