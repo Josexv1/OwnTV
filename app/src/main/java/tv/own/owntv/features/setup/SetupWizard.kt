@@ -208,29 +208,30 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
 
 @Composable
 private fun WelcomeScreen(onNext: () -> Unit) {
-    MainSetupPage {
-        Text(
-            stringResource(R.string.setup_welcome_to),
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-            ),
-            color = OwnTVTheme.colors.primary.copy(alpha = 0.82f),
-        )
-        Spacer(Modifier.height(19.dp))
+    // The wordmark is the single hero: no eyebrow above it and no decorative rule below the tagline
+    // compete for the accent. The only accent fill on the screen is whichever control has focus (the
+    // language selector on entry), so focus — not colour — signals "you are here".
+    // This page is sparse, so it scales up well past the shared shrink-to-fit value to read at 10 feet.
+    MainSetupPage(contentScale = 0.92f) {
         BrandLockup(markSize = 82, textSize = 62)
         Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_welcome_tagline), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurfaceVariant)
-        Spacer(Modifier.height(30.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(26.dp))
+        // The one line explaining the app to a first-time sideloader — sized up so it reads from the couch.
+        Text(stringResource(R.string.setup_welcome_tagline), style = MaterialTheme.typography.titleLarge, color = OwnTVTheme.colors.onSurfaceVariant)
+        // Air between the branding block and the two controls, which read as one tight vertical pair below.
+        Spacer(Modifier.height(52.dp))
         FirstRunLanguageSelector()
-        Spacer(Modifier.height(14.dp))
+        // A short gap binds the selector and button into a focus "ladder" (DOWN goes selector → start),
+        // rather than a wider gap that reads as two separate choices.
+        Spacer(Modifier.height(12.dp))
+        // SECONDARY (tonal) at rest so it doesn't read as a second bright CTA next to the focused
+        // selector; it lifts to the accent fill only when focus reaches it. The chevron reads as
+        // "proceed" — a play triangle would wrongly imply this button starts playback.
         OwnTVButton(
             stringResource(R.string.setup_get_started),
             onClick = onNext,
-            modifier = Modifier.width(192.dp).height(50.dp),
-            icon = OwnTVIcon.PLAY,
+            modifier = Modifier.width(216.dp).height(52.dp),
+            style = OwnTVButtonStyle.SECONDARY,
+            icon = OwnTVIcon.CHEVRON,
         )
     }
 }
@@ -349,7 +350,13 @@ private fun SetupAccentRule() {
 private const val MAIN_SETUP_CONTENT_SCALE = 0.62f
 
 @Composable
-private fun MainSetupPage(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+private fun MainSetupPage(
+    // Content-heavy pages (add-source form, disclaimer) shrink to fit the frame; the sparse welcome
+    // page overrides this larger so its few elements read from across the room instead of floating
+    // small in a big empty frame.
+    contentScale: Float = MAIN_SETUP_CONTENT_SCALE,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
     Box(Modifier.fillMaxSize()) {
         SetupAmbientBackdrop()
         Box(
@@ -359,8 +366,8 @@ private fun MainSetupPage(content: @Composable androidx.compose.foundation.layou
             Column(
                 modifier = Modifier
                     .graphicsLayer {
-                        scaleX = MAIN_SETUP_CONTENT_SCALE
-                        scaleY = MAIN_SETUP_CONTENT_SCALE
+                        scaleX = contentScale
+                        scaleY = contentScale
                     }
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -389,8 +396,8 @@ private fun SetupAmbientBackdrop() {
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    primary.copy(alpha = 0.12f),
-                    primary.copy(alpha = 0.045f),
+                    primary.copy(alpha = 0.14f),
+                    primary.copy(alpha = 0.05f),
                     Color.Transparent,
                 ),
                 center = center,
@@ -399,9 +406,18 @@ private fun SetupAmbientBackdrop() {
             radius = glowRadius,
             center = center,
         )
+        // The ambient rings are the screen's one atmospheric signature, so give them enough alpha to
+        // actually read on a TV — the old 0.075 was invisible on-panel. Two concentric strokes (the
+        // outer one breathing) add depth without pulling focus from the wordmark.
         drawCircle(
-            color = primary.copy(alpha = 0.075f),
-            radius = size.minDimension * 0.34f * ringScale,
+            color = primary.copy(alpha = 0.20f),
+            radius = size.minDimension * 0.37f * ringScale,
+            center = center,
+            style = Stroke(width = 1.5.dp.toPx()),
+        )
+        drawCircle(
+            color = primary.copy(alpha = 0.09f),
+            radius = size.minDimension * 0.28f,
             center = center,
             style = Stroke(width = 1.dp.toPx()),
         )

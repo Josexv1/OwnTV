@@ -130,16 +130,29 @@ fun FirstRunLanguageSelector(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(28.dp),
             )
             Column(Modifier.weight(1f)) {
+                val endonym = selectedLocale?.endonym ?: stringResource(R.string.settings_language_system_default)
+                val subtitle = selectedLocale?.englishName ?: stringResource(R.string.settings_language_system_default_description)
                 Text(
-                    text = selectedLocale?.endonym ?: stringResource(R.string.settings_language_system_default),
-                    style = MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.SansSerif),
+                    text = endonym,
+                    // Latin endonyms stay in the brand face (Figtree); only non-Latin scripts fall back
+                    // to the platform sans for Noto coverage (Figtree ships Latin only).
+                    style = if (needsNonLatinFallback(endonym)) {
+                        MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.SansSerif)
+                    } else {
+                        MaterialTheme.typography.labelLarge
+                    },
                     color = foreground,
                 )
-                Text(
-                    text = selectedLocale?.englishName ?: stringResource(R.string.settings_language_system_default_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = foreground.copy(alpha = 0.78f),
-                )
+                // Drop the second line when it only repeats the first (e.g. English / English) — a
+                // duplicated line reads as a bug at 10 feet. Keep it when it adds information
+                // (System default → "Follows device language", Español → "Spanish").
+                if (!subtitle.equals(endonym, ignoreCase = true)) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = foreground.copy(alpha = 0.78f),
+                    )
+                }
             }
             OwnTVIcon(
                 icon = OwnTVIcon.CHEVRON,
@@ -357,6 +370,13 @@ fun LanguageSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * True when [text] contains characters beyond Latin Extended-B (> U+024F) — i.e. CJK, Arabic, Hebrew,
+ * Cyrillic, Greek, etc. — which the Latin-only brand font (Figtree) can't render, so the platform
+ * sans (with its Noto fallbacks) must be used instead. Latin-script endonyms keep the brand face.
+ */
+internal fun needsNonLatinFallback(text: String): Boolean = text.any { it.code > 0x024F }
+
 internal fun coverageBadgePercent(locale: SupportedLocale): Int? =
     SupportedLocales.coverageBadgePercent(locale)
 
@@ -523,17 +543,25 @@ private fun LanguageRow(
         ) {
             RadioIndicator(selected = selected)
             Column(modifier = Modifier.weight(1f)) {
-                // SansSerif so CJK / Arabic / Hebrew endonyms get platform Noto fallbacks (Lora has none).
+                // Latin endonyms keep the brand face; CJK / Arabic / Hebrew / Cyrillic / Greek fall
+                // back to the platform sans for Noto coverage (Figtree ships Latin only).
                 Text(
                     endonym,
-                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.SansSerif),
+                    style = if (needsNonLatinFallback(endonym)) {
+                        MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.SansSerif)
+                    } else {
+                        MaterialTheme.typography.titleMedium
+                    },
                     color = if (selected) colors.onPrimaryContainer else colors.onSurface,
                 )
-                Text(
-                    englishName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (selected) colors.onPrimaryContainer.copy(alpha = 0.8f) else colors.onSurfaceVariant,
-                )
+                // Skip the English-name line when it just repeats the endonym (e.g. English / English).
+                if (!englishName.equals(endonym, ignoreCase = true)) {
+                    Text(
+                        englishName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (selected) colors.onPrimaryContainer.copy(alpha = 0.8f) else colors.onSurfaceVariant,
+                    )
+                }
             }
             if (coverage != null) {
                 Text(
