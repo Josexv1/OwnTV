@@ -55,14 +55,14 @@ class CompanionController(context: Context, localeStore: LocaleStore) {
     /** A fresh 6-digit PIN per [start], so a leaked code is short-lived. */
     @Volatile private var currentPin: String = ""
 
-    /** Bundled Lora TTF bytes, loaded once and served on the web form; null if the resource can't be read. */
-    private val loraBytes: ByteArray? by lazy {
+    /** Bundled Figtree TTF bytes, loaded once and served on the web form; null if the resource can't be read. */
+    private val figtreeBytes: ByteArray? by lazy {
         // openRawResource serves any file-backed resource, not just res/raw; a font is exactly that,
         // and we want the TTF bytes verbatim rather than a loaded Typeface. runCatching covers the
         // resource being unavailable, which is the only thing the lint check is protecting against.
         @Suppress("ResourceType")
-        runCatching { appContext.resources.openRawResource(R.font.lora_variable).use { it.readBytes() } }
-            .onFailure { Log.w(TAG, "Could not load Lora for companion web form; falling back to serif", it) }
+        runCatching { appContext.resources.openRawResource(R.font.figtree_variable).use { it.readBytes() } }
+            .onFailure { Log.w(TAG, "Could not load Figtree for companion web form; falling back to sans-serif", it) }
             .getOrNull()
     }
 
@@ -90,7 +90,7 @@ class CompanionController(context: Context, localeStore: LocaleStore) {
             val urls = server.start(
                 port = port,
                 pin = currentPin,
-                fontBytes = loraBytes,
+                fontBytes = figtreeBytes,
                 mode = mode,
                 onPayload = { payload ->
                     Log.d(TAG, "Received ${payload.type} payload '${payload.name.ifBlank { "(unnamed)" }}' — forwarding to UI")

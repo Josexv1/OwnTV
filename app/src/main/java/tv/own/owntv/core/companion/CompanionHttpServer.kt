@@ -71,7 +71,7 @@ class CompanionHttpServer(
     @Volatile private var serverSocket: ServerSocket? = null
     @Volatile private var pin: String = ""
 
-    /** Bundled Lora TTF served at `/lora.ttf` so the web form matches the app's popup font offline. */
+    /** Bundled Figtree TTF served at `/figtree.ttf` so the web form matches the app's popup font offline. */
     @Volatile private var fontBytes: ByteArray? = null
 
     /** Which page/endpoint set is live for the current session (add-source vs. backup upload). */
@@ -87,7 +87,7 @@ class CompanionHttpServer(
 
     /**
      * Bind [port] and start accepting. [pin] gates the pages and POST endpoints. [fontBytes], when
-     * provided, is served at `/lora.ttf`. [mode] selects the served page (add-source form or backup
+     * provided, is served at `/figtree.ttf`. [mode] selects the served page (add-source form or backup
      * upload); [onPayload] receives an add-source submission, [onBackup] the raw JSON of an uploaded
      * backup. Returns the LAN URLs to show on the TV. Throws on bind failure (the caller maps that to
      * [CompanionServerState.Failed]).
@@ -199,7 +199,7 @@ class CompanionHttpServer(
             }
 
             // Font asset for the web form (no PIN needed — it is only a font).
-            if (method == "GET" && path == "/lora.ttf") {
+            if (method == "GET" && path == "/figtree.ttf") {
                 val bytes = fontBytes
                 return if (bytes != null) sendBytes(socket, 200, "font/ttf", bytes) else sendText(socket, 404, localized(R.string.companion_error_not_found))
             }
