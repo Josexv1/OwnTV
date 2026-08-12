@@ -31,7 +31,13 @@ import tv.own.owntv.ui.theme.Dimens
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 
-/** A focusable poster tile for the Movies/Series grids: poster, title, rating, resume bar, fav star. */
+/**
+ * A focusable poster tile for the Movies/Series grids: poster, title, rating, resume bar, fav star.
+ *
+ * "Artwork is the card" — [FocusableSurface] wraps only the artwork box, so the white focus ring
+ * hugs the art itself (Google TV style). The title sits below, outside the ring, in the root
+ * [Column].
+ */
 @Composable
 fun PosterCard(
     posterUrl: String?,
@@ -47,28 +53,27 @@ fun PosterCard(
     onLongClick: (() -> Unit)? = null,
 ) {
     val colors = OwnTVTheme.colors
-    FocusableSurface(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        modifier = modifier.onFocusChanged { if (it.hasFocus) onFocus() },
-        selected = selected,
-        shape = RoundedCornerShape(Dimens.PosterCardCorner),
-        surface = GlassSurface.CARDS,
-        focusedScale = 1.06f,
-        glowElevation = 14,
-        focusedContainerColor = colors.surfaceContainerHigh,
-        unfocusedContainerColor = colors.surfaceContainerHigh,
-        selectedContainerColor = colors.surfaceContainerHigh,
-        contentAlignment = Alignment.Center,
-    ) { focused ->
-        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.PosterPadding)) {
+    Column(modifier = modifier) {
+        FocusableSurface(
+            onClick = onClick,
+            onLongClick = onLongClick,
+            modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.hasFocus) onFocus() },
+            selected = selected,
+            shape = RoundedCornerShape(Dimens.CornerMedium),
+            surface = GlassSurface.CARDS,
+            focusedScale = 1.05f,
+            glowElevation = 12,
+            focusedContainerColor = colors.surfaceContainerHigh,
+            unfocusedContainerColor = colors.surfaceContainerHigh,
+            selectedContainerColor = colors.surfaceContainerHigh,
+            contentAlignment = Alignment.Center,
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     // Taller, phone-screen-like poster. Crop (not Fit) so a standard 2:3 poster fills the
                     // slightly taller box instead of letterboxing.
                     .aspectRatio(2f / 3.2f)
-                    .clip(RoundedCornerShape(Dimens.PosterArtCorner))
                     .background(colors.surfaceContainerLowest),
             ) {
                 if (!posterUrl.isNullOrBlank()) {
@@ -138,17 +143,17 @@ fun PosterCard(
                     }
                 }
             }
-            Spacer(Modifier.height(Dimens.PosterPadding))
-            Text(
-                title,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (focused) colors.primary else colors.onSurface,
-                maxLines = 2,
-                minLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.labelLarge,
+            color = colors.onSurface,
+            maxLines = 2,
+            minLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
