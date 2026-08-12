@@ -173,7 +173,7 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
         focusedContainerColor = colors.primary,
-        unfocusedContainerColor = colors.primaryContainer.copy(alpha = 0.6f),
+        unfocusedContainerColor = colors.surfaceContainer.copy(alpha = 0.6f),
         contentAlignment = Alignment.Center,
     ) { focused ->
         Row(
@@ -181,7 +181,7 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            val fg = if (focused) colors.onPrimary else colors.onPrimaryContainer
+            val fg = if (focused) colors.onPrimary else colors.onSurfaceVariant
             OwnTVIcon(icon = icon, tint = fg, modifier = Modifier.size(16.dp))
             Text(
                 label,
