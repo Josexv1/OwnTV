@@ -239,25 +239,13 @@ private fun DisclaimerScreen(onAgree: () -> Unit, onBack: () -> Unit) {
 
 @Composable
 private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBack: () -> Unit) {
-    val colors = OwnTVTheme.colors
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
-    MainSetupPage {
-        BrandLockup(markSize = 36, textSize = 26)
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.setup_set_up_owntv), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            stringResource(R.string.setup_setup_choice_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 560.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        SetupAccentRule()
-        Spacer(Modifier.height(24.dp))
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_set_up_owntv)) },
+        subtitle = { Text(stringResource(R.string.setup_setup_choice_description)) },
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ChoiceCard(icon = OwnTVIcon.PERSON, title = stringResource(R.string.setup_new_profile), desc = stringResource(R.string.setup_create_profile_add_sources), modifier = Modifier.focusRequester(fr), onClick = onCreate)
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_restore_backup), desc = stringResource(R.string.setup_import_profiles_playlists), onClick = onRestore)
