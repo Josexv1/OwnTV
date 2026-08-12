@@ -3,11 +3,10 @@ package tv.own.owntv.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Material 3 tonal palette for OwnTV (teal-seeded). NEUTRAL + secondary/tertiary roles are
- * theme-only; the `primary` roles are seeded per [AccentColor] (default teal == these values).
- *
- * Dark uses a near-black background (#040e0b) so the panel colours (Phase 6) pop against
- * the deep dark surface while keeping a subtle green undertone.
+ * Material 3 tonal palette for OwnTV. Neutral palette is charcoal with no hue bias (design spec
+ * 2026-08-12): dark background #0B0D0E, neutrals identical under every accent. All color (hue,
+ * saturation) carried by the accent; secondary/tertiary are theme-only. The `primary` roles are
+ * seeded per [AccentColor] (default teal == these values).
  */
 
 // Brand mark color (the OwnTV play logo) — constant.
