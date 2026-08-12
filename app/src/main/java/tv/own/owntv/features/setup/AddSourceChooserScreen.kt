@@ -7,13 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,7 +27,6 @@ import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVIcon
-import tv.own.owntv.ui.components.roundedPanel
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 
@@ -47,42 +42,31 @@ fun AddSourceChooserScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = OwnTVTheme.colors
     val firstFocus = remember { FocusRequester() }
     LaunchedEffectRequestFocus(firstFocus)
     BackHandler { onBack() }
 
-    Box(modifier.fillMaxSize().roundedPanel().background(colors.background), contentAlignment = Alignment.Center) {
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()).padding(40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.setup_add_source), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                stringResource(R.string.setup_add_source_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
+    SetupScaffold(
+        title = { Text(stringResource(R.string.setup_add_source)) },
+        subtitle = { Text(stringResource(R.string.setup_add_source_description)) },
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ChooserCard(
+                icon = OwnTVIcon.PLAYLIST,
+                title = stringResource(R.string.setup_from_phone),
+                subtitle = stringResource(R.string.setup_use_phone_same_wifi),
+                onClick = onRemote,
+                modifier = Modifier.focusRequester(firstFocus),
             )
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ChooserCard(
-                    icon = OwnTVIcon.PLAYLIST,
-                    title = stringResource(R.string.setup_from_phone),
-                    subtitle = stringResource(R.string.setup_use_phone_same_wifi),
-                    onClick = onRemote,
-                    modifier = Modifier.focusRequester(firstFocus),
-                )
-                ChooserCard(
-                    icon = OwnTVIcon.ADD,
-                    title = stringResource(R.string.setup_manual),
-                    subtitle = stringResource(R.string.setup_type_source_here),
-                    onClick = onManual,
-                )
-            }
-            Spacer(Modifier.height(24.dp))
-            OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
+            ChooserCard(
+                icon = OwnTVIcon.ADD,
+                title = stringResource(R.string.setup_manual),
+                subtitle = stringResource(R.string.setup_type_source_here),
+                onClick = onManual,
+            )
         }
+        Spacer(Modifier.height(24.dp))
+        OwnTVButton(stringResource(R.string.common_back), onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
     }
 }
 
