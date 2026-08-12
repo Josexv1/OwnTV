@@ -103,7 +103,7 @@ fun OwnTVTextField(
     val borderColor = when {
         glassy && (focused || eyeFocused) -> Color.White.copy(alpha = 0.5f)
         glassy -> Color.White.copy(alpha = 0.22f)
-        focused || eyeFocused -> colors.primary
+        focused || eyeFocused -> colors.focusBorder
         else -> colors.outlineVariant
     }
 

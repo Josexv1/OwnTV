@@ -70,6 +70,8 @@ fun BrandLockup(
                 }
             },
             fontSize = textSize.sp,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }
