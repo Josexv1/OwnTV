@@ -154,7 +154,7 @@ internal fun ProfileEditorDialog(
             Spacer(Modifier.height(6.dp))
             Text(
                 stringResource(R.string.profiles_name_taken),
-                style = MaterialTheme.typography.bodyMedium, color = Color(0xFFEF4444),
+                style = MaterialTheme.typography.bodyMedium, color = colors.favorite,
             )
         }
         Spacer(Modifier.height(16.dp))

@@ -55,3 +55,14 @@ val LightOnTertiary = Color(0xFFFFFFFF)
 val LightTertiaryContainer = Color(0xFFC5E7FF)
 val LightOnTertiaryContainer = Color(0xFF001E2F)
 val LightError = Color(0xFFBA1A1A)
+
+/** Pictorial palette for the top-bar weather glyph (canvas art, not chrome). */
+object WeatherGlyph {
+    val Sun = Color(0xFFFFD166)
+    val Moon = Color(0xFFDDF8FF)
+    val Cloud = Color(0xFFDDEFE9)
+    val Rain = Color(0xFF76A7FF)
+    val Snow = Color(0xFFF0FCFF)
+    val Fog = Color(0xFFDDF8FF)
+    val Thunder = Color(0xFFFFD166)
+}

@@ -177,6 +177,6 @@ private fun ProxyTestLabel(state: SettingsViewModel.ProxyTestState) {
         else -> null
     }
     if (text != null) {
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = if (state is SettingsViewModel.ProxyTestState.Ok) colors.primary else androidx.compose.ui.graphics.Color(0xFFEF4444))
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = if (state is SettingsViewModel.ProxyTestState.Ok) colors.primary else colors.favorite)
     }
 }

@@ -1130,7 +1130,7 @@ private fun SubtitleColorDialog(color: String, onColor: (String) -> Unit, onDism
                 }
                 if (hexError) {
                     Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.settings_subtitle_color_hex_hint), style = MaterialTheme.typography.bodySmall, color = Color(0xFFEF4444))
+                    Text(stringResource(R.string.settings_subtitle_color_hex_hint), style = MaterialTheme.typography.bodySmall, color = colors.favorite)
                 }
 
                 Spacer(Modifier.height(14.dp))

@@ -129,7 +129,7 @@ internal fun ProgrammeStripCanvas(
         }
     }
     // Vertical "now" marker + catch-up glyph — measured once, reused each frame.
-    val nowColor = Color(0xFFFF5C5C)
+    val nowColor = colors.favorite
     val nowLinePx = with(density) { 2.dp.toPx() }
     val catchupStyle = MaterialTheme.typography.labelSmall.copy(
         color = colors.primary,

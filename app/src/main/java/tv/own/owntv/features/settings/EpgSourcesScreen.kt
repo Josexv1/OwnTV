@@ -331,7 +331,7 @@ private fun EpgRow(
                 } ?: stringResource(R.string.settings_epg_sources_status_synced)
                 else -> stringResource(R.string.settings_epg_sources_not_synced)
             }
-            Text(status, style = MaterialTheme.typography.labelMedium, color = if (source.lastError != null && activeSync == null) Color(0xFFEF4444) else colors.primary)
+            Text(status, style = MaterialTheme.typography.labelMedium, color = if (source.lastError != null && activeSync == null) colors.favorite else colors.primary)
         }
         Spacer(Modifier.width(12.dp))
         // While the guide data is being deleted, hide the actions — the row is on its way out and a

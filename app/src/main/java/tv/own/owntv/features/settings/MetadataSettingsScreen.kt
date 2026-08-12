@@ -330,7 +330,7 @@ private fun MetadataTestLabel(state: SettingsViewModel.MetadataTestState) {
             SettingsViewModel.MetadataFailure.ServerUnavailable -> stringResource(R.string.settings_metadata_server_unavailable)
             is SettingsViewModel.MetadataFailure.NoMatch -> stringResource(R.string.settings_metadata_no_match, failure.query)
             is SettingsViewModel.MetadataFailure.Unknown -> failure.rawMessage ?: stringResource(R.string.settings_metadata_lookup_failed)
-        } to androidx.compose.ui.graphics.Color(0xFFEF4444)
+        } to colors.favorite
         else -> null to colors.onSurfaceVariant
     }
     if (text != null) {

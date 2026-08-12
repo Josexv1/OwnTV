@@ -90,7 +90,6 @@ import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.format.localizedDecimal
 
 private val SPEEDS = listOf(0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
-private val TEAL = Color(0xFF52DBC8)
 
 @Composable
 internal fun MediaSpec.displayText(): String {
@@ -804,8 +803,9 @@ private fun ChannelLogo(logoUrl: String?, title: String?, size: Int, modifier: M
 
 @Composable
 private fun LiveBadge() {
+    val colors = OwnTVTheme.colors
     Row(
-        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xCCDC3232)).padding(horizontal = 8.dp, vertical = 2.dp),
+        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(colors.favorite.copy(alpha = 0.8f)).padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(Modifier.size(6.dp).clip(CircleShape).background(Color.White))
@@ -854,6 +854,7 @@ private fun ChannelCard(player: PlaybackEngine, modifier: Modifier = Modifier) {
  *  visible instead of mysterious. [error] turns it into the failure readout for the same number. */
 @Composable
 private fun ChannelNumberCard(digits: String, error: String? = null, modifier: Modifier = Modifier) {
+    val colors = OwnTVTheme.colors
     val caret = rememberInfiniteTransition(label = "tuneCaret")
     val caretAlpha by caret.animateFloat(
         initialValue = 1f, targetValue = 0f,
@@ -874,14 +875,14 @@ private fun ChannelNumberCard(digits: String, error: String? = null, modifier: M
                 val barHeight = 3.dp.toPx()
                 val top = Offset(0f, size.height - barHeight)
                 drawRect(Color.White.copy(alpha = 0.08f), topLeft = top, size = Size(size.width, barHeight))
-                drawRect(TEAL, topLeft = top, size = Size(size.width * countdown.value, barHeight))
+                drawRect(colors.primary, topLeft = top, size = Size(size.width * countdown.value, barHeight))
             }
             .padding(bottom = 3.dp),
     ) {
         Column(Modifier.padding(start = 16.dp, end = 20.dp, top = 12.dp, bottom = 12.dp)) {
             Text(
                 stringResource(R.string.player_channel_label),
-                style = MaterialTheme.typography.labelSmall, color = TEAL, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelSmall, color = colors.primary, fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
             )
             Row(verticalAlignment = Alignment.Bottom) {
@@ -893,12 +894,12 @@ private fun ChannelNumberCard(digits: String, error: String? = null, modifier: M
                 if (error == null) {
                     Box(
                         Modifier.padding(start = 4.dp, bottom = 4.dp).width(3.dp).height(22.dp)
-                            .clip(RoundedCornerShape(2.dp)).background(TEAL.copy(alpha = caretAlpha)),
+                            .clip(RoundedCornerShape(2.dp)).background(colors.primary.copy(alpha = caretAlpha)),
                     )
                 }
             }
             error?.let {
-                Text(it, style = MaterialTheme.typography.labelMedium, color = Color(0xFFFF8A80), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(it, style = MaterialTheme.typography.labelMedium, color = colors.favorite, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -1043,6 +1044,7 @@ private fun CircleButton(icon: OwnTVIcon, size: Int, primary: Boolean = false, m
 
 @Composable
 private fun SpeedButton(label: String, active: Boolean, onClick: () -> Unit) {
+    val colors = OwnTVTheme.colors
     FocusableSurface(
         onClick = onClick,
         modifier = Modifier.heightIn(min = 44.dp),
@@ -1055,7 +1057,7 @@ private fun SpeedButton(label: String, active: Boolean, onClick: () -> Unit) {
         // The rate itself is the icon — the extra ">>" glyph read as a seek control next to the real
         // rewind/forward buttons, and "1.0x" already says everything the button does.
         Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) TEAL else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -1122,6 +1124,7 @@ private fun NextEpisodeCard(
  *  the non-default engine (ExoPlayer for VOD; mpv "compatibility" pin for Live). Mirrors [SpeedButton]. */
 @Composable
 private fun EngineToggle(label: String, active: Boolean, onClick: () -> Unit) {
+    val colors = OwnTVTheme.colors
     FocusableSurface(
         onClick = onClick,
         modifier = Modifier.heightIn(min = 44.dp),
@@ -1136,14 +1139,15 @@ private fun EngineToggle(label: String, active: Boolean, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            OwnTVIcon(OwnTVIcon.SWAP, tint = if (active) TEAL else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(16.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) TEAL else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
+            OwnTVIcon(OwnTVIcon.SWAP, tint = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(16.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
 @Composable
 private fun CtrlButton(icon: OwnTVIcon, badge: Int? = null, active: Boolean = false, onClick: () -> Unit) {
+    val colors = OwnTVTheme.colors
     FocusableSurface(
         onClick = onClick,
         modifier = Modifier.size(44.dp),
@@ -1154,13 +1158,13 @@ private fun CtrlButton(icon: OwnTVIcon, badge: Int? = null, active: Boolean = fa
         contentAlignment = Alignment.Center,
     ) { focused ->
         Box(contentAlignment = Alignment.Center) {
-            OwnTVIcon(icon, tint = if (active) TEAL else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(22.dp))
+            OwnTVIcon(icon, tint = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(22.dp))
             if (badge != null) {
                 Box(
-                    Modifier.align(Alignment.TopEnd).size(15.dp).clip(CircleShape).background(TEAL),
+                    Modifier.align(Alignment.TopEnd).size(15.dp).clip(CircleShape).background(colors.primary),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(R.string.common_number_grouped, badge), style = MaterialTheme.typography.labelSmall, color = Color(0xFF003730), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_number_grouped, badge), style = MaterialTheme.typography.labelSmall, color = colors.onPrimary, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1171,6 +1175,7 @@ private fun CtrlButton(icon: OwnTVIcon, badge: Int? = null, active: Boolean = fa
 
 @Composable
 private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
+    val colors = OwnTVTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val frac = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
@@ -1189,11 +1194,11 @@ private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) 
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(Modifier.fillMaxWidth().height(if (focused) 6.dp else 4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = if (focused) 0.4f else 0.22f))) {
-            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(TEAL))
+            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(colors.primary))
         }
         if (focused) {
             Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
-                Box(Modifier.size(14.dp).clip(CircleShape).background(TEAL))
+                Box(Modifier.size(14.dp).clip(CircleShape).background(colors.primary))
             }
             // Time-remaining bubble above the thumb (elapsed is shown at the bar's left, total at the right,
             // so the bubble shows what's LEFT: "-12:34"). Uses a negative offset (not bottom padding) so it
@@ -1223,6 +1228,7 @@ private const val LIVE_SCRUB_STEP_SEC = 60     // per Left/Right press (hold to 
  *  settle (the VM debounces). Going past the window keeps working via the ⏪ button — the bar just pins left. */
 @Composable
 private fun LiveTimelineBar(offsetSec: Int, onScrub: (Int) -> Unit) {
+    val colors = OwnTVTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val frac = (1f - offsetSec.toFloat() / LIVE_WINDOW_SEC).coerceIn(0f, 1f) // 1 = live edge, 0 = far edge
@@ -1241,15 +1247,15 @@ private fun LiveTimelineBar(offsetSec: Int, onScrub: (Int) -> Unit) {
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(Modifier.fillMaxWidth().height(if (focused) 6.dp else 4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = if (focused) 0.4f else 0.22f))) {
-            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(TEAL))
+            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(colors.primary))
         }
         // Live-edge marker (red dot) at the far right.
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFFF4D4D)))
+            Box(Modifier.size(8.dp).clip(CircleShape).background(colors.favorite))
         }
         if (focused) {
             Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
-                Box(Modifier.size(14.dp).clip(CircleShape).background(TEAL))
+                Box(Modifier.size(14.dp).clip(CircleShape).background(colors.primary))
             }
             Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
                 Box(Modifier.padding(bottom = 30.dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
@@ -1455,7 +1461,7 @@ private fun VolumeDialog(player: PlaybackEngine, onDismiss: () -> Unit) {
                 Spacer(Modifier.height(20.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     StepButton(stringResource(R.string.common_minus), enabled = volume > 0, modifier = Modifier.focusRequester(focus)) { player.adjustVolume(-5) }
-                    Text(stringResource(R.string.player_percent, volume), style = MaterialTheme.typography.headlineLarge, color = TEAL, modifier = Modifier.width(120.dp), textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.player_percent, volume), style = MaterialTheme.typography.headlineLarge, color = colors.primary, modifier = Modifier.width(120.dp), textAlign = TextAlign.Center)
                     StepButton(stringResource(R.string.common_plus), enabled = volume < 150) { player.adjustVolume(5) }
                 }
                 Spacer(Modifier.height(22.dp))
@@ -1486,7 +1492,7 @@ private fun SubtitleTimingDialog(player: PlaybackEngine, onDismiss: () -> Unit) 
                 Column(Modifier.dialogPanel(width = 560.dp, padding = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.player_subtitle_timing), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
                     Spacer(Modifier.height(10.dp))
-                    Text(formatSubDelay(delay), style = MaterialTheme.typography.headlineLarge, color = TEAL)
+                    Text(formatSubDelay(delay), style = MaterialTheme.typography.headlineLarge, color = colors.primary)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         when {

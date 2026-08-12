@@ -122,12 +122,12 @@ fun RemoteSetupScreen(
                         OwnTVButton(stringResource(R.string.setup_stop_server), onClick = onStopListener, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.focusRequester(actionFocus))
                     }
                     is CompanionServerState.Failed -> {
-                        Text(state.failure.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFEF4444), textAlign = TextAlign.Center)
+                        Text(state.failure.displayText(), style = MaterialTheme.typography.bodyMedium, color = colors.favorite, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(20.dp))
                         OwnTVButton(stringResource(R.string.setup_try_again), onClick = { onStartListener(CompanionLink.DEFAULT_PORT) }, modifier = Modifier.focusRequester(actionFocus))
                     }
                     CompanionServerState.Locked -> {
-                        Text(companionLockedText(), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFEF4444), textAlign = TextAlign.Center)
+                        Text(companionLockedText(), style = MaterialTheme.typography.bodyMedium, color = colors.favorite, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(20.dp))
                         // Restarting mints a fresh PIN, so this is the recovery path — not a retry of a failure.
                         OwnTVButton(stringResource(R.string.setup_start_again_new_pin), onClick = { onStartListener(CompanionLink.DEFAULT_PORT) }, modifier = Modifier.focusRequester(actionFocus))

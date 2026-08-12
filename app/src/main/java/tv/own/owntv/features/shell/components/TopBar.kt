@@ -46,6 +46,7 @@ import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.LocalGlass
 import tv.own.owntv.ui.theme.OwnTVTheme
+import tv.own.owntv.ui.theme.WeatherGlyph
 import tv.own.owntv.ui.theme.glass
 import tv.own.owntv.ui.theme.ownTvTween
 import java.util.Date
@@ -280,10 +281,10 @@ private fun WeatherChip(info: WeatherInfo, fahrenheit: Boolean) {
 @Composable
 private fun WeatherConditionIcon(info: WeatherInfo, modifier: Modifier = Modifier) {
     val key = info.symbolKey()
-    val sunC = Color(0xFFFFD166); val moonC = Color(0xFFDDF8FF)
-    val cloudC = Color(0xFFDDEFE9); val rainC = Color(0xFF76A7FF)
-    val snowC = Color(0xFFF0FCFF); val fogC = Color(0xFFDDF8FF)
-    val thunderC = Color(0xFFFFD166)
+    val sunC = WeatherGlyph.Sun; val moonC = WeatherGlyph.Moon
+    val cloudC = WeatherGlyph.Cloud; val rainC = WeatherGlyph.Rain
+    val snowC = WeatherGlyph.Snow; val fogC = WeatherGlyph.Fog
+    val thunderC = WeatherGlyph.Thunder
 
     Canvas(modifier) {
         val s = size.minDimension / 100f

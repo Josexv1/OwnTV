@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -146,7 +145,7 @@ fun DnsSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             Text(
                 stringResource(R.string.settings_dns_server_missing),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFFEF4444),
+                color = colors.favorite,
             )
         }
 
@@ -249,7 +248,7 @@ private fun DnsTestLabel(state: SettingsViewModel.DnsTestState) {
             state.millis,
             state.resolvedIps.joinToString(", "),
         ) to colors.primary
-        is SettingsViewModel.DnsTestState.Fail -> state.failure.displayText() to Color(0xFFEF4444)
+        is SettingsViewModel.DnsTestState.Fail -> state.failure.displayText() to colors.favorite
         else -> null to colors.onSurfaceVariant
     }
     if (text != null) {
