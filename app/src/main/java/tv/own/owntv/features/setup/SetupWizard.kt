@@ -2,8 +2,6 @@ package tv.own.owntv.features.setup
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -448,7 +446,7 @@ private fun ImportProgressScreen(
         if (state is SetupViewModel.ImportState.Success || state is SetupViewModel.ImportState.Failed) runCatching { fr.requestFocus() }
     }
     BackHandler(enabled = state is SetupViewModel.ImportState.Running || state is SetupViewModel.ImportState.Idle) { onCancel() }
-    Centered {
+    SetupScaffold(title = {}) {
         when (state) {
             SetupViewModel.ImportState.Running, SetupViewModel.ImportState.Idle,
             is SetupViewModel.ImportState.NeedPassword -> {
@@ -460,7 +458,7 @@ private fun ImportProgressScreen(
                 Text(
                     display?.primaryText() ?: stringResource(R.string.setup_preparing_catalog),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = colors.primary,
+                    color = colors.onSurface,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -520,17 +518,5 @@ private fun ImportProgressScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Centered(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.Center) {
-        // Scrollable so wizard steps taller than a small/low-res screen keep all buttons reachable.
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = content,
-        )
     }
 }
