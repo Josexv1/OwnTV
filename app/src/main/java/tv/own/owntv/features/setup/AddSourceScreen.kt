@@ -7,16 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,7 +71,6 @@ import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVTextField
 import tv.own.owntv.ui.components.StorageBrowser
-import tv.own.owntv.ui.components.roundedPanel
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 
@@ -108,6 +104,15 @@ private val MAG_UA_PRESETS = listOf(
     MagPreset(R.string.setup_mag420, "Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/601.1 (KHTML, like Gecko) MAG420 stbapp ver: 4 rev: 2721 Safari/601.1"),
 )
 
+/**
+ * The Xtream / M3U / Stalker manual "Add source" form — the dense exception among the setup screens:
+ * a tab row, a dozen fields depending on the chosen type, and multiple action buttons, all at true
+ * dp/sp size (no local shrink/scale — the form scrolls at full size via [SetupScaffold]'s own
+ * `verticalScroll`).
+ *
+ * Shared with Settings → Manage sources ([embedded] = true there), which suppresses the onboarding
+ * chrome (ambient backdrop + logo badge) via [SetupScaffold].
+ */
 @Composable
 fun AddSourceScreen(
     onStartXtream: (
@@ -151,6 +156,7 @@ fun AddSourceScreen(
     ) -> Unit)? = null,
     onTestStalker: ((portalUrl: String, mac: String, userAgent: String) -> Unit)? = null,
     stalkerTest: StalkerTestUi = StalkerTestUi.Idle,
+    embedded: Boolean = false,
 ) {
     val colors = OwnTVTheme.colors
     val editing = initial != null
@@ -330,24 +336,17 @@ fun AddSourceScreen(
         SourceKind.STALKER -> tv.own.owntv.core.stalker.StalkerClient.isValidPortalUrl(portalUrl) && macValid && hasAnySectionOn
     }
 
-    Box(modifier.fillMaxSize().roundedPanel()) {
-      Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 48.dp, vertical = 36.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    SetupScaffold(
+        title = {
+            Text(if (editing) stringResource(R.string.setup_edit_source) else stringResource(R.string.setup_add_your_source))
+        },
+        subtitle = {
+            Text(if (editing) stringResource(R.string.setup_edit_source_description) else stringResource(R.string.setup_byo_source_description))
+        },
+        showLogoBadge = !embedded,
+        showBackdrop = !embedded,
     ) {
         Column(modifier = Modifier.widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(if (editing) stringResource(R.string.setup_edit_source) else stringResource(R.string.setup_add_your_source), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                if (editing) stringResource(R.string.setup_edit_source_description) else stringResource(R.string.setup_byo_source_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(24.dp))
-
             // Source type selector (locked while editing — the type can't change, so initial focus
             // goes to the Name field instead of a dead chip).
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -557,52 +556,51 @@ fun AddSourceScreen(
                 )
             }
         }
-      }
-      // In-app, TV-safe file picker (SAF / system file picker is missing on many TVs).
-      if (showFileBrowser) {
-          StorageBrowser(
-              title = stringResource(R.string.setup_pick_playlist_file),
-              mode = BrowseMode.FILE,
-              fileExtensions = setOf("m3u", "m3u8"),
-              onPick = { file ->
-                  showFileBrowser = false
-                  m3uUrl = file.absolutePath
-                  if (name.isBlank()) name = file.nameWithoutExtension
-              },
-              onDismiss = { showFileBrowser = false },
-          )
-      }
-      if (showUaPresetPicker) {
-          PickerDialog(
-              title = stringResource(R.string.setup_device_model_preset_title),
-              options = listOf(
-                  R.string.setup_default_mag.toString() to stringResource(R.string.setup_default_mag),
-                  R.string.setup_mag250.toString() to stringResource(R.string.setup_mag250),
-                  R.string.setup_mag254.toString() to stringResource(R.string.setup_mag254),
-                  R.string.setup_mag270.toString() to stringResource(R.string.setup_mag270),
-                  R.string.setup_mag420.toString() to stringResource(R.string.setup_mag420),
-              ),
-              selected = MAG_UA_PRESETS.firstOrNull { it.userAgent == userAgent }?.labelRes?.toString()
-                  ?: MAG_UA_PRESETS.first().labelRes.toString(),
-              onSelect = { labelRes ->
-                  userAgent = MAG_UA_PRESETS.firstOrNull { it.labelRes.toString() == labelRes }?.userAgent.orEmpty()
-                  showUaPresetPicker = false
-              },
-              onDismiss = { showUaPresetPicker = false },
-          )
-      }
-      if (showAutoRefreshPicker) {
-          PickerDialog(
-              title = stringResource(R.string.setup_auto_refresh_title),
-              options = PlaylistAutoRefresh.entries.map { it.name to playlistAutoRefreshLabel(it) },
-              selected = autoRefresh.name,
-              onSelect = { value ->
-                  autoRefresh = runCatching { PlaylistAutoRefresh.valueOf(value) }.getOrDefault(PlaylistAutoRefresh.OFF)
-                  showAutoRefreshPicker = false
-              },
-              onDismiss = { showAutoRefreshPicker = false },
-          )
-      }
+        // In-app, TV-safe file picker (SAF / system file picker is missing on many TVs).
+        if (showFileBrowser) {
+            StorageBrowser(
+                title = stringResource(R.string.setup_pick_playlist_file),
+                mode = BrowseMode.FILE,
+                fileExtensions = setOf("m3u", "m3u8"),
+                onPick = { file ->
+                    showFileBrowser = false
+                    m3uUrl = file.absolutePath
+                    if (name.isBlank()) name = file.nameWithoutExtension
+                },
+                onDismiss = { showFileBrowser = false },
+            )
+        }
+        if (showUaPresetPicker) {
+            PickerDialog(
+                title = stringResource(R.string.setup_device_model_preset_title),
+                options = listOf(
+                    R.string.setup_default_mag.toString() to stringResource(R.string.setup_default_mag),
+                    R.string.setup_mag250.toString() to stringResource(R.string.setup_mag250),
+                    R.string.setup_mag254.toString() to stringResource(R.string.setup_mag254),
+                    R.string.setup_mag270.toString() to stringResource(R.string.setup_mag270),
+                    R.string.setup_mag420.toString() to stringResource(R.string.setup_mag420),
+                ),
+                selected = MAG_UA_PRESETS.firstOrNull { it.userAgent == userAgent }?.labelRes?.toString()
+                    ?: MAG_UA_PRESETS.first().labelRes.toString(),
+                onSelect = { labelRes ->
+                    userAgent = MAG_UA_PRESETS.firstOrNull { it.labelRes.toString() == labelRes }?.userAgent.orEmpty()
+                    showUaPresetPicker = false
+                },
+                onDismiss = { showUaPresetPicker = false },
+            )
+        }
+        if (showAutoRefreshPicker) {
+            PickerDialog(
+                title = stringResource(R.string.setup_auto_refresh_title),
+                options = PlaylistAutoRefresh.entries.map { it.name to playlistAutoRefreshLabel(it) },
+                selected = autoRefresh.name,
+                onSelect = { value ->
+                    autoRefresh = runCatching { PlaylistAutoRefresh.valueOf(value) }.getOrDefault(PlaylistAutoRefresh.OFF)
+                    showAutoRefreshPicker = false
+                },
+                onDismiss = { showAutoRefreshPicker = false },
+            )
+        }
     }
 }
 

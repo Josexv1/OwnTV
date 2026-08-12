@@ -191,6 +191,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 stalkerTest = stalkerTestUi,
                 onBack = { vm.resetStalkerTest(); editingSource = null },
                 modifier = Modifier,
+                embedded = true,
             )
         } else if (showAdd) {
             when (val s = importState) {
@@ -232,6 +233,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onBack = { vm.resetStalkerTest(); addMode = null },
                         modifier = Modifier,
                         initial = vm.lastFailedSource, // pre-fill on retry — no re-typing after a typo
+                        embedded = true,
                     )
                 }
                 SettingsViewModel.ImportState.Running -> CenterStatus {
