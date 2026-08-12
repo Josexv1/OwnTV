@@ -10,7 +10,8 @@ import androidx.compose.ui.graphics.toArgb
  *
  * Exposes the full M3 surface-container tiers and primary/secondary/tertiary roles the MD3 UI needs.
  * A few legacy aliases (`panel`/`card`/`rail`/`textPrimary`/`textSecondary`/`accent`) map onto M3
- * roles so older components keep working.
+ * roles so older components keep working. Focus tokens (`focusBorder`/`focusGlow`) are neutral to
+ * support any accent; selection/interaction indicators use the accent (`primary`).
  */
 @Immutable
 data class OwnTVColors(
@@ -148,8 +149,8 @@ fun ownTvColors(isDark: Boolean, accent: AccentColor, customAccent: String = "")
             onTertiary = DarkOnTertiary,
             tertiaryContainer = DarkTertiaryContainer,
             onTertiaryContainer = DarkOnTertiaryContainer,
-            focusBorder = primary,
-            focusGlow = primary.copy(alpha = 0.40f),
+            focusBorder = Color.White,
+            focusGlow = Color.Black.copy(alpha = 0.45f),
             favorite = DarkError,
         )
     } else {
@@ -178,8 +179,8 @@ fun ownTvColors(isDark: Boolean, accent: AccentColor, customAccent: String = "")
             onTertiary = LightOnTertiary,
             tertiaryContainer = LightTertiaryContainer,
             onTertiaryContainer = LightOnTertiaryContainer,
-            focusBorder = primary,
-            focusGlow = primary.copy(alpha = 0.28f),
+            focusBorder = Color(0xFF191C1E),
+            focusGlow = Color.Black.copy(alpha = 0.22f),
             favorite = LightError,
         )
     }
