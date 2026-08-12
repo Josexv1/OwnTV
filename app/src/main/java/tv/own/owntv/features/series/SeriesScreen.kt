@@ -46,7 +46,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -448,7 +447,7 @@ private fun SeriesGrid(
         ) {
             Text(stringResource(R.string.content_section_category, stringResource(R.string.common_nav_series), selectedLabel), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
             Spacer(Modifier.height(4.dp))
-            Text(pluralStringResource(R.plurals.content_count_series, count, selectedLabel, count), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.primary, fontWeight = FontWeight.Bold)
+            Text(pluralStringResource(R.plurals.content_count_series, count, selectedLabel, count), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurfaceVariant)
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SearchBar(query = searchQuery, onQueryChange = vm::setSearchQuery, placeholder = stringResource(R.string.content_search_series, selectedLabel), modifier = Modifier.weight(1f))
@@ -577,7 +576,7 @@ private fun SeriesGrid(
                     // Tall portrait poster (like the list / a phone screen), centred in the pane.
                     Box(modifier = Modifier.fillMaxWidth().height(340.dp), contentAlignment = Alignment.Center) {
                         Box(
-                            modifier = Modifier.fillMaxHeight().aspectRatio(2f / 3f).clip(RoundedCornerShape(12.dp)).background(OwnTVTheme.colors.surfaceContainerLowest),
+                            modifier = Modifier.fillMaxHeight().aspectRatio(2f / 3f).clip(RoundedCornerShape(Dimens.CornerMedium)).background(OwnTVTheme.colors.surfaceContainerLowest),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (!art.isNullOrBlank()) {
@@ -588,19 +587,19 @@ private fun SeriesGrid(
                         }
                     }
                     Spacer(Modifier.height(14.dp))
-                    Text(s.name, style = MaterialTheme.typography.titleLarge, color = OwnTVTheme.colors.onSurface)
+                    Text(s.name, style = MaterialTheme.typography.headlineMedium, color = OwnTVTheme.colors.onSurface)
                     val metaBits = listOfNotNull(year?.let { localizedInteger(it, grouping = false) }, rating?.let { stringResource(R.string.content_rating, it) })
                     if (metaBits.isNotEmpty()) {
                         Spacer(Modifier.height(4.dp))
-                        Text(metaBits.joinToString(stringResource(R.string.content_metadata_separator)), style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant)
+                        Text(metaBits.joinToString(stringResource(R.string.content_metadata_separator)), style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), color = OwnTVTheme.colors.onSurfaceVariant)
                     }
                     if (genres.isNotEmpty()) {
                         Spacer(Modifier.height(6.dp))
-                        Text(genres.joinToString(stringResource(R.string.content_genres_separator)), style = MaterialTheme.typography.labelMedium, color = OwnTVTheme.colors.primary)
+                        Text(genres.joinToString(stringResource(R.string.content_genres_separator)), style = MaterialTheme.typography.labelMedium, color = OwnTVTheme.colors.onSurfaceVariant)
                     }
                     if (!plot.isNullOrBlank()) {
                         Spacer(Modifier.height(12.dp))
-                        Text(plot, style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                        Text(plot, style = MaterialTheme.typography.bodyMedium, color = OwnTVTheme.colors.onSurfaceVariant, maxLines = 8, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp))
                     }
                     if (cast.isNotEmpty()) {
                         Spacer(Modifier.height(12.dp))

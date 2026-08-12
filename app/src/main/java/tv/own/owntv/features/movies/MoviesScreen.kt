@@ -92,6 +92,7 @@ import tv.own.owntv.ui.components.longPressMenuGuard
 import tv.own.owntv.ui.components.dialogPanel
 import tv.own.owntv.ui.components.gridFocusTarget
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import tv.own.owntv.ui.components.SearchBar
 import tv.own.owntv.ui.components.trapAllFocusExit
 import tv.own.owntv.ui.components.trapVerticalFocusExit
@@ -370,8 +371,7 @@ fun MoviesScreen(
             Text(
                 pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
                 style = MaterialTheme.typography.titleMedium,
-                color = OwnTVTheme.colors.primary,
-                fontWeight = FontWeight.Bold,
+                color = OwnTVTheme.colors.onSurfaceVariant,
             )
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -808,7 +808,7 @@ private fun MovieDetailsPane(
         // Tall portrait poster (like the list / a phone screen), centred in the pane.
         Box(modifier = Modifier.fillMaxWidth().height(340.dp), contentAlignment = Alignment.Center) {
             Box(
-                modifier = Modifier.fillMaxHeight().aspectRatio(2f / 3f).clip(RoundedCornerShape(12.dp)).background(colors.surfaceContainerLowest),
+                modifier = Modifier.fillMaxHeight().aspectRatio(2f / 3f).clip(RoundedCornerShape(Dimens.CornerMedium)).background(colors.surfaceContainerLowest),
                 contentAlignment = Alignment.Center,
             ) {
                 if (!posterArt.isNullOrBlank()) {
@@ -834,18 +834,18 @@ private fun MovieDetailsPane(
             )
             Spacer(Modifier.height(6.dp))
         }
-        Text(movie.name, style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+        Text(movie.name, style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
         Spacer(Modifier.height(6.dp))
-        Text(metaLine(movie, meta, tmdbWins), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        Text(metaLine(movie, meta, tmdbWins), style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), color = colors.onSurfaceVariant)
         // Genres & cast are TMDB-only (§7.1) — a whole layer the provider never had.
         val genres = jsonList(meta?.genresJson)
         if (genres.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
-            Text(genres.joinToString(stringResource(R.string.content_genres_separator)), style = MaterialTheme.typography.labelMedium, color = colors.primary)
+            Text(genres.joinToString(stringResource(R.string.content_genres_separator)), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
         }
         if (!plot.isNullOrBlank()) {
             Spacer(Modifier.height(12.dp))
-            Text(plot, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 6, overflow = TextOverflow.Ellipsis)
+            Text(plot, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 6, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp))
         }
         val cast = jsonList(meta?.castJson)
         if (cast.isNotEmpty()) {
