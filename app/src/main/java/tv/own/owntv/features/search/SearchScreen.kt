@@ -495,10 +495,9 @@ private fun PillChip(
 @Composable
 private fun SectionLabel(text: String) {
     Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.titleSmall,
-        color = OwnTVTheme.colors.primary,
-        fontWeight = FontWeight.Bold,
+        text,
+        style = MaterialTheme.typography.titleMedium,
+        color = OwnTVTheme.colors.onSurface,
     )
 }
 

@@ -1052,15 +1052,14 @@ private fun ContinueWatchingRow(
         modifier = modifier.fillMaxWidth(),
     ) {
         Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.titleSmall,
-            color = OwnTVTheme.colors.primary,
-            fontWeight = FontWeight.Bold,
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = OwnTVTheme.colors.onSurface,
             modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(Dimens.GapSmall))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
             contentPadding = PaddingValues(horizontal = Dimens.HomeRowPaddingH),
             modifier = Modifier.focusGroup(),
         ) {
@@ -1362,12 +1361,12 @@ private fun SkeletonRowPlaceholder(
                 .clip(RoundedCornerShape(100))
                 .background(placeholder),
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(Dimens.GapSmall))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.HomeRowPaddingH),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
         ) {
             repeat(cardCount) {
                 Box(
