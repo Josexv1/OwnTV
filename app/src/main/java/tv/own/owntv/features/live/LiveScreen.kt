@@ -798,7 +798,7 @@ private fun LivePreviewPane(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(12.dp)).background(colors.surfaceContainerLowest),
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(Dimens.CornerMedium)).background(colors.surfaceContainerLowest),
             contentAlignment = Alignment.Center,
         ) {
             if (!channel.displayLogoUrl.isNullOrBlank()) {
@@ -817,7 +817,7 @@ private fun LivePreviewPane(
             if (singleSessionBlocked && !previewPlaying) {
                 Box(
                     Modifier.align(Alignment.BottomCenter).padding(10.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(50))
                         .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                 ) {
@@ -839,18 +839,18 @@ private fun LivePreviewPane(
                 ) {
                     list.forEach { label ->
                         Box(
-                            Modifier.clip(RoundedCornerShape(6.dp))
+                            Modifier.clip(RoundedCornerShape(50))
                                 .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f))
                                 .padding(horizontal = 8.dp, vertical = 3.dp),
                         ) {
-                            Text(label, style = MaterialTheme.typography.labelMedium, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                            Text(label, style = MaterialTheme.typography.labelMedium, color = androidx.compose.ui.graphics.Color.White)
                         }
                     }
                 }
             }
         }
         Spacer(Modifier.height(14.dp))
-        Text(channel.name, style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+        Text(channel.name, style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
 
         // Metadata row — category · inferred genre (with colour dot) · catch-up status · EPG status.
         // All informational, never focusable.
@@ -904,7 +904,7 @@ private fun ChannelMetaRow(
     val chips = buildList {
         // Genre chip (always shown, with its colour dot — including the grey "Other" fallback so every
         // channel has a genre marker), then the raw category name when it differs from the genre label.
-        add(MetaChip(stringResource(genre.displayLabelRes), dot = genre.dot, primary = genre != ChannelGenre.OTHER))
+        add(MetaChip(stringResource(genre.displayLabelRes), dot = genre.dot))
         if (!categoryName.isNullOrBlank() && categoryName != genre.canonicalLabel) add(MetaChip(categoryName))
         if (catchupLabel != null) add(MetaChip(catchupLabel, accent = true))
         add(MetaChip(epgStatus))
@@ -923,18 +923,15 @@ private fun ChannelMetaRow(
 private data class MetaChip(
     val text: String,
     val dot: Color? = null,
-    val primary: Boolean = false,
     val accent: Boolean = false,
 )
 
 @Composable
 private fun MetaChipBadge(chip: MetaChip) {
     val colors = OwnTVTheme.colors
-    val fg = when {
-        chip.primary -> colors.primary
-        chip.accent -> colors.primary
-        else -> colors.onSurfaceVariant
-    }
+    // Only a MEANINGFUL state (catch-up availability) gets the primary accent colour; genre/category/EPG
+    // chips are purely informational — the genre's own colour dot already carries that signal.
+    val fg = if (chip.accent) colors.primary else colors.onSurfaceVariant
     Row(
         modifier = Modifier
             .height(26.dp)                  // uniform chip height — long category names can't wrap to 2 lines and make one chip taller than the others
@@ -988,13 +985,18 @@ private fun EpgSection(nowNext: EpgNowNext?) {
             }
             Text(
                 stringResource(R.string.content_live_time_range_plain, formatTime(now.startMs), formatTime(now.stopMs)),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
                 color = colors.onSurfaceVariant,
             )
         }
         if (next != null) {
             Spacer(Modifier.height(2.dp))
-            Text(stringResource(R.string.content_live_next_label, formatTime(next.startMs)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.content_live_next_label, formatTime(next.startMs)),
+                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                color = colors.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+            )
             Text(
                 next.title,
                 style = MaterialTheme.typography.bodyMedium,
@@ -1010,7 +1012,7 @@ private fun EpgSection(nowNext: EpgNowNext?) {
             Text(stringResource(R.string.content_live_later_label), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, fontWeight = FontWeight.Bold)
             later.forEach { p ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(formatTime(p.startMs), style = MaterialTheme.typography.labelSmall, color = colors.primary)
+                    Text(formatTime(p.startMs), style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = colors.primary)
                     Text(p.title, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
