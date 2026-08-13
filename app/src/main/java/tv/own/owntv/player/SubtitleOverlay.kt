@@ -15,14 +15,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import org.koin.compose.koinInject
 import tv.own.owntv.features.settings.data.SettingsRepository
 import tv.own.owntv.features.settings.data.SubtitleStyle
-import tv.own.owntv.ui.theme.OwnTVTypography
 
 /**
  * App-drawn subtitles for the direct render path: the decoder owns the video surface there, so mpv
@@ -84,15 +85,14 @@ fun SubtitleOverlay(
         Text(
             text = line,
             textAlign = textAlign,
-            // User-styled subtitle rendering — sizes/colors come from SubtitleStyle settings, not the
-            // type scale (sanctioned, mirrors SubtitlePreview ruling). The base size/weight this scales
-            // from is the headlineMedium token (the closest type-scale match to the historical 24sp
-            // look), not a bare literal.
+            // User-styled subtitle rendering — the hand-tuned 24/30/Medium base is an over-video
+            // legibility parameter scaled by the user's SubtitleStyle settings, deliberately outside
+            // the type scale (sanctioned; mirrors the SubtitlePreview ruling).
             style = TextStyle(
                 color = textColor,
-                fontSize = OwnTVTypography.headlineMedium.fontSize * textScale * sizeScale,
-                lineHeight = OwnTVTypography.headlineMedium.lineHeight * textScale * sizeScale,
-                fontWeight = OwnTVTypography.headlineMedium.fontWeight,
+                fontSize = (24 * textScale * sizeScale).sp,
+                lineHeight = (30 * textScale * sizeScale).sp,
+                fontWeight = FontWeight.Medium,
                 shadow = Shadow(color = Color.Black, offset = Offset(0f, 2f), blurRadius = 6f),
             ),
             modifier = Modifier
