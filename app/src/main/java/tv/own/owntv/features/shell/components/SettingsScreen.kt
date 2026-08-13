@@ -1190,7 +1190,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         ) {
             BrandLockup(markSize = 48, textSize = 30)
             Spacer(Modifier.height(6.dp))
-            Text(stringResource(R.string.settings_about_version, tv.own.owntv.BuildConfig.VERSION_NAME), style = MaterialTheme.typography.titleMedium, color = colors.primary)
+            Text(stringResource(R.string.settings_about_version, tv.own.owntv.BuildConfig.VERSION_NAME), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
             Spacer(Modifier.height(14.dp))
             Text(
                 stringResource(R.string.settings_about_description_full),
@@ -1201,7 +1201,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Text(stringResource(R.string.settings_about_license), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
             Spacer(Modifier.height(4.dp))
-            Text(GITHUB_REPO, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
+            Text(GITHUB_REPO, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             // Community: Telegram link + a QR, side-by-side to keep the dialog compact, so TV users can
             // join from their phone — no TV browser needed.
@@ -1209,7 +1209,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.settings_join_telegram), style = MaterialTheme.typography.titleSmall, color = colors.onSurface)
                     Spacer(Modifier.height(2.dp))
-                    Text(TELEGRAM_LINK, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
+                    Text(TELEGRAM_LINK, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                     Spacer(Modifier.height(6.dp))
                     Text(
                         stringResource(R.string.settings_telegram_scan),
@@ -1316,7 +1316,7 @@ private fun PlaybackErrorLogDialog(onDismiss: () -> Unit) {
                                         stringResource(if (e.live) R.string.settings_live else R.string.settings_vod),
                                     ),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = if (e.kind == tv.own.owntv.player.PlaybackErrorLog.Kind.ERROR) colors.primary else colors.onSurfaceVariant,
+                                    color = if (e.kind == tv.own.owntv.player.PlaybackErrorLog.Kind.ERROR) colors.favorite else colors.onSurfaceVariant,
                                 )
                                 val reasonText = e.reason?.displayText() ?: e.legacyReason
                                 reasonText?.let {
@@ -1343,7 +1343,7 @@ private fun PlaybackErrorLogDialog(onDismiss: () -> Unit) {
             }
             exportPath?.let {
                 Spacer(Modifier.height(12.dp))
-                Text(stringResource(R.string.settings_backup_saved_to, it), style = MaterialTheme.typography.bodySmall, color = colors.primary)
+                Text(stringResource(R.string.settings_backup_saved_to, it), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
             }
             if (exportFailed) {
                 Spacer(Modifier.height(12.dp))
@@ -2180,7 +2180,9 @@ private fun QuickToggleChip(
 ) {
     val colors = OwnTVTheme.colors
     val onColors = TileTone.PRIMARY.colors()
-    val offColors = TileTone.SECONDARY.colors()
+    // Off is a neutral resting state, not a lesser accent — the secondary tonal pair read as "still
+    // an active choice", just dimmer. A plain surface + onSurfaceVariant reads as truly off.
+    val offColors = colors.surfaceContainerHigh to colors.onSurfaceVariant
     val (bg, fg) = if (on) onColors else offColors
     // Always-on faint glass edge over the tonal fill (which is opaque, so it hides an outer-surface
     // rim) so these chips read as glass at rest too, matching the top-bar chips.
