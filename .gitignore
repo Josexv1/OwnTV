@@ -29,6 +29,7 @@ signing.properties
 
 # Internal planning documents — kept local, never committed
 future-plan/
+audit/
 
 # Upstream triage notebook: which ahXN00/OwnTV and flashingcursor/SteadfastTV commits we take.
 # Working notes for this fork only — never pushed.
