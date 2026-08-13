@@ -15,6 +15,7 @@ import tv.own.owntv.core.database.entity.ProfileEntity
 import tv.own.owntv.core.database.entity.ProfileSourceCrossRef
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.util.normalizeUrlScheme
 import tv.own.owntv.features.settings.data.SettingsRepository
 
 /**
@@ -706,7 +707,9 @@ class BackupManager(
         return SourceEntity(
             id = o.getLong("id"), name = o.getString("name"),
             type = type,
-            url = o.getString("url"), username = o.optStringOrNull("username"),
+            // Older backups (or a source added before this fix) may carry an uppercase scheme;
+            // normalize on the way in so a restore doesn't reintroduce mpv's "Protocol not found".
+            url = normalizeUrlScheme(o.getString("url")), username = o.optStringOrNull("username"),
             password = if (o.isNull("password")) null else unseal(o.opt("password")),
             // Stalker MAC: restored from its encrypted block when a passphrase was given; null on backups
             // older than v10 (no "mac" key) or when the MAC was omitted (no passphrase).
@@ -804,9 +807,15 @@ internal fun profileMatchKey(name: String) = name.trim().lowercase()
  * Identity a restored source is merged onto. Username is part of the key because one portal commonly
  * serves several accounts; the password is not, so a re-exported backup with a rotated password
  * still updates the existing row instead of duplicating it.
+ *
+ * The URL's scheme is normalized on BOTH sides of every comparison: an existing device row loaded
+ * raw via [tv.own.owntv.core.database.dao.SourceDao.getAllOnce] may still carry a pre-fix uppercase
+ * scheme even though incoming/newly-ingested rows are now clean (see [normalizeUrlScheme]), so
+ * comparing without normalizing here would treat "HTTP://…" and "http://…" as different sources and
+ * insert a duplicate instead of updating the existing one.
  */
 internal fun sourceMatchKey(type: String, url: String, username: String?) =
-    "$type|${url.trim()}|${username.orEmpty()}"
+    "$type|${normalizeUrlScheme(url.trim())}|${username.orEmpty()}"
 
 /** Rewrites an id-keyed JSON map ({"<fileId>": …}) to device ids; unmapped keys pass through. */
 internal fun remapKeys(o: JSONObject, idMap: Map<Long, Long>): JSONObject {
