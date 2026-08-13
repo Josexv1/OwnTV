@@ -15,6 +15,7 @@ import tv.own.owntv.core.database.entity.ProfileEntity
 import tv.own.owntv.core.database.entity.ProfileSourceCrossRef
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.util.normalizeUrlScheme
 import tv.own.owntv.features.settings.data.SettingsRepository
 
 /**
@@ -706,7 +707,9 @@ class BackupManager(
         return SourceEntity(
             id = o.getLong("id"), name = o.getString("name"),
             type = type,
-            url = o.getString("url"), username = o.optStringOrNull("username"),
+            // Older backups (or a source added before this fix) may carry an uppercase scheme;
+            // normalize on the way in so a restore doesn't reintroduce mpv's "Protocol not found".
+            url = normalizeUrlScheme(o.getString("url")), username = o.optStringOrNull("username"),
             password = if (o.isNull("password")) null else unseal(o.opt("password")),
             // Stalker MAC: restored from its encrypted block when a passphrase was given; null on backups
             // older than v10 (no "mac" key) or when the MAC was omitted (no passphrase).

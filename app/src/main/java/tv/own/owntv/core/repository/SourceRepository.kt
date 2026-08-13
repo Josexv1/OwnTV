@@ -13,6 +13,7 @@ import tv.own.owntv.core.sync.ImportStage
 import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncManager
 import tv.own.owntv.core.sync.SyncResult
+import tv.own.owntv.core.util.normalizeUrlScheme
 
 /**
  * Adds/links sources to a profile and runs imports. The setup wizard (Phase 6) and playlist screen
@@ -65,9 +66,10 @@ class SourceRepository(
     )
 
     private suspend fun addAndLink(profileId: Long, source: SourceEntity): SourceEntity {
-        val id = sourceDao.insert(source)
+        val normalized = source.copy(url = normalizeUrlScheme(source.url))
+        val id = sourceDao.insert(normalized)
         sourceDao.link(ProfileSourceCrossRef(profileId = profileId, sourceId = id))
-        return source.copy(id = id)
+        return normalized.copy(id = id)
     }
 
     suspend fun deleteSource(source: SourceEntity) = sourceDao.delete(source)
@@ -87,7 +89,8 @@ class SourceRepository(
             .forEach { categoryDao.clear(sourceId, it) }
     }
 
-    suspend fun updateSource(source: SourceEntity) = sourceDao.update(source)
+    suspend fun updateSource(source: SourceEntity) =
+        sourceDao.update(source.copy(url = normalizeUrlScheme(source.url)))
 
     suspend fun sync(
         source: SourceEntity,
