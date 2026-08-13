@@ -245,11 +245,7 @@ private fun OnNowRow(
                 .padding(1.dp)
                 .border(
                     width = 1.dp,
-                    color = if (focused) {
-                        colors.primary.copy(alpha = 0.42f)
-                    } else {
-                        Color.Transparent
-                    },
+                    color = Color.Transparent,
                     shape = sectionShape,
                 )
                 .padding(10.dp),
@@ -384,11 +380,7 @@ private fun OnNowChannelItem(
                 Text(
                     text = info.timeLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (focused) {
-                        colors.primary.copy(alpha = 0.82f)
-                    } else {
-                        colors.onSurfaceVariant.copy(alpha = 0.62f)
-                    },
+                    color = colors.onSurfaceVariant.copy(alpha = 0.62f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -454,13 +446,13 @@ private fun ChannelTextBadge(
         modifier = Modifier
             .size(46.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (focused) colors.primaryContainer else colors.surfaceContainerLowest),
+            .background(colors.surfaceContainerLowest),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = if (focused) colors.onPrimaryContainer else colors.onSurfaceVariant,
+            color = colors.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

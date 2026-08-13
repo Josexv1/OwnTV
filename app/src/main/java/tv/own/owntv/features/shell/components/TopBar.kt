@@ -160,12 +160,10 @@ private fun SearchPill(onClick: () -> Unit, visible: Boolean) {
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
-        // Neutral when idle; accent fill only when focused (matches the playlist selector).
-        focusedContainerColor = colors.primaryContainer,
         unfocusedContainerColor = colors.surfaceContainer.copy(alpha = 0.6f),
         contentAlignment = Alignment.Center,
     ) { focused ->
-        val fg = if (focused) colors.onPrimaryContainer else colors.onSurfaceVariant
+        val fg = colors.onSurfaceVariant
         Row(Modifier.padding(horizontal = 14.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OwnTVIcon(icon = OwnTVIcon.SEARCH, tint = fg, modifier = Modifier.size(16.dp))
             Text(
@@ -198,7 +196,6 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
-        focusedContainerColor = colors.primary,
         unfocusedContainerColor = colors.surfaceContainer.copy(alpha = 0.6f),
         contentAlignment = Alignment.Center,
     ) { focused ->
@@ -207,7 +204,7 @@ private fun ContinueChip(label: String, icon: OwnTVIcon, onClick: () -> Unit, vi
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            val fg = if (focused) colors.onPrimary else colors.onSurfaceVariant
+            val fg = colors.onSurfaceVariant
             OwnTVIcon(icon = icon, tint = fg, modifier = Modifier.size(16.dp))
             Text(
                 label,
@@ -258,12 +255,10 @@ private fun PlaylistChip(label: String, interactive: Boolean = false, onClick: (
         surface = GlassSurface.TOPBAR,
         glassFrostScale = TopBarFrost,
         glassIdleRimAlpha = 0.18f,
-        // Neutral when idle; accent fill only when focused (no always-on accent).
-        focusedContainerColor = colors.primaryContainer,
         unfocusedContainerColor = colors.surfaceContainer.copy(alpha = 0.6f),
         contentAlignment = Alignment.Center,
     ) { focused ->
-        val fg = if (focused) colors.onPrimaryContainer else colors.onSurfaceVariant
+        val fg = colors.onSurfaceVariant
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
