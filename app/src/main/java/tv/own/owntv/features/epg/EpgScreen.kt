@@ -382,14 +382,14 @@ fun EpgScreen(
         }
         state.stats?.let { stats ->
             Spacer(Modifier.height(4.dp))
-            Text(epgStatsText(stats), style = MaterialTheme.typography.labelLarge, color = colors.primary)
+            Text(epgStatsText(stats), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
         }
         // Outcome of the last auto-match run (auto-applied count / how many need review). Dismissible.
         matchSummary?.let { summary ->
             if (review.isEmpty()) {
                 Spacer(Modifier.height(6.dp))
                 FocusableSurface(onClick = vm::clearReview, shape = RoundedCornerShape(10.dp), unfocusedContainerColor = colors.surfaceContainerHigh, contentAlignment = Alignment.CenterStart, surface = GlassSurface.CARDS) { _ ->
-                    Text(epgMatchSummaryText(summary), style = MaterialTheme.typography.labelLarge, color = colors.primary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+                    Text(epgMatchSummaryText(summary), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
                 }
             }
         }
@@ -766,7 +766,7 @@ private fun GuideChannelRow(
                 Text(
                     channel.number?.let { stringResource(R.string.content_epg_channel_number, it, channel.name) } ?: channel.name,
                     style = MaterialTheme.typography.titleSmall.copy(textDirection = TextDirection.Content),
-                    color = if (focused) colors.primary else colors.onSurface,
+                    color = colors.onSurface,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )

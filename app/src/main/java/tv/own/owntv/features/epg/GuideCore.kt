@@ -235,7 +235,7 @@ internal fun ProgrammeDetailDialog(
                     .glass(surface = GlassSurface.DIALOGS, baseFill = colors.surfaceContainerHigh, shape = RoundedCornerShape(corner), cornerRadius = corner)
                     .verticalScroll(rememberScrollState()).padding(if (compact) 18.dp else 28.dp),
             ) {
-                Text(channelName.uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.primary, fontWeight = FontWeight.SemiBold)
+                Text(channelName.uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(6.dp))
                 Text(programme.title, style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall, color = colors.onSurface)
                 Spacer(Modifier.height(if (compact) 4.dp else 8.dp))

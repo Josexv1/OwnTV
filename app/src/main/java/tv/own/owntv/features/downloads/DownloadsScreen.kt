@@ -227,7 +227,7 @@ private fun StorageBar(info: tv.own.owntv.core.download.DownloadStorageInfo) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.content_downloads_storage), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
-            Text(stringResource(R.string.content_downloads_storage_free, storageSize(info.freeBytes, stringResource(R.string.content_downloads_unknown_size)), storageSize(info.totalBytes, stringResource(R.string.content_downloads_unknown_size))), style = MaterialTheme.typography.labelLarge, color = colors.primary, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.content_downloads_storage_free, storageSize(info.freeBytes, stringResource(R.string.content_downloads_unknown_size)), storageSize(info.totalBytes, stringResource(R.string.content_downloads_unknown_size))), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
         }
         Spacer(Modifier.height(6.dp))
         Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(colors.surfaceContainerLowest)) {
@@ -294,7 +294,7 @@ private fun folderCrumb(filePath: String?, separator: String): String? {
 private fun StatusLine(d: DownloadEntity) {
     val colors = OwnTVTheme.colors
     when (d.status) {
-        DownloadStatus.COMPLETED -> Text(stringResource(R.string.content_downloads_completed, sizeMb(d.totalBytes, stringResource(R.string.content_downloads_unknown_size))), style = MaterialTheme.typography.bodySmall, color = colors.primary, fontWeight = FontWeight.SemiBold)
+        DownloadStatus.COMPLETED -> Text(stringResource(R.string.content_downloads_completed, sizeMb(d.totalBytes, stringResource(R.string.content_downloads_unknown_size))), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         DownloadStatus.FAILED -> Text(stringResource(R.string.content_downloads_failure_message), style = MaterialTheme.typography.bodySmall, color = colors.favorite)
         DownloadStatus.QUEUED -> Text(stringResource(R.string.content_downloads_queued), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         else -> { // RUNNING / PAUSED
