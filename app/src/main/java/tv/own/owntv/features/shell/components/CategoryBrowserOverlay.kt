@@ -92,7 +92,7 @@ fun CategoryBrowserOverlay(
             Text(
                 stringResource(R.string.content_category_browser_title),
                 style = MaterialTheme.typography.titleMedium,
-                color = colors.primary,
+                color = colors.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
             )
             LazyColumn(

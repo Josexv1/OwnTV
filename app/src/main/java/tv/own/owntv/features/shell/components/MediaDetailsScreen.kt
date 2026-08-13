@@ -166,7 +166,7 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
                     }
                     if (details.genres.isNotEmpty()) {
                         Spacer(Modifier.height(6.dp))
-                        Text(details.genres.joinToString(" · "), style = MaterialTheme.typography.labelLarge, color = colors.primary)
+                        Text(details.genres.joinToString(" · "), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
                     }
                 }
             }
