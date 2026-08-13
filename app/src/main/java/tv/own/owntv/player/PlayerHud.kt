@@ -87,6 +87,7 @@ import tv.own.owntv.ui.components.dialogPanel
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.HudPictorial
 import tv.own.owntv.ui.theme.LocalActionSurface
+import tv.own.owntv.ui.theme.OwnTVColors
 import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.format.localizedDecimal
 
@@ -1027,6 +1028,11 @@ private fun volumeIcon(volume: Int): OwnTVIcon = when {
     else -> OwnTVIcon.VOLUME_HIGH
 }
 
+/** Shared tint for the bottom-strip transport chrome (speed pill, engine toggle, ctrl buttons):
+ *  solid accent while active, white while focused (the transient D-pad cursor), dimmed white otherwise. */
+private fun hudTint(active: Boolean, focused: Boolean, colors: OwnTVColors): Color =
+    if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f)
+
 // ---------------- Buttons ----------------
 
 @Composable
@@ -1060,7 +1066,7 @@ private fun SpeedButton(label: String, active: Boolean, onClick: () -> Unit) {
         // The rate itself is the icon — the extra ">>" glyph read as a seek control next to the real
         // rewind/forward buttons, and "1.0x" already says everything the button does.
         Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = hudTint(active, focused, colors), fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -1142,8 +1148,8 @@ private fun EngineToggle(label: String, active: Boolean, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            OwnTVIcon(OwnTVIcon.SWAP, tint = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(16.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold)
+            OwnTVIcon(OwnTVIcon.SWAP, tint = hudTint(active, focused, colors), filled = true, modifier = Modifier.size(16.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, color = hudTint(active, focused, colors), fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -1161,13 +1167,13 @@ private fun CtrlButton(icon: OwnTVIcon, badge: Int? = null, active: Boolean = fa
         contentAlignment = Alignment.Center,
     ) { focused ->
         Box(contentAlignment = Alignment.Center) {
-            OwnTVIcon(icon, tint = if (active) colors.primary else if (focused) Color.White else Color.White.copy(alpha = 0.78f), filled = true, modifier = Modifier.size(22.dp))
+            OwnTVIcon(icon, tint = hudTint(active, focused, colors), filled = true, modifier = Modifier.size(22.dp))
             if (badge != null) {
                 Box(
-                    Modifier.align(Alignment.TopEnd).size(15.dp).clip(CircleShape).background(colors.primary),
+                    Modifier.align(Alignment.TopEnd).size(15.dp).clip(CircleShape).background(colors.surfaceContainerHigh),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(R.string.common_number_grouped, badge), style = MaterialTheme.typography.labelSmall, color = colors.onPrimary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_number_grouped, badge), style = MaterialTheme.typography.labelSmall, color = colors.onSurface, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1570,9 +1576,9 @@ private fun OptionRow(label: String, selected: Boolean, modifier: Modifier = Mod
         onClick = onClick, modifier = modifier.fillMaxWidth(), selected = selected, shape = RoundedCornerShape(12.dp),
         selectedContainerColor = colors.primaryContainer, contentAlignment = Alignment.CenterStart,
         surface = GlassSurface.DIALOGS,
-    ) { focused ->
+    ) { _ ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = if (selected) colors.onPrimaryContainer else if (focused) colors.primary else colors.onSurface)
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = if (selected) colors.onPrimaryContainer else colors.onSurface)
             if (selected) {
                 Spacer(Modifier.weight(1f))
                 OwnTVIcon(OwnTVIcon.STAR, tint = colors.onPrimaryContainer, filled = true, modifier = Modifier.size(14.dp))
