@@ -500,12 +500,7 @@ private fun HeroRowSection(
     val endPadding = (rowWidthDp - Dimens.HeroBaseWidth - Dimens.HomeRowPaddingH).coerceAtLeast(Dimens.HomeRowPaddingH)
 
     Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.home_keep_watching),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.onSurface,
-            modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
-        )
+        HomeRowHeader(title = stringResource(R.string.home_keep_watching))
         Spacer(Modifier.height(10.dp))
 
         Box(
@@ -1064,12 +1059,7 @@ private fun ContinueWatchingRow(
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = OwnTVTheme.colors.onSurface,
-            modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
-        )
+        HomeRowHeader(title = title)
         Spacer(Modifier.height(Dimens.GapSmall))
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),

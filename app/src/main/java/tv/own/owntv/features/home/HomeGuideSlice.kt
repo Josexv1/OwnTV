@@ -104,12 +104,7 @@ private fun ChannelCardsRow(
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = OwnTVTheme.colors.onSurface,
-            modifier = Modifier.padding(start = Dimens.HomeRowPaddingH),
-        )
+        HomeRowHeader(title = title)
         Spacer(Modifier.height(Dimens.GapSmall))
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
