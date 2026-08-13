@@ -508,6 +508,7 @@ fun PlayerHud(
         // you can read live bitrate/buffer while watching. Toggled from the bottom bar's info button.
         if (showInfo) {
             // Sits clear of the taller unified top strip (logo + guide) rather than under the old title row.
+            // 112.dp encodes the scrimmed strip height (hudTextScrim adds 20dp) — verified on-device.
             StreamInfoOverlay(player, modifier = Modifier.align(Alignment.TopEnd).padding(top = 112.dp, end = 20.dp))
         }
 
@@ -519,6 +520,7 @@ fun PlayerHud(
         val tuned = (tuneOsd as? TuneOsd.Tuned)?.info
         Column(
             modifier = Modifier.align(Alignment.TopStart)
+                // 92.dp clears the scrimmed top strip (hudTextScrim adds 20dp) — verified on-device with direct tune.
                 .padding(start = 28.dp, top = if (controlsVisible) 92.dp else 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

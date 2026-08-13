@@ -337,7 +337,7 @@ private fun AudioBtn(
         shape = CircleShape,
         focusedScale = 1.12f,
         glowElevation = 0,
-        // Bare icons — no circle fill or glow behind them; focus shows only the accent ring + tint.
+        // Bare icons — no circle fill or glow behind them; focus shows only the accent ring.
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
         selectedContainerColor = Color.Transparent,
