@@ -37,6 +37,7 @@ import tv.own.owntv.ui.theme.PopupFontTheme
 @Composable
 fun StepperDialog(
     title: String,
+    description: String? = null,
     value: Int,
     step: Int,
     min: Int,
@@ -49,6 +50,7 @@ fun StepperDialog(
     val colors = OwnTVTheme.colors
     val frPlus = remember { FocusRequester() }
     val frMinus = remember { FocusRequester() }
+    val frDone = remember { FocusRequester() }
     val plusEnabled = value < max
     val minusEnabled = value > min
     // "+" is the natural landing spot, but at [max] it is disabled and so cannot take focus. Focus is
@@ -58,9 +60,18 @@ fun StepperDialog(
     // A caller can remount this dialog within the same frame another composable unmounts (e.g. a
     // confirmation gate closing back into it) — requesting focus before the new node has completed a
     // layout pass silently fails and falls through the trap, so wait a frame first.
+    // min == max disables both steppers at once (a degenerate but real range), leaving nothing above
+    // for the initial request to land on — fall back to the always-enabled Done button so the trap
+    // never strands the D-pad with only Back working.
     LaunchedEffect(Unit) {
         withFrameNanos { }
-        runCatching { (if (plusEnabled) frPlus else frMinus).requestFocus() }
+        runCatching {
+            when {
+                plusEnabled -> frPlus.requestFocus()
+                minusEnabled -> frMinus.requestFocus()
+                else -> frDone.requestFocus()
+            }
+        }
     }
     LaunchedEffect(plusEnabled) { if (!plusEnabled && minusEnabled) runCatching { frMinus.requestFocus() } }
     LaunchedEffect(minusEnabled) { if (!minusEnabled && plusEnabled) runCatching { frPlus.requestFocus() } }
@@ -72,6 +83,15 @@ fun StepperDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+            if (description != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -97,7 +117,7 @@ fun StepperDialog(
                     OwnTVButton(stringResource(R.string.common_reset), onClick = onReset, style = OwnTVButtonStyle.SECONDARY)
                 }
                 Spacer(Modifier.weight(1f))
-                OwnTVButton(stringResource(R.string.common_done), onClick = onDismiss)
+                OwnTVButton(stringResource(R.string.common_done), onClick = onDismiss, modifier = Modifier.focusRequester(frDone))
             }
         }
     }

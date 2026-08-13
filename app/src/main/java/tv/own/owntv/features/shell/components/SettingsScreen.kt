@@ -1585,6 +1585,7 @@ private fun ZoomDialog(current: Int, onSet: (Int) -> Unit, onDismiss: () -> Unit
 
     StepperDialog(
         title = stringResource(R.string.settings_ui_zoom),
+        description = stringResource(R.string.settings_ui_zoom_range, UiZoom.MIN, UiZoom.MAX),
         value = current,
         step = UiZoom.STEP,
         min = UiZoom.MIN,
@@ -2027,6 +2028,7 @@ private fun EpgOffsetSettingDialog(
 ) {
     StepperDialog(
         title = stringResource(R.string.content_epg_time_offset),
+        description = stringResource(R.string.settings_epg_offset_dialog_description),
         value = offsetMinutes,
         step = 30,
         min = offsetRange.first,
