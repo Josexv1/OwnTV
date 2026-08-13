@@ -1196,22 +1196,33 @@ private fun CtrlButton(icon: OwnTVIcon, badge: Int? = null, active: Boolean = fa
     }
 }
 
-// ---------------- Seekbar ----------------
+// ---------------- Timeline bar (VOD seek + live scrub share one drawing implementation) ----------------
 
+/** Shared track/fill/thumb/focus drawing for both the VOD seek bar and the live catch-up timeline.
+ *  [frac] is the normalized thumb position (0 = far/start edge, 1 = live/end edge) — each caller computes
+ *  it from its own domain (position/duration for VOD, offset/window for live). [onKeyLeft]/[onKeyRight]
+ *  carry the caller's own step size and sign so the two domains (ms position vs seconds-behind-live) never
+ *  leak into this shared shell. [liveMarker] draws the red live-edge dot; [bubble] is the focused-state
+ *  label bubble, supplied verbatim by each caller since its vertical placement trick differs per mode. */
 @Composable
-private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
+private fun TimelineBar(
+    frac: Float,
+    onKeyLeft: () -> Unit,
+    onKeyRight: () -> Unit,
+    liveMarker: Boolean = false,
+    bubble: (@Composable () -> Unit)? = null,
+) {
     val colors = OwnTVTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val frac = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Box(
         modifier = Modifier.fillMaxWidth().height(24.dp)
             .onKeyEvent { e ->
-                // Physical by design: left rewinds and right advances media time in every locale.
+                // Physical by design: left moves toward the start/past, right moves toward the end/live edge.
                 if (e.type == KeyEventType.KeyDown) when (e.key) {
-                    Key.DirectionLeft -> { onSeek(-10_000); true }
-                    Key.DirectionRight -> { onSeek(10_000); true }
+                    Key.DirectionLeft -> { onKeyLeft(); true }
+                    Key.DirectionRight -> { onKeyRight(); true }
                     else -> false
                 } else false
             }
@@ -1221,27 +1232,49 @@ private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) 
         Box(Modifier.fillMaxWidth().height(if (focused) 6.dp else 4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = if (focused) 0.4f else 0.22f))) {
             Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(colors.primary))
         }
+        if (liveMarker) {
+            // Live-edge marker (red dot) at the far right.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                Box(Modifier.size(8.dp).clip(CircleShape).background(colors.favorite))
+            }
+        }
         if (focused) {
             Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
                 Box(Modifier.size(14.dp).clip(CircleShape).background(colors.primary))
             }
-            // Time-remaining bubble above the thumb (elapsed is shown at the bar's left, total at the right,
-            // so the bubble shows what's LEFT: "-12:34"). Uses a negative offset (not bottom padding) so it
-            // floats clear above the 24dp-tall bar — padding can't lift it out of the height-constrained parent.
-            Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
-                Box(
-                    Modifier.offset(y = (-32).dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.player_time_remaining, formatTime((durationMs - positionMs).coerceAtLeast(0))),
-                        style = MaterialTheme.typography.labelMedium.copy(textDirection = TextDirection.Content),
-                        color = Color.White,
-                    )
+            if (bubble != null) {
+                Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
+                    bubble()
                 }
             }
         }
     }
     }
+}
+
+@Composable
+private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
+    val frac = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
+    TimelineBar(
+        frac = frac,
+        // Physical by design: left rewinds and right advances media time in every locale.
+        onKeyLeft = { onSeek(-10_000) },
+        onKeyRight = { onSeek(10_000) },
+        bubble = {
+            // Time-remaining bubble above the thumb (elapsed is shown at the bar's left, total at the right,
+            // so the bubble shows what's LEFT: "-12:34"). Uses a negative offset (not bottom padding) so it
+            // floats clear above the 24dp-tall bar — padding can't lift it out of the height-constrained parent.
+            Box(
+                Modifier.offset(y = (-32).dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp),
+            ) {
+                Text(
+                    stringResource(R.string.player_time_remaining, formatTime((durationMs - positionMs).coerceAtLeast(0))),
+                    style = MaterialTheme.typography.labelMedium.copy(textDirection = TextDirection.Content),
+                    color = Color.White,
+                )
+            }
+        },
+    )
 }
 
 private const val LIVE_WINDOW_SEC = 2 * 3600   // the live timeline shows the last 2 hours up to the edge
@@ -1253,47 +1286,23 @@ private const val LIVE_SCRUB_STEP_SEC = 60     // per Left/Right press (hold to 
  *  settle (the VM debounces). Going past the window keeps working via the ⏪ button — the bar just pins left. */
 @Composable
 private fun LiveTimelineBar(offsetSec: Int, onScrub: (Int) -> Unit) {
-    val colors = OwnTVTheme.colors
-    val interaction = remember { MutableInteractionSource() }
-    val focused by interaction.collectIsFocusedAsState()
     val frac = (1f - offsetSec.toFloat() / LIVE_WINDOW_SEC).coerceIn(0f, 1f) // 1 = live edge, 0 = far edge
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-    Box(
-        modifier = Modifier.fillMaxWidth().height(24.dp)
-            .onKeyEvent { e ->
-                // Physical by design: left moves away from live; right moves toward the live edge.
-                if (e.type == KeyEventType.KeyDown) when (e.key) {
-                    Key.DirectionLeft -> { onScrub(LIVE_SCRUB_STEP_SEC); true }    // back in time
-                    Key.DirectionRight -> { onScrub(-LIVE_SCRUB_STEP_SEC); true }  // toward live
-                    else -> false
-                } else false
+    TimelineBar(
+        frac = frac,
+        // Physical by design: left moves away from live; right moves toward the live edge.
+        onKeyLeft = { onScrub(LIVE_SCRUB_STEP_SEC) },    // back in time
+        onKeyRight = { onScrub(-LIVE_SCRUB_STEP_SEC) },  // toward live
+        liveMarker = true,
+        bubble = {
+            Box(Modifier.padding(bottom = 30.dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                Text(
+                    if (offsetSec <= 1) stringResource(R.string.player_live) else stringResource(R.string.player_live_offset, mmss(offsetSec)),
+                    style = MaterialTheme.typography.labelMedium.copy(textDirection = TextDirection.Content),
+                    color = Color.White,
+                )
             }
-            .focusable(interactionSource = interaction),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(Modifier.fillMaxWidth().height(if (focused) 6.dp else 4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = if (focused) 0.4f else 0.22f))) {
-            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(50)).background(colors.primary))
-        }
-        // Live-edge marker (red dot) at the far right.
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(colors.favorite))
-        }
-        if (focused) {
-            Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
-                Box(Modifier.size(14.dp).clip(CircleShape).background(colors.primary))
-            }
-            Box(Modifier.fillMaxWidth(frac), contentAlignment = Alignment.CenterEnd) {
-                Box(Modifier.padding(bottom = 30.dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                    Text(
-                        if (offsetSec <= 1) stringResource(R.string.player_live) else stringResource(R.string.player_live_offset, mmss(offsetSec)),
-                        style = MaterialTheme.typography.labelMedium.copy(textDirection = TextDirection.Content),
-                        color = Color.White,
-                    )
-                }
-            }
-        }
-    }
-    }
+        },
+    )
 }
 
 // ---------------- Dialogs ----------------
