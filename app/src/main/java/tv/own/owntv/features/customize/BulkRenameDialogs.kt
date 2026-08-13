@@ -276,7 +276,7 @@ private fun BulkRenameChoicePopup(session: BulkRenameSession) {
             )
             Spacer(Modifier.height(8.dp))
             OwnTVButton(stringResource(R.string.settings_bulk_rename_add_rule), onClick = { session.openBuilder() }, modifier = Modifier.fillMaxWidth().focusRequester(addFocus))
-            OwnTVButton(stringResource(R.string.settings_bulk_rename_auto_cleanup), onClick = { session.autoCleanup() }, modifier = Modifier.fillMaxWidth())
+            OwnTVButton(stringResource(R.string.settings_bulk_rename_auto_cleanup), onClick = { session.autoCleanup() }, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
             OwnTVButton(stringResource(R.string.settings_bulk_rename_restore_original), onClick = { session.requestRestore() }, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
             OwnTVButton(stringResource(R.string.common_cancel), onClick = { session.close() }, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
         }
