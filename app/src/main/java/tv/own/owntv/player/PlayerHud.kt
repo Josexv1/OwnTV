@@ -93,6 +93,15 @@ import tv.own.owntv.ui.format.localizedDecimal
 
 private val SPEEDS = listOf(0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
 
+/** Rounded dark backdrop for HUD text drawn directly over video. Plain color, deliberately NOT
+ *  glass — the player opts out of glass surfaces (see the LocalActionSurface provider above).
+ *  Radius matches the zap/tune OSD cards' (ChannelOsdCard/ChannelNumberCard, 14.dp), not the
+ *  generic 12.dp, so scrimmed text reads as the same surface family as those cards. */
+private fun Modifier.hudTextScrim(): Modifier = this
+    .clip(RoundedCornerShape(14.dp))
+    .background(Color.Black.copy(alpha = 0.45f))
+    .padding(horizontal = 16.dp, vertical = 10.dp)
+
 @Composable
 internal fun MediaSpec.displayText(): String {
     val decoderText = decoder?.let {
@@ -633,25 +642,28 @@ fun PlayerHud(
         // Status overlay (always shown).
         when {
             error != null -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(stringResource(R.string.player_playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
-                Spacer(Modifier.height(8.dp))
-                error?.let {
-                    Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
-                }
-                // Structured technical detail so a user can report the real cause without adb/logcat:
-                // plain reason → media spec (codec • resolution • decoder) → raw engine/codec line.
-                errorInfo?.let { info ->
-                    info.reason?.let {
-                        Spacer(Modifier.height(8.dp))
-                        Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                // Scrim hugs only the bare-text readout — the Retry button below stays unscrimmed.
+                Column(Modifier.hudTextScrim(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(stringResource(R.string.player_playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
+                    Spacer(Modifier.height(8.dp))
+                    error?.let {
+                        Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
                     }
-                    info.spec?.let {
-                        Spacer(Modifier.height(4.dp))
-                        Text(it.displayText(), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.55f), textAlign = TextAlign.Center)
-                    }
-                    info.raw?.takeIf { it.isNotBlank() }?.let {
-                        Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.player_raw_error, it), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                    // Structured technical detail so a user can report the real cause without adb/logcat:
+                    // plain reason → media spec (codec • resolution • decoder) → raw engine/codec line.
+                    errorInfo?.let { info ->
+                        info.reason?.let {
+                            Spacer(Modifier.height(8.dp))
+                            Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                        }
+                        info.spec?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(it.displayText(), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.55f), textAlign = TextAlign.Center)
+                        }
+                        info.raw?.takeIf { it.isNotBlank() }?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(stringResource(R.string.player_raw_error, it), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                        }
                     }
                 }
                 Spacer(Modifier.height(18.dp))
@@ -754,34 +766,38 @@ private fun TopBar(
                     }
                 }
             }
-            // Live stacks the technical chips ABOVE the channel name; VOD keeps title-then-chips.
-            if (isLive) {
-                chipRow()
-                Spacer(Modifier.height(2.dp))
-                // Channel number ahead of the name — this is where you look to learn the number of a
-                // channel you arrived at by zapping. meta.subtitle carries it ("#123") only while the
-                // "Channel numbers" setting is on, so an off setting leaves the name alone.
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    meta.subtitle?.takeIf { it.isNotBlank() }?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White.copy(alpha = 0.45f),
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Spacer(Modifier.width(10.dp))
+            // Scrim hugs just the title+chips text stack, not the full-width strip the outer
+            // weight(1f) Column occupies (that width is reserved for the trailing Now/Next guide).
+            Column(Modifier.hudTextScrim()) {
+                // Live stacks the technical chips ABOVE the channel name; VOD keeps title-then-chips.
+                if (isLive) {
+                    chipRow()
+                    Spacer(Modifier.height(2.dp))
+                    // Channel number ahead of the name — this is where you look to learn the number of a
+                    // channel you arrived at by zapping. meta.subtitle carries it ("#123") only while the
+                    // "Channel numbers" setting is on, so an off setting leaves the name alone.
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        meta.subtitle?.takeIf { it.isNotBlank() }?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White.copy(alpha = 0.45f),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                } else {
+                    vodSubtitle?.let {
+                        Text(it, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.45f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Spacer(Modifier.height(2.dp))
+                    chipRow()
                 }
-            } else {
-                vodSubtitle?.let {
-                    Text(it, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.45f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(2.dp))
-                chipRow()
             }
         }
         if (trailing != null) {
