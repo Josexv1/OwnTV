@@ -94,6 +94,7 @@ import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.displayText
 import tv.own.owntv.ui.components.ContentPanelFill
 import tv.own.owntv.ui.components.roundedPanel
+import tv.own.owntv.ui.components.StepperDialog
 import tv.own.owntv.ui.components.StorageBrowser
 import tv.own.owntv.ui.components.BackgroundImageChooserDialog
 import tv.own.owntv.ui.components.ingestBackgroundImage
@@ -1524,104 +1525,71 @@ private fun ClearHistoryDialog(
 @Composable
 private fun ZoomDialog(current: Int, onSet: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = OwnTVTheme.colors
-    val firstFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
     // Zoom below LOW_RAM_WARN doubles the on-screen item count, which can OOM-crash 2 GB devices
     // (#51) — the first step under it is gated behind an accept-the-risk warning. Accepting once
     // arms the rest of this dialog session; if it was opened already below the line, don't nag.
     var lowZoomAccepted by remember { mutableStateOf(current < UiZoom.LOW_RAM_WARN) }
     var pendingLowZoom by remember { mutableStateOf<Int?>(null) }
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).trapAllFocusExit().focusGroup(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(width = 460.dp, padding = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.settings_ui_zoom), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                stringResource(R.string.settings_ui_zoom_range, UiZoom.MIN, UiZoom.MAX),
-                style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(20.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                // Initial focus lands on the DECREASE button: the dialog is most often opened to escape an
-                // over-zoomed screen (where everything's too big to navigate), so "–" must be first under
-                // the cursor. The buttons stay focusable at the limits (clamped + dimmed, never disabled)
-                // so focus always lands inside the dialog — a disabled "+" at MAX zoom was leaving focus
-                // stranded outside, trapping the user at high zoom.
-                StepButton(stringResource(R.string.settings_decrease), dimmed = current <= UiZoom.MIN, modifier = Modifier.focusRequester(firstFocus)) {
-                    val next = UiZoom.clamp(current - UiZoom.STEP)
-                    if (next < UiZoom.LOW_RAM_WARN && !lowZoomAccepted) pendingLowZoom = next else onSet(next)
-                }
-                Text(
-                    stringResource(R.string.common_percent, current),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = colors.primary,
-                    modifier = Modifier.width(120.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
-                StepButton(stringResource(R.string.settings_increase), dimmed = current >= UiZoom.MAX) {
-                    onSet(UiZoom.clamp(current + UiZoom.STEP))
-                }
-            }
-            Spacer(Modifier.height(24.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OwnTVButton(stringResource(R.string.settings_reset), onClick = { onSet(UiZoom.DEFAULT) }, style = OwnTVButtonStyle.SECONDARY)
-                Spacer(Modifier.weight(1f))
-                OwnTVButton(stringResource(R.string.settings_done), onClick = onDismiss)
-            }
-        }
 
-        // Accept-the-risk gate for zoom below LOW_RAM_WARN (#51). One button, focus locked (all
-        // D-pad directions cancelled) — OK accepts and applies the pending step, Back cancels.
-        pendingLowZoom?.let { target ->
-            val acceptFocus = remember { FocusRequester() }
-            LaunchedEffect(Unit) { runCatching { acceptFocus.requestFocus() } }
-            // Composed after the dialog's own BackHandler, so it wins while the warning is up.
-            BackHandler {
-                pendingLowZoom = null
-                runCatching { firstFocus.requestFocus() }
-            }
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.8f)).trapAllFocusExit().focusGroup(),
-                contentAlignment = Alignment.Center,
+    // Accept-the-risk gate for zoom below LOW_RAM_WARN (#51) replaces the stepper panel outright
+    // while it's up, rather than layering over it — the shared StepperDialog owns its own focus
+    // trap internally, so there's no external FocusRequester left to hand focus back to once this
+    // closes. Letting the stepper unmount and remount instead means its own initial-focus effect
+    // re-runs and lands on a real button, the same guarantee the old layered overlay relied on.
+    val target = pendingLowZoom
+    if (target != null) {
+        val acceptFocus = remember { FocusRequester() }
+        LaunchedEffect(Unit) { runCatching { acceptFocus.requestFocus() } }
+        BackHandler { pendingLowZoom = null }
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.8f)).trapAllFocusExit().focusGroup(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier.dialogPanel(width = 460.dp, padding = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
-                    modifier = Modifier.dialogPanel(width = 460.dp, padding = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(stringResource(R.string.settings_low_zoom_warning_title), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        stringResource(R.string.settings_low_zoom_warning, UiZoom.LOW_RAM_WARN, UiZoom.LOW_RAM_WARN),
-                        style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(20.dp))
-                    OwnTVButton(
-                        stringResource(R.string.settings_low_zoom_accept),
-                        onClick = {
-                            lowZoomAccepted = true
-                            pendingLowZoom = null
-                            onSet(target)
-                            runCatching { firstFocus.requestFocus() }
+                Text(stringResource(R.string.settings_low_zoom_warning_title), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResource(R.string.settings_low_zoom_warning, UiZoom.LOW_RAM_WARN, UiZoom.LOW_RAM_WARN),
+                    style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(20.dp))
+                OwnTVButton(
+                    stringResource(R.string.settings_low_zoom_accept),
+                    onClick = {
+                        lowZoomAccepted = true
+                        pendingLowZoom = null
+                        onSet(target)
+                    },
+                    modifier = Modifier
+                        .focusRequester(acceptFocus)
+                        .focusProperties {
+                            up = FocusRequester.Cancel
+                            down = FocusRequester.Cancel
+                            start = FocusRequester.Cancel
+                            end = FocusRequester.Cancel
                         },
-                        modifier = Modifier
-                            .focusRequester(acceptFocus)
-                            .focusProperties {
-                                up = FocusRequester.Cancel
-                                down = FocusRequester.Cancel
-                                start = FocusRequester.Cancel
-                                end = FocusRequester.Cancel
-                            },
-                    )
-                }
+                )
             }
         }
+        return
     }
+
+    StepperDialog(
+        title = stringResource(R.string.settings_ui_zoom),
+        value = current,
+        step = UiZoom.STEP,
+        min = UiZoom.MIN,
+        max = UiZoom.MAX,
+        format = { stringResource(R.string.common_percent, it) },
+        onSet = { next ->
+            if (next < current && next < UiZoom.LOW_RAM_WARN && !lowZoomAccepted) pendingLowZoom = next else onSet(next)
+        },
+        onReset = { onSet(UiZoom.DEFAULT) },
+        onDismiss = onDismiss,
+    )
 }
 
 /**
@@ -1713,7 +1681,8 @@ private fun GlassEffectDialog(
                     Text(
                         stringResource(R.string.settings_surface_transparency, alphaPercent),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = colors.primary,
+                        // Design contract: the value is a readout, not an accent/action — neutral onSurface, not primary.
+                        color = colors.onSurface,
                         modifier = Modifier.width(120.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
@@ -1734,7 +1703,8 @@ private fun GlassEffectDialog(
                     Text(
                         stringResource(R.string.settings_surface_transparency, blurPercent),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = colors.primary,
+                        // Design contract: the value is a readout, not an accent/action — neutral onSurface, not primary.
+                        color = colors.onSurface,
                         modifier = Modifier.width(120.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
@@ -2001,7 +1971,8 @@ private fun CatchupTimeDialog(
                     Text(
                         utcOffsetLabel(offsetMinutes),
                         style = MaterialTheme.typography.headlineMedium,
-                        color = colors.primary,
+                        // Design contract: the value is a readout, not an accent/action — neutral onSurface, not primary.
+                        color = colors.onSurface,
                         modifier = Modifier.width(150.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
@@ -2048,55 +2019,17 @@ private fun EpgOffsetSettingDialog(
     onReset: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = OwnTVTheme.colors
-    val firstFocus = remember { FocusRequester() }
-    val doneFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).trapAllFocusExit().focusGroup(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(width = 480.dp, padding = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.content_epg_time_offset), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                stringResource(R.string.settings_epg_offset_dialog_description),
-                style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            Spacer(Modifier.height(22.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                // Dimmed, never disabled: a disabled button leaves the focus graph, so reaching a limit
-                // used to drop focus out of the dialog entirely. The adjust is clamped anyway.
-                StepButton("–", dimmed = offsetMinutes <= offsetRange.first, modifier = Modifier.focusRequester(firstFocus)) { onAdjust(-30) }
-                Text(
-                    epgShiftLabel(offsetMinutes),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = colors.primary,
-                    modifier = Modifier.width(150.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
-                StepButton("+", dimmed = offsetMinutes >= offsetRange.last) { onAdjust(30) }
-            }
-            Spacer(Modifier.height(24.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (offsetMinutes != 0) {
-                    // Reset removes itself from the row (the offset becomes 0), taking the focused
-                    // element with it — so hand focus to Done in the same click.
-                    OwnTVButton(
-                        stringResource(R.string.common_reset),
-                        onClick = { onReset(); runCatching { doneFocus.requestFocus() } },
-                        style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.weight(1f),
-                    )
-                }
-                OwnTVButton(stringResource(R.string.common_done), onClick = onDismiss, modifier = Modifier.weight(1f).focusRequester(doneFocus))
-            }
-        }
-    }
+    StepperDialog(
+        title = stringResource(R.string.content_epg_time_offset),
+        value = offsetMinutes,
+        step = 30,
+        min = offsetRange.first,
+        max = offsetRange.last,
+        format = { epgShiftLabel(it) },
+        onSet = { next -> onAdjust(next - offsetMinutes) },
+        onReset = onReset,
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
