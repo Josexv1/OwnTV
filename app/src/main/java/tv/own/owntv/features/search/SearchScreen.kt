@@ -181,7 +181,7 @@ private fun LauncherEmptyState(
         SectionLabel(stringResource(R.string.search_jump_to))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SearchIntent.entries.forEach { i ->
-                PillChip(label = i.displayLabel(), tonal = true) { onIntent(i) }
+                PillChip(label = i.displayLabel()) { onIntent(i) }
             }
         }
 
@@ -189,13 +189,13 @@ private fun LauncherEmptyState(
         if (recent.isNotEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SectionLabel(stringResource(R.string.search_recent))
-                PillChip(label = stringResource(R.string.search_clear), tonal = false, onClick = onClearRecent)
+                PillChip(label = stringResource(R.string.search_clear), onClick = onClearRecent)
             }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 recent.chunked(4).forEach { rowTerms ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         rowTerms.forEach { term ->
-                            PillChip(label = term, tonal = false, icon = OwnTVIcon.HISTORY) { onRecent(term) }
+                            PillChip(label = term, icon = OwnTVIcon.HISTORY) { onRecent(term) }
                         }
                     }
                 }
@@ -374,17 +374,17 @@ private fun DetailPane(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colors.surfaceContainerHigh, RoundedCornerShape(12.dp))
+                    .background(colors.primary, RoundedCornerShape(12.dp))
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OwnTVIcon(OwnTVIcon.PLAY, tint = colors.onSurface, modifier = Modifier.size(20.dp))
+                OwnTVIcon(OwnTVIcon.PLAY, tint = colors.onPrimary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     actionLabel,
                     style = MaterialTheme.typography.titleSmall,
-                    color = colors.onSurface,
+                    color = colors.onPrimary,
                 )
             }
         }
@@ -452,7 +452,6 @@ private fun ResultRow(
 @Composable
 private fun PillChip(
     label: String,
-    tonal: Boolean,
     icon: OwnTVIcon? = null,
     onClick: () -> Unit,
 ) {
@@ -462,22 +461,11 @@ private fun PillChip(
         shape = RoundedCornerShape(999.dp),
         contentAlignment = Alignment.Center,
         surface = GlassSurface.CARDS,
-    ) { focused ->
-        val fg = when {
-            focused -> colors.onPrimary
-            tonal -> colors.onPrimaryContainer
-            else -> colors.onSurface
-        }
+    ) { _ ->
+        val fg = colors.onSurface
         Row(
             modifier = Modifier
-                .background(
-                    when {
-                        focused -> colors.primary
-                        tonal -> colors.primaryContainer
-                        else -> colors.surfaceContainerHigh
-                    },
-                    RoundedCornerShape(999.dp),
-                )
+                .background(colors.surfaceContainerHigh, RoundedCornerShape(999.dp))
                 .padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
