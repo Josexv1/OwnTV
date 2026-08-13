@@ -354,7 +354,7 @@ private fun OnNowChannelItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            ChannelLogoBadge(channel = channel, focused = focused)
+            ChannelLogoBadge(channel = channel)
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -438,7 +438,6 @@ private fun visibleStartFor(
 @Composable
 private fun ChannelTextBadge(
     channel: ChannelEntity,
-    focused: Boolean,
 ) {
     val colors = OwnTVTheme.colors
     val text = channel.number?.toString() ?: channel.name.firstOrNull()?.uppercase().orEmpty()
@@ -463,14 +462,13 @@ private fun ChannelTextBadge(
 @Composable
 private fun ChannelLogoBadge(
     channel: ChannelEntity,
-    focused: Boolean,
 ) {
     val colors = OwnTVTheme.colors
     Box(
         modifier = Modifier
             .size(46.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (focused) colors.primaryContainer else colors.surfaceContainerLowest),
+            .background(colors.surfaceContainerLowest),
         contentAlignment = Alignment.Center,
     ) {
         if (!channel.displayLogoUrl.isNullOrBlank()) {
@@ -481,7 +479,7 @@ private fun ChannelLogoBadge(
                 contentScale = ContentScale.Fit,
             )
         } else {
-            ChannelTextBadge(channel = channel, focused = focused)
+            ChannelTextBadge(channel = channel)
         }
     }
 }
