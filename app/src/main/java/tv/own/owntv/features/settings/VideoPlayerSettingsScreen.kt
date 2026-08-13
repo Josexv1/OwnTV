@@ -41,7 +41,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -62,6 +61,7 @@ import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.theme.Dimens
 import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.components.roundedPanel
+import tv.own.owntv.ui.components.StepperDialog
 import tv.own.owntv.ui.components.trapAllFocusExit
 import tv.own.owntv.ui.theme.OwnTVTheme
 
@@ -791,68 +791,6 @@ private fun ExternalPlayerDialog(
     }
 }
 
-/** A +/- stepper dialog for an integer value. */
-@Composable
-internal fun StepperDialog(
-    title: String,
-    value: Int,
-    step: Int,
-    min: Int,
-    max: Int,
-    format: @Composable (Int) -> String,
-    onSet: (Int) -> Unit,
-    onReset: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val colors = OwnTVTheme.colors
-    val frPlus = remember { FocusRequester() }
-    val frMinus = remember { FocusRequester() }
-    val plusEnabled = value < max
-    val minusEnabled = value > min
-    // "+" is the natural landing spot, but at [max] it is disabled and so cannot take focus. Focus is
-    // trapped inside this dialog, so silently failing to focus anything left the D-pad dead with only
-    // Back working — the reported "+/- unreachable" at the top of the range. Land on whichever stepper
-    // is usable, and hand focus over if the one holding it becomes disabled mid-adjustment.
-    LaunchedEffect(Unit) { runCatching { (if (plusEnabled) frPlus else frMinus).requestFocus() } }
-    LaunchedEffect(plusEnabled) { if (!plusEnabled && minusEnabled) runCatching { frMinus.requestFocus() } }
-    LaunchedEffect(minusEnabled) { if (!minusEnabled && plusEnabled) runCatching { frPlus.requestFocus() } }
-    BackHandler { onDismiss() }
-    tv.own.owntv.ui.theme.PopupFontTheme {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).trapAllFocusExit().focusGroup(), contentAlignment = Alignment.Center) {
-        Column(
-            modifier = Modifier.dialogPanel(width = 360.dp, corner = 16.dp, padding = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                StepBtn("–", enabled = minusEnabled, modifier = Modifier.focusRequester(frMinus)) { onSet((value - step).coerceAtLeast(min)) }
-                Text(
-                    format(value),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.primary,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
-                StepBtn("+", enabled = plusEnabled, modifier = Modifier.focusRequester(frPlus)) { onSet((value + step).coerceAtMost(max)) }
-            }
-            Spacer(Modifier.height(14.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OwnTVButton(stringResource(R.string.common_reset), onClick = onReset, style = OwnTVButtonStyle.SECONDARY)
-                Spacer(Modifier.weight(1f))
-                OwnTVButton(stringResource(R.string.common_done), onClick = onDismiss)
-            }
-        }
-    }
-    }
-}
-
 /** The quick text-color presets offered above the full picker (label → "#RRGGBB"). */
 private val SUB_COLOR_PRESETS: List<Pair<Int, String>> = listOf(
     R.string.settings_subtitle_color_white to "#FFFFFF",
@@ -1330,7 +1268,8 @@ private fun SubtitleTransparencyDialog(
                     }
                     Text(
                         subOpacityLabel(bgOpacity), style = MaterialTheme.typography.titleMedium,
-                        color = colors.primary, modifier = Modifier.width(100.dp), textAlign = TextAlign.Center,
+                        // Design contract: the value is the sole readout here, not an accent/action — neutral onSurface, not primary.
+                        color = colors.onSurface, modifier = Modifier.width(100.dp), textAlign = TextAlign.Center,
                     )
                     StepBtn("+", enabled = plusEnabled, modifier = Modifier.focusRequester(frPlus)) {
                         onSet(
