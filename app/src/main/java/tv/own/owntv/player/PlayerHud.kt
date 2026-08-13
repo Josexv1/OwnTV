@@ -645,7 +645,9 @@ fun PlayerHud(
         when {
             error != null -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 // Scrim hugs only the bare-text readout — the Retry button below stays unscrimmed.
-                Column(Modifier.hudTextScrim(), horizontalAlignment = Alignment.CenterHorizontally) {
+                // Width is capped on the scrimmed column itself so the scrim hugs the text up to the
+                // cap instead of stretching to a fraction of the whole screen.
+                Column(Modifier.hudTextScrim().widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.player_playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
                     Spacer(Modifier.height(8.dp))
                     error?.let {
@@ -656,7 +658,7 @@ fun PlayerHud(
                     errorInfo?.let { info ->
                         info.reason?.let {
                             Spacer(Modifier.height(8.dp))
-                            Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                            Text(it.displayText(), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f), textAlign = TextAlign.Center)
                         }
                         info.spec?.let {
                             Spacer(Modifier.height(4.dp))
@@ -664,7 +666,7 @@ fun PlayerHud(
                         }
                         info.raw?.takeIf { it.isNotBlank() }?.let {
                             Spacer(Modifier.height(4.dp))
-                            Text(stringResource(R.string.player_raw_error, it), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
+                            Text(stringResource(R.string.player_raw_error, it), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -750,55 +752,64 @@ private fun TopBar(
             Spacer(Modifier.width(14.dp))
         }
         Column(Modifier.weight(1f)) {
+            // Hoisted out of chipRow so the empty-metadata guard below can see whether the chip row
+            // will actually render anything, without duplicating its content logic.
+            val durMin = (duration / 60000)
+            val chipParts = buildList {
+                meta.year?.takeIf { it.isNotBlank() }?.let { add(it) }
+                if (!isLive && durMin > 0) add(stringResource(R.string.player_duration_minutes, durMin))
+                addAll(chips) // aspect · resolution · fps · audio
+            }
             val chipRow: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val durMin = (duration / 60000)
-                    val parts = buildList {
-                        meta.year?.takeIf { it.isNotBlank() }?.let { add(it) }
-                        if (!isLive && durMin > 0) add(stringResource(R.string.player_duration_minutes, durMin))
-                        addAll(chips) // aspect · resolution · fps · audio
-                    }
-                    parts.forEachIndexed { i, label ->
+                    chipParts.forEachIndexed { i, label ->
                         if (i > 0) Box(Modifier.size(3.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f)))
                         Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.5f))
                     }
                     if (isLive) {
-                        if (parts.isNotEmpty()) Box(Modifier.size(3.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f)))
+                        if (chipParts.isNotEmpty()) Box(Modifier.size(3.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f)))
                         LiveBadge()
                     }
                 }
             }
-            // Scrim hugs just the title+chips text stack, not the full-width strip the outer
-            // weight(1f) Column occupies (that width is reserved for the trailing Now/Next guide).
-            Column(Modifier.hudTextScrim()) {
-                // Live stacks the technical chips ABOVE the channel name; VOD keeps title-then-chips.
-                if (isLive) {
-                    chipRow()
-                    Spacer(Modifier.height(2.dp))
-                    // Channel number ahead of the name — this is where you look to learn the number of a
-                    // channel you arrived at by zapping. meta.subtitle carries it ("#123") only while the
-                    // "Channel numbers" setting is on, so an off setting leaves the name alone.
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        meta.subtitle?.takeIf { it.isNotBlank() }?.let {
-                            Text(
-                                it,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White.copy(alpha = 0.45f),
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Spacer(Modifier.width(10.dp))
+            // Live always renders the LiveBadge chip regardless of chipParts, so its chip row is never
+            // truly empty; only VOD can have an empty chip row. Skipping the scrim (and the stack it
+            // wraps) when there's neither a title nor chip content avoids painting an empty scrim box —
+            // this branch only fires when metadata is empty, so it never changes layout when it exists.
+            val chipRowEmpty = !isLive && chipParts.isEmpty()
+            if (!(displayTitle.isEmpty() && chipRowEmpty)) {
+                // Scrim hugs just the title+chips text stack, not the full-width strip the outer
+                // weight(1f) Column occupies (that width is reserved for the trailing Now/Next guide).
+                Column(Modifier.hudTextScrim()) {
+                    // Live stacks the technical chips ABOVE the channel name; VOD keeps title-then-chips.
+                    if (isLive) {
+                        chipRow()
+                        Spacer(Modifier.height(2.dp))
+                        // Channel number ahead of the name — this is where you look to learn the number of a
+                        // channel you arrived at by zapping. meta.subtitle carries it ("#123") only while the
+                        // "Channel numbers" setting is on, so an off setting leaves the name alone.
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            meta.subtitle?.takeIf { it.isNotBlank() }?.let {
+                                Text(
+                                    it,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White.copy(alpha = 0.45f),
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(Modifier.width(10.dp))
+                            }
+                            Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    } else {
+                        vodSubtitle?.let {
+                            Text(it, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.45f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Spacer(Modifier.height(2.dp))
+                        chipRow()
                     }
-                } else {
-                    vodSubtitle?.let {
-                        Text(it, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.45f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    Text(displayTitle, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Spacer(Modifier.height(2.dp))
-                    chipRow()
                 }
             }
         }
@@ -1118,7 +1129,7 @@ private fun NextEpisodeCard(
         Text(
             stringResource(R.string.player_next_episode, seconds),
             style = MaterialTheme.typography.labelLarge,
-            color = colors.primary,
+            color = colors.onSurface,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(4.dp))
@@ -1296,6 +1307,10 @@ private fun LiveTimelineBar(offsetSec: Int, onScrub: (Int) -> Unit) {
         onKeyRight = { onScrub(-LIVE_SCRUB_STEP_SEC) },  // toward live
         liveMarker = true,
         bubble = {
+            // Same floating bubble as the VOD seek bar above, but placed with bottom padding instead of a
+            // negative offset: this bar's parent isn't height-constrained the way the VOD bar's is, so padding
+            // is enough to clear the thumb. The two placements land ~2dp apart historically — deliberately
+            // preserved rather than unified, since re-deriving one from the other risks nudging either bar.
             Box(Modifier.padding(bottom = 30.dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
                 Text(
                     if (offsetSec <= 1) stringResource(R.string.player_live) else stringResource(R.string.player_live_offset, mmss(offsetSec)),
@@ -1417,7 +1432,8 @@ private fun TrackDialog(
                     StepButton(stringResource(R.string.common_minus), enabled = (audioDelayMs ?: 0) > -5_000) { onAdjustAudioDelay(-50) }
                     Text(
                         formatDelay(audioDelayMs ?: 0),
-                        style = MaterialTheme.typography.bodyMedium, color = colors.primary,
+                        // Neutral value readout — phase-2 stepper contract.
+                        style = MaterialTheme.typography.bodyMedium, color = colors.onSurface,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         modifier = Modifier.widthIn(min = 78.dp, max = 140.dp),
                         maxLines = 1,
@@ -1497,7 +1513,7 @@ private fun VolumeDialog(player: PlaybackEngine, onDismiss: () -> Unit) {
                 Spacer(Modifier.height(20.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     StepButton(stringResource(R.string.common_minus), enabled = volume > 0, modifier = Modifier.focusRequester(focus)) { player.adjustVolume(-5) }
-                    Text(stringResource(R.string.player_percent, volume), style = MaterialTheme.typography.headlineLarge, color = colors.primary, modifier = Modifier.width(120.dp), textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.player_percent, volume), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface, modifier = Modifier.width(120.dp), textAlign = TextAlign.Center)
                     StepButton(stringResource(R.string.common_plus), enabled = volume < 150) { player.adjustVolume(5) }
                 }
                 Spacer(Modifier.height(22.dp))
@@ -1528,7 +1544,7 @@ private fun SubtitleTimingDialog(player: PlaybackEngine, onDismiss: () -> Unit) 
                 Column(Modifier.dialogPanel(width = 560.dp, padding = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.player_subtitle_timing), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
                     Spacer(Modifier.height(10.dp))
-                    Text(formatSubDelay(delay), style = MaterialTheme.typography.headlineLarge, color = colors.primary)
+                    Text(formatSubDelay(delay), style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         when {
