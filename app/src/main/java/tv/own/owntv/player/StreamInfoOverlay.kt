@@ -59,7 +59,7 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
         Text(
             stringResource(R.string.player_stream_info),
             style = MaterialTheme.typography.labelMedium,
-            color = colors.primary,
+            color = colors.onSurface,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.width(2.dp))

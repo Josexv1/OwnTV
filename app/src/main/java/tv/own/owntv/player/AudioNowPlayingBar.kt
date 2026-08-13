@@ -322,8 +322,9 @@ private fun AudioBtn(
     iconDp: Int = 13,
     onClick: () -> Unit,
 ) {
-    // White-on-dark circles; focus = accent ring (built-in focus border) + accent icon, background
-    // stays dark — outline-only focus per owner spec (mini-player mock in audio-hud-options.html).
+    // White-on-dark circles; focus = accent ring (built-in focus border) only — icon tint stays
+    // neutral, background stays dark — outline-only focus per owner spec (mini-player mock in
+    // audio-hud-options.html).
     val colors = OwnTVTheme.colors
     FocusableSurface(
         onClick = { if (enabled) onClick() },
@@ -341,8 +342,8 @@ private fun AudioBtn(
         unfocusedContainerColor = Color.Transparent,
         selectedContainerColor = Color.Transparent,
         contentAlignment = Alignment.Center,
-    ) { focused ->
-        OwnTVIcon(icon, tint = if (focused) colors.primary else if (colors.isDark) Color.White else colors.onSurface, filled = true, modifier = Modifier.size(iconDp.dp))
+    ) { _ ->
+        OwnTVIcon(icon, tint = if (colors.isDark) Color.White else colors.onSurface, filled = true, modifier = Modifier.size(iconDp.dp))
     }
 }
 
