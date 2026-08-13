@@ -40,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
@@ -81,28 +80,27 @@ import tv.own.owntv.ui.components.InAppToast
 import tv.own.owntv.ui.components.rememberInAppToast
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
-import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.PosterCard
 import tv.own.owntv.ui.components.ResumeDialog
 import tv.own.owntv.ui.components.SetTmdbNameDialog
 import tv.own.owntv.ui.components.TrailerPlayerScreen
 import tv.own.owntv.ui.components.chNavPaging
-import tv.own.owntv.ui.components.longPressMenuGuard
-import tv.own.owntv.ui.components.dialogPanel
 import tv.own.owntv.ui.components.gridFocusTarget
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import tv.own.owntv.ui.components.SearchBar
-import tv.own.owntv.ui.components.trapAllFocusExit
 import tv.own.owntv.ui.components.trapVerticalFocusExit
 import tv.own.owntv.ui.components.SortChip
 import tv.own.owntv.ui.components.formatCount
 import tv.own.owntv.ui.components.ContentPanelFill
 import tv.own.owntv.ui.components.PreviewPanelFill
 import tv.own.owntv.ui.components.roundedPanel
+import tv.own.owntv.ui.components.CategoryHeader
+import tv.own.owntv.ui.components.MediaContextMenu
+import tv.own.owntv.ui.components.MediaListRow
+import tv.own.owntv.ui.components.MenuEntry
 import tv.own.owntv.ui.theme.Dimens
-import tv.own.owntv.ui.theme.GlassSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.format.localizedInteger
 
@@ -366,12 +364,9 @@ fun MoviesScreen(
                 .focusGroup()
                 .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
         ) {
-            Text(stringResource(R.string.content_section_category, stringResource(R.string.common_nav_movies), selectedLabel), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
-            Spacer(Modifier.height(4.dp))
-            Text(
-                pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
-                style = MaterialTheme.typography.titleMedium,
-                color = OwnTVTheme.colors.onSurfaceVariant,
+            CategoryHeader(
+                title = stringResource(R.string.content_section_category, stringResource(R.string.common_nav_movies), selectedLabel),
+                subtitle = pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
             )
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -712,63 +707,41 @@ private fun MovieContextMenu(
     onDeleteSubtitles: (() -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
-    val colors = OwnTVTheme.colors
-    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    androidx.activity.compose.BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))
-            .trapAllFocusExit().focusGroup()
-            .longPressMenuGuard(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(
-                if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
-                onClick = onToggleFavorite, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.FAVORITE,
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            )
-            OwnTVButton(
-                if (watched) stringResource(R.string.content_mark_unwatched) else stringResource(R.string.content_mark_watched),
-                onClick = onToggleWatched, style = OwnTVButtonStyle.SECONDARY,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (canMove) OwnTVButton(stringResource(R.string.content_move), onClick = onMove, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (canMove) OwnTVButton(stringResource(R.string.content_move_to_category), onClick = onMoveToCategory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (isHistory) OwnTVButton(stringResource(R.string.content_remove_history), onClick = onRemoveFromHistory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.common_hide), onClick = onHide, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.content_download), onClick = onDownload, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.DOWNLOADS, modifier = Modifier.fillMaxWidth())
-            // Delete subtitles — only when this movie has downloaded OpenSubtitles subs (§11).
-            onDeleteSubtitles?.let {
-                OwnTVButton(stringResource(R.string.content_delete_subtitles), onClick = it, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.SUBTITLE, modifier = Modifier.fillMaxWidth())
-            }
-            // Phase B: one-off external playback, independent of the global "External player" toggle.
-            OwnTVButton(stringResource(R.string.content_play_external), onClick = onPlayExternal, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.PLAY, modifier = Modifier.fillMaxWidth())
-            // TMDB Details — only when a confident match resolved (§11.1).
-            if (hasTmdbDetails) {
-                Spacer(Modifier.height(4.dp))
-                OwnTVButton(stringResource(R.string.content_tmdb_details), onClick = onShowDetails, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.MENU, modifier = Modifier.fillMaxWidth())
-            }
-            // Play Trailer (§7.3 U4) — only when TMDB actually has a trailer for this title (§11.1 gating).
-            trailerKey?.let { key ->
-                OwnTVButton(stringResource(R.string.content_play_trailer), onClick = { onPlayTrailer(key) }, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            }
-            // Refetch TMDB details (§11.2 U5a) — always available when enrichment is on, so a "no match"
-            // (7-day negative cache) or a stale match can be cleared and re-searched immediately.
-            if (canRefetchTmdb) {
-                OwnTVButton(stringResource(R.string.content_refetch_tmdb), onClick = onRefetch, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-                // Set TMDB name (§11.2 U5b) — hand-type the exact title to override the auto-match.
-                OwnTVButton(stringResource(R.string.content_set_tmdb_name), onClick = onSetTmdbName, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            }
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(stringResource(R.string.content_close), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-        }
+    val entries = mutableListOf<MenuEntry>()
+    entries += MenuEntry(
+        if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
+        onToggleFavorite, OwnTVIcon.FAVORITE,
+    )
+    entries += MenuEntry(
+        if (watched) stringResource(R.string.content_mark_unwatched) else stringResource(R.string.content_mark_watched),
+        onToggleWatched,
+    )
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move), onMove)
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move_to_category), onMoveToCategory)
+    if (isHistory) entries += MenuEntry(stringResource(R.string.content_remove_history), onRemoveFromHistory)
+    entries += MenuEntry(stringResource(R.string.common_hide), onHide)
+    entries += MenuEntry(stringResource(R.string.content_download), onDownload, OwnTVIcon.DOWNLOADS)
+    // Delete subtitles — only when this movie has downloaded OpenSubtitles subs (§11).
+    onDeleteSubtitles?.let { entries += MenuEntry(stringResource(R.string.content_delete_subtitles), it, OwnTVIcon.SUBTITLE) }
+    // Phase B: one-off external playback, independent of the global "External player" toggle.
+    entries += MenuEntry(stringResource(R.string.content_play_external), onPlayExternal, OwnTVIcon.PLAY)
+    // TMDB Details — only when a confident match resolved (§11.1).
+    if (hasTmdbDetails) entries += MenuEntry(stringResource(R.string.content_tmdb_details), onShowDetails, OwnTVIcon.MENU)
+    // Play Trailer (§7.3 U4) — only when TMDB actually has a trailer for this title (§11.1 gating).
+    trailerKey?.let { key -> entries += MenuEntry(stringResource(R.string.content_play_trailer), { onPlayTrailer(key) }) }
+    // Refetch TMDB details (§11.2 U5a) — always available when enrichment is on, so a "no match"
+    // (7-day negative cache) or a stale match can be cleared and re-searched immediately.
+    if (canRefetchTmdb) {
+        entries += MenuEntry(stringResource(R.string.content_refetch_tmdb), onRefetch)
+        // Set TMDB name (§11.2 U5b) — hand-type the exact title to override the auto-match.
+        entries += MenuEntry(stringResource(R.string.content_set_tmdb_name), onSetTmdbName)
     }
+    MediaContextMenu(
+        title = title,
+        entries = entries,
+        onDismiss = onDismiss,
+        closeLabel = stringResource(R.string.content_close),
+    )
 }
 
 @Composable
@@ -830,7 +803,7 @@ private fun MovieDetailsPane(
             Text(
                 stringResource(R.string.content_resume_at, tv.own.owntv.ui.components.formatTimestamp(resumePositionMs)),
                 style = MaterialTheme.typography.labelMedium,
-                color = colors.primary,
+                color = colors.onSurfaceVariant,
             )
             Spacer(Modifier.height(6.dp))
         }
@@ -928,20 +901,14 @@ private fun MovieListRow(
     modifier: Modifier = Modifier,
 ) {
     val colors = OwnTVTheme.colors
-    FocusableSurface(
+    val metaText = metaLine(movie)
+    MediaListRow(
+        title = movie.name,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        contentAlignment = Alignment.CenterStart,
-        surface = GlassSurface.CARDS,
-    ) { focused ->
-        LaunchedEffect(focused) { if (focused) onFocus() }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        modifier = modifier.onFocusChanged { if (it.hasFocus) onFocus() },
+        dimmed = completed,
+        leading = {
             Box(
                 modifier = Modifier.size(width = 44.dp, height = 62.dp).clip(RoundedCornerShape(6.dp)).background(colors.surfaceContainerLowest),
                 contentAlignment = Alignment.Center,
@@ -952,34 +919,26 @@ private fun MovieListRow(
                     OwnTVIcon(OwnTVIcon.MOVIES, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
                 }
             }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    movie.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = when {
-                        focused -> colors.primary
-                        completed -> colors.onSurfaceVariant
-                        else -> colors.onSurface
-                    },
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                )
-                val meta = metaLine(movie)
-                if (meta.isNotBlank()) {
-                    Text(meta, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        },
+        meta = if (metaText.isNotBlank()) {
+            { Text(metaText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        } else null,
+        trailing = if (completed || isFavorite) {
+            {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (completed) {
+                        Box(
+                            modifier = Modifier.size(20.dp).clip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.onSurface)
+                        }
+                    }
+                    if (isFavorite) {
+                        OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
-            if (completed) {
-                Box(
-                    modifier = Modifier.size(20.dp).clip(RoundedCornerShape(50)).background(colors.primary),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.onPrimary)
-                }
-            }
-            if (isFavorite) {
-                OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.primary, modifier = Modifier.size(18.dp))
-            }
-        }
-    }
+        } else null,
+    )
 }

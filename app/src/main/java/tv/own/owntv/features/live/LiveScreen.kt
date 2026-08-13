@@ -408,19 +408,9 @@ fun LiveScreen(
                 .focusGroup()
                 .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
         ) {
-            Text(
-                stringResource(R.string.content_section_category, stringResource(R.string.common_nav_live_tv), selectedLabel),
-                style = MaterialTheme.typography.headlineMedium,
-                color = OwnTVTheme.colors.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                pluralStringResource(R.plurals.content_count_channels, count, selectedLabel, count),
-                style = MaterialTheme.typography.titleMedium,
-                color = OwnTVTheme.colors.primary,
-                fontWeight = FontWeight.Bold,
+            tv.own.owntv.ui.components.CategoryHeader(
+                title = stringResource(R.string.content_section_category, stringResource(R.string.common_nav_live_tv), selectedLabel),
+                subtitle = pluralStringResource(R.plurals.content_count_channels, count, selectedLabel, count),
             )
             Spacer(Modifier.height(14.dp))
 
@@ -648,64 +638,40 @@ private fun ChannelRow(
     modifier: Modifier = Modifier,
 ) {
     val colors = OwnTVTheme.colors
-    FocusableSurface(
+    tv.own.owntv.ui.components.MediaListRow(
+        title = channel.name,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .onFocusChanged { if (it.hasFocus) onFocus() },
-        shape = RoundedCornerShape(12.dp),
-        surface = GlassSurface.CARDS,
-        contentAlignment = Alignment.CenterStart,
-    ) { focused ->
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Box(
-                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerLowest),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (!channel.displayLogoUrl.isNullOrBlank()) {
-                    AsyncImage(model = channel.displayLogoUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
-                } else {
-                    OwnTVIcon(OwnTVIcon.LIVE_TV, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+        modifier = modifier.onFocusChanged { if (it.hasFocus) onFocus() },
+        leading = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Box(
+                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerLowest),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (!channel.displayLogoUrl.isNullOrBlank()) {
+                        AsyncImage(model = channel.displayLogoUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
+                    } else {
+                        OwnTVIcon(OwnTVIcon.LIVE_TV, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                    }
                 }
-            }
-            // Provider channel number, in a fixed-width strip so every name below starts at the same x
-            // however many digits the number has. Hidden entirely when the setting is off.
-            if (showNumber) {
-                tv.own.owntv.ui.components.ChannelNumberColumn(
-                    number = channel.number,
-                    color = colors.onSurfaceVariant,
-                )
-            }
-            // Name + (optional) current programme. The subtitle is rendered only when guide data exists,
-            // so channels without EPG look exactly as before — single line.
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    channel.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (focused) colors.primary else colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (nowTitle != null) {
-                    Text(
-                        nowTitle,
-                        style = MaterialTheme.typography.bodySmall,
+                // Provider channel number, in a fixed-width strip so every name below starts at the same x
+                // however many digits the number has. Hidden entirely when the setting is off.
+                if (showNumber) {
+                    tv.own.owntv.ui.components.ChannelNumberColumn(
+                        number = channel.number,
                         color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
-            if (isFavorite) {
-                OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, filled = true, modifier = Modifier.size(20.dp))
-            }
-        }
-    }
+        },
+        // Current programme title, rendered only when guide data exists so channels without EPG look
+        // exactly as before — single line.
+        meta = nowTitle?.let { title -> { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+        trailing = if (isFavorite) {
+            { OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, filled = true, modifier = Modifier.size(20.dp)) }
+        } else null,
+    )
 }
 
 /** Long-press quick actions for a Live channel (favourite / rename / hide / match EPG / EPG offset / catch-up / move / remove history). */
@@ -1252,7 +1218,7 @@ internal fun EpgOffsetDialog(
                 Text(
                     liveEpgShiftLabel(minutes),
                     style = MaterialTheme.typography.titleLarge,
-                    color = colors.primary,
+                    color = colors.onSurfaceVariant,
                     modifier = Modifier.width(120.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )

@@ -75,7 +75,11 @@ import tv.own.owntv.features.settings.rememberPanelShares
 import tv.own.owntv.features.shell.components.CategoryRail
 import tv.own.owntv.features.shell.components.PreviewPane
 import tv.own.owntv.features.shell.components.RailCategory
+import tv.own.owntv.ui.components.CategoryHeader
 import tv.own.owntv.ui.components.FocusableSurface
+import tv.own.owntv.ui.components.MediaContextMenu
+import tv.own.owntv.ui.components.MediaListRow
+import tv.own.owntv.ui.components.MenuEntry
 import tv.own.owntv.ui.components.MoveOrderOverlay
 import tv.own.owntv.ui.components.InAppToast
 import tv.own.owntv.ui.components.rememberInAppToast
@@ -169,49 +173,35 @@ private fun SeriesContextMenu(
     onPlayTrailer: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = OwnTVTheme.colors
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f))
-            .trapAllFocusExit().focusGroup()
-            .longPressMenuGuard(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(
-                if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
-                onClick = onToggleFavorite, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.FAVORITE,
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            )
-            if (canMove) OwnTVButton(stringResource(R.string.content_move), onClick = onMove, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (canMove) OwnTVButton(stringResource(R.string.content_move_to_category), onClick = onMoveToCategory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (isHistory) OwnTVButton(stringResource(R.string.content_remove_history), onClick = onRemoveFromHistory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.common_hide), onClick = onHide, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.content_download_all_episodes), onClick = onDownload, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.DOWNLOADS, modifier = Modifier.fillMaxWidth())
-            if (hasTmdbDetails) {
-                OwnTVButton(stringResource(R.string.content_tmdb_details), onClick = onShowDetails, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.MENU, modifier = Modifier.fillMaxWidth())
-            }
-            // Play Trailer (§7.3 U4) — only when TMDB actually has a trailer for this show (§11.1 gating).
-            trailerKey?.let { key ->
-                OwnTVButton(stringResource(R.string.content_play_trailer), onClick = { onPlayTrailer(key) }, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            }
-            // Refetch TMDB details (§11.2 U5a) — clear a wrong/stale match (or a 7-day "no match" cache) and re-search.
-            if (canRefetchTmdb) {
-                OwnTVButton(stringResource(R.string.content_refetch_tmdb), onClick = onRefetch, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-                // Set TMDB name (§11.2 U5b) — hand-type the exact TMDB title when the auto-match is wrong.
-                OwnTVButton(stringResource(R.string.content_set_tmdb_name), onClick = onSetTmdbName, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            }
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(stringResource(R.string.content_close), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-        }
+    val entries = mutableListOf<MenuEntry>()
+    entries += MenuEntry(
+        if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
+        onToggleFavorite, OwnTVIcon.FAVORITE,
+    )
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move), onMove)
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move_to_category), onMoveToCategory)
+    if (isHistory) entries += MenuEntry(stringResource(R.string.content_remove_history), onRemoveFromHistory)
+    entries += MenuEntry(stringResource(R.string.common_hide), onHide)
+    entries += MenuEntry(stringResource(R.string.content_download_all_episodes), onDownload, OwnTVIcon.DOWNLOADS)
+    if (hasTmdbDetails) {
+        entries += MenuEntry(stringResource(R.string.content_tmdb_details), onShowDetails, OwnTVIcon.MENU)
     }
+    // Play Trailer (§7.3 U4) — only when TMDB actually has a trailer for this show (§11.1 gating).
+    trailerKey?.let { key ->
+        entries += MenuEntry(stringResource(R.string.content_play_trailer), { onPlayTrailer(key) })
+    }
+    // Refetch TMDB details (§11.2 U5a) — clear a wrong/stale match (or a 7-day "no match" cache) and re-search.
+    if (canRefetchTmdb) {
+        entries += MenuEntry(stringResource(R.string.content_refetch_tmdb), onRefetch)
+        // Set TMDB name (§11.2 U5b) — hand-type the exact TMDB title when the auto-match is wrong.
+        entries += MenuEntry(stringResource(R.string.content_set_tmdb_name), onSetTmdbName)
+    }
+    MediaContextMenu(
+        title = title,
+        entries = entries,
+        onDismiss = onDismiss,
+        closeLabel = stringResource(R.string.content_close),
+    )
 }
 
 @Composable
@@ -445,9 +435,10 @@ private fun SeriesGrid(
                 .focusGroup()
                 .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
         ) {
-            Text(stringResource(R.string.content_section_category, stringResource(R.string.common_nav_series), selectedLabel), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
-            Spacer(Modifier.height(4.dp))
-            Text(pluralStringResource(R.plurals.content_count_series, count, selectedLabel, count), style = MaterialTheme.typography.titleMedium, color = OwnTVTheme.colors.onSurfaceVariant)
+            CategoryHeader(
+                title = stringResource(R.string.content_section_category, stringResource(R.string.common_nav_series), selectedLabel),
+                subtitle = pluralStringResource(R.plurals.content_count_series, count, selectedLabel, count),
+            )
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SearchBar(query = searchQuery, onQueryChange = vm::setSearchQuery, placeholder = stringResource(R.string.content_search_series, selectedLabel), modifier = Modifier.weight(1f))
@@ -836,7 +827,7 @@ private fun EpisodeDetailPane(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(colors.primaryContainer.copy(alpha = 0.22f)).padding(12.dp),
             ) {
-                Text(stringResource(R.string.content_next_up), style = MaterialTheme.typography.labelSmall, color = colors.primary)
+                Text(stringResource(R.string.content_next_up), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
                 Spacer(Modifier.height(4.dp))
                 Text(stringResource(R.string.content_season_episode_title, nup.seasonNumber, nup.episodeNumber, episodeDisplayTitle(nup)), style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (nextUpPositionMs > 0) {
@@ -1092,7 +1083,7 @@ private fun EpisodeView(
             .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            OwnTVButton(label = stringResource(R.string.common_back), onClick = { vm.closeSeries() }, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.CHEVRON)
+            OwnTVButton(label = stringResource(R.string.common_back), onClick = { vm.closeSeries() }, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.BACK)
             Text(series.name, style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
             Spacer(Modifier.weight(1f))
             OwnTVButton(
@@ -1397,11 +1388,9 @@ private fun EpisodeRow(
                 Text(
                     displayTitle,
                     style = MaterialTheme.typography.titleMedium,
-                    color = when {
-                        focused -> colors.primary
-                        completed -> colors.onSurfaceVariant
-                        else -> colors.onSurface
-                    },
+                    // Semantic de-emphasis only — never keyed off focus (the white focus ring is the
+                    // sole focus signal; matches the `dimmed` contract MediaListRow enforces elsewhere).
+                    color = if (completed) colors.onSurfaceVariant else colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -1437,20 +1426,16 @@ private fun SeriesListRow(
     modifier: Modifier = Modifier,
 ) {
     val colors = OwnTVTheme.colors
-    FocusableSurface(
+    val meta = buildList {
+        series.year?.let { add(localizedInteger(it, grouping = false)) }
+        series.rating?.takeIf { it > 0 }?.let { add(stringResource(R.string.content_rating, it)) }
+    }.joinToString(stringResource(R.string.content_metadata_separator))
+    MediaListRow(
+        title = series.name,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        contentAlignment = Alignment.CenterStart,
-        surface = GlassSurface.CARDS,
-    ) { focused ->
-        LaunchedEffect(focused) { if (focused) onFocus() }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        modifier = modifier.onFocusChanged { if (it.hasFocus) onFocus() },
+        leading = {
             Box(
                 modifier = Modifier.size(width = 44.dp, height = 62.dp).clip(RoundedCornerShape(6.dp)).background(colors.surfaceContainerLowest),
                 contentAlignment = Alignment.Center,
@@ -1461,27 +1446,14 @@ private fun SeriesListRow(
                     OwnTVIcon(OwnTVIcon.SERIES, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
                 }
             }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    series.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (focused) colors.primary else colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                val meta = buildList {
-                    series.year?.let { add(localizedInteger(it, grouping = false)) }
-                    series.rating?.takeIf { it > 0 }?.let { add(stringResource(R.string.content_rating, it)) }
-                }.joinToString(stringResource(R.string.content_metadata_separator))
-                if (meta.isNotBlank()) {
-                    Text(meta, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-            if (isFavorite) {
-                OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.primary, modifier = Modifier.size(18.dp))
-            }
-        }
-    }
+        },
+        meta = if (meta.isNotBlank()) {
+            { Text(meta, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        } else null,
+        trailing = if (isFavorite) {
+            { OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, modifier = Modifier.size(18.dp)) }
+        } else null,
+    )
 }
 
 /**
