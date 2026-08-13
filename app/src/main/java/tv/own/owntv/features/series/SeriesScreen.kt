@@ -1448,7 +1448,7 @@ private fun SeriesListRow(
             }
         },
         meta = if (meta.isNotBlank()) {
-            { Text(meta) }
+            { Text(meta, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         } else null,
         trailing = if (isFavorite) {
             { OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, modifier = Modifier.size(18.dp)) }

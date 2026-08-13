@@ -25,6 +25,12 @@ import tv.own.owntv.ui.theme.OwnTVTheme
  * is the sole focus signal. There is deliberately no focused-color parameter. [selected] maps to
  * the sanctioned selected treatment (selection ≠ focus). [dimmed] = semantic de-emphasis for
  * consumed/watched items; never focus-dependent.
+ *
+ * [meta] content is responsible for its own line clamping — the slot only supplies color and
+ * typography via [ProvideTextStyle]/[LocalContentColor], neither of which carries `maxLines` or
+ * `overflow`. Callers must pass `maxLines = 1, overflow = TextOverflow.Ellipsis` on their meta
+ * [Text] so arbitrary provider text (e.g. a long Live now-playing EPG title) can't wrap and break
+ * the row's uniform height.
  */
 @Composable
 fun MediaListRow(

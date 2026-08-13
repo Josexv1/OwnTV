@@ -921,7 +921,7 @@ private fun MovieListRow(
             }
         },
         meta = if (metaText.isNotBlank()) {
-            { Text(metaText) }
+            { Text(metaText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         } else null,
         trailing = if (completed || isFavorite) {
             {

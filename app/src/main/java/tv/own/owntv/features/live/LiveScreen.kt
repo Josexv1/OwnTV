@@ -667,7 +667,7 @@ private fun ChannelRow(
         },
         // Current programme title, rendered only when guide data exists so channels without EPG look
         // exactly as before — single line.
-        meta = nowTitle?.let { title -> { Text(title) } },
+        meta = nowTitle?.let { title -> { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
         trailing = if (isFavorite) {
             { OwnTVIcon(OwnTVIcon.FAVORITE, tint = colors.favorite, filled = true, modifier = Modifier.size(20.dp)) }
         } else null,
