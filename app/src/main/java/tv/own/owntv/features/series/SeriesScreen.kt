@@ -94,7 +94,6 @@ import tv.own.owntv.ui.components.formatTimestamp
 import tv.own.owntv.ui.components.SetTmdbNameDialog
 import tv.own.owntv.ui.components.TrailerPlayerScreen
 import tv.own.owntv.ui.components.chNavPaging
-import tv.own.owntv.ui.components.longPressMenuGuard
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import tv.own.owntv.ui.components.SearchBar
@@ -878,47 +877,30 @@ private fun EpisodeContextMenu(
     onDeleteSubtitles: (() -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
-    val colors = OwnTVTheme.colors
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).trapAllFocusExit().focusGroup().longPressMenuGuard(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(stringResource(R.string.content_download), onClick = onDownload, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.DOWNLOADS, modifier = Modifier.fillMaxWidth().focusRequester(focus))
-            // Phase B: one-off external playback, independent of the global "External player" toggle.
-            OwnTVButton(
-                stringResource(R.string.content_play_external), onClick = onPlayExternal, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.PLAY,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            // Manual override of the ≥95% auto-detected watched state (option 2 of the design pass).
-            OwnTVButton(
-                if (watched) stringResource(R.string.content_mark_unwatched) else stringResource(R.string.content_mark_watched),
-                onClick = onToggleWatched,
-                style = OwnTVButtonStyle.SECONDARY,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (hasTmdbDetails) {
-                OwnTVButton(stringResource(R.string.content_tmdb_details), onClick = onShowDetails, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.MENU, modifier = Modifier.fillMaxWidth())
-            }
-            // Refetch TMDB details (§11.2 U5a) — clear this episode's cache AND its show's match, then re-search.
-            if (canRefetchTmdb) {
-                OwnTVButton(stringResource(R.string.content_refetch_tmdb), onClick = onRefetch, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            }
-            // Delete subtitles — only when this episode has downloaded OpenSubtitles subs (§11).
-            onDeleteSubtitles?.let {
-                OwnTVButton(stringResource(R.string.content_delete_subtitles), onClick = it, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.SUBTITLE, modifier = Modifier.fillMaxWidth())
-            }
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(stringResource(R.string.content_close), onClick = onDismiss, modifier = Modifier.fillMaxWidth())        }
+    val entries = mutableListOf<MenuEntry>()
+    entries += MenuEntry(stringResource(R.string.content_download), onDownload, OwnTVIcon.DOWNLOADS)
+    // Phase B: one-off external playback, independent of the global "External player" toggle.
+    entries += MenuEntry(stringResource(R.string.content_play_external), onPlayExternal, OwnTVIcon.PLAY)
+    // Manual override of the ≥95% auto-detected watched state (option 2 of the design pass).
+    entries += MenuEntry(
+        if (watched) stringResource(R.string.content_mark_unwatched) else stringResource(R.string.content_mark_watched),
+        onToggleWatched,
+    )
+    if (hasTmdbDetails) {
+        entries += MenuEntry(stringResource(R.string.content_tmdb_details), onShowDetails, OwnTVIcon.MENU)
     }
+    // Refetch TMDB details (§11.2 U5a) — clear this episode's cache AND its show's match, then re-search.
+    if (canRefetchTmdb) {
+        entries += MenuEntry(stringResource(R.string.content_refetch_tmdb), onRefetch)
+    }
+    // Delete subtitles — only when this episode has downloaded OpenSubtitles subs (§11).
+    onDeleteSubtitles?.let { entries += MenuEntry(stringResource(R.string.content_delete_subtitles), it, OwnTVIcon.SUBTITLE) }
+    MediaContextMenu(
+        title = title,
+        entries = entries,
+        onDismiss = onDismiss,
+        closeLabel = stringResource(R.string.content_close),
+    )
 }
 
 /** Build the fullscreen TMDB-details payload for an episode (still as the hero; no 2:3 poster). */

@@ -72,11 +72,12 @@ import tv.own.owntv.features.shell.components.PreviewPane
 import tv.own.owntv.features.shell.components.RailCategory
 import tv.own.owntv.ui.components.chNavPaging
 import tv.own.owntv.ui.components.jumpLazyListTo
-import tv.own.owntv.ui.components.longPressMenuGuard
 import tv.own.owntv.ui.components.trapAllFocusExit
 import tv.own.owntv.ui.components.trapVerticalFocusExit
 import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.ChannelGenre
+import tv.own.owntv.ui.components.MediaContextMenu
+import tv.own.owntv.ui.components.MenuEntry
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVIcon
@@ -695,42 +696,28 @@ private fun ChannelContextMenu(
     onRemoveFromHistory: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = OwnTVTheme.colors
-    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    androidx.activity.compose.BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))
-            .trapAllFocusExit().focusGroup()
-            .longPressMenuGuard(), // the long-press OK is still held — don't let it auto-click a menu item
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier.dialogPanel(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(channelName, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(
-                if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
-                onClick = onToggleFavorite, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.FAVORITE,
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            )
-            OwnTVButton(stringResource(R.string.content_rename), onClick = onRename, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.content_hide_channel), onClick = onHide, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.content_match_epg), onClick = onMatchEpg, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.EPG, modifier = Modifier.fillMaxWidth())
-            OwnTVButton(stringResource(R.string.content_epg_time_offset), onClick = onEpgOffset, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.EPG, modifier = Modifier.fillMaxWidth())
-            if (hasCatchup) OwnTVButton(stringResource(R.string.content_catchup), onClick = onCatchup, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            // Always offered, regardless of the Live TV external-player default — this is the per-channel
-            // escape hatch for a stream neither in-app engine can open (same as Movies/Series/Downloads).
-            OwnTVButton(stringResource(R.string.content_play_external_short), onClick = onPlayExternal, style = OwnTVButtonStyle.SECONDARY, icon = OwnTVIcon.PLAY, modifier = Modifier.fillMaxWidth())
-            if (canMove) OwnTVButton(stringResource(R.string.content_move), onClick = onMove, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (canMove) OwnTVButton(stringResource(R.string.content_move_to_category), onClick = onMoveToCategory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            if (isHistory) OwnTVButton(stringResource(R.string.content_remove_history), onClick = onRemoveFromHistory, style = OwnTVButtonStyle.SECONDARY, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(4.dp))
-            OwnTVButton(stringResource(R.string.content_close), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
-        }
-    }
+    val entries = mutableListOf<MenuEntry>()
+    entries += MenuEntry(
+        if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite),
+        onToggleFavorite, OwnTVIcon.FAVORITE,
+    )
+    entries += MenuEntry(stringResource(R.string.content_rename), onRename)
+    entries += MenuEntry(stringResource(R.string.content_hide_channel), onHide)
+    entries += MenuEntry(stringResource(R.string.content_match_epg), onMatchEpg, OwnTVIcon.EPG)
+    entries += MenuEntry(stringResource(R.string.content_epg_time_offset), onEpgOffset, OwnTVIcon.EPG)
+    if (hasCatchup) entries += MenuEntry(stringResource(R.string.content_catchup), onCatchup)
+    // Always offered, regardless of the Live TV external-player default — this is the per-channel
+    // escape hatch for a stream neither in-app engine can open (same as Movies/Series/Downloads).
+    entries += MenuEntry(stringResource(R.string.content_play_external_short), onPlayExternal, OwnTVIcon.PLAY)
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move), onMove)
+    if (canMove) entries += MenuEntry(stringResource(R.string.content_move_to_category), onMoveToCategory)
+    if (isHistory) entries += MenuEntry(stringResource(R.string.content_remove_history), onRemoveFromHistory)
+    MediaContextMenu(
+        title = channelName,
+        entries = entries,
+        onDismiss = onDismiss,
+        closeLabel = stringResource(R.string.content_close),
+    )
 }
 
 @Composable

@@ -30,6 +30,7 @@ import tv.own.owntv.R
 import tv.own.owntv.player.MiniPlayerPosition
 import tv.own.owntv.player.MiniPlayerSize
 import tv.own.owntv.ui.components.OwnTVIcon
+import tv.own.owntv.ui.components.StepperDialog
 import tv.own.owntv.ui.components.roundedPanel
 import tv.own.owntv.ui.theme.OwnTVTheme
 

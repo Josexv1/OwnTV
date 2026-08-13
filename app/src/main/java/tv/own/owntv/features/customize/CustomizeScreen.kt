@@ -652,14 +652,13 @@ private fun SectionChip(label: String, selected: Boolean, modifier: Modifier = M
         selectedContainerColor = colors.primaryContainer,
         contentAlignment = Alignment.Center,
         surface = GlassSurface.CARDS,
-    ) { focused ->
+    ) { _ ->
         Text(
             label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = when {
                 selected -> colors.onPrimaryContainer
-                focused -> colors.primary
                 else -> colors.onSurface
             },
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
@@ -721,17 +720,15 @@ private fun CategoryRow(
             shape = RoundedCornerShape(50),
             focusedScale = 1f,
             unfocusedContainerColor = Color.Transparent,
-            focusedContainerColor = colors.primaryContainer,
             surface = GlassSurface.CARDS,
             contentAlignment = Alignment.CenterStart,
-        ) { focused ->
+        ) { _ ->
             Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                 Text(
                     row.displayName,
                     style = MaterialTheme.typography.titleSmall,
                     color = when {
                         row.hidden -> colors.onSurfaceVariant
-                        focused -> colors.onPrimaryContainer
                         else -> colors.onSurface
                     },
                     maxLines = 1,

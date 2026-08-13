@@ -32,7 +32,7 @@ data class MenuEntry(
 )
 
 /**
- * The shared long-press context menu (Movies + Series browse). Owns the frame — scrim, focus trap,
+ * The shared long-press context menu (Live, Movies, Series browse and episode lists). Owns the frame — scrim, focus trap,
  * long-press guard, auto-focus, Back-dismiss, dialog panel — while callers own the policy (which
  * entries appear, in what order). Per the dialog ruling, entries render SECONDARY and the single
  * close action renders PRIMARY.

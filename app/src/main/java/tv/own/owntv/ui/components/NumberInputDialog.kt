@@ -164,7 +164,7 @@ fun NumberInputDialog(
     }
 }
 
-/** Square − / + button (matches the one in VideoPlayerSettingsScreen's StepperDialog). */
+/** Square − / + button (matches the one in ui/components/StepperDialog.kt). */
 @Composable
 private fun StepBtn(label: String, enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val colors = OwnTVTheme.colors
