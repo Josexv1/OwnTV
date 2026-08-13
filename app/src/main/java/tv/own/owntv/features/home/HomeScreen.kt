@@ -621,7 +621,7 @@ private fun HeroRowSection(
                             selectedContainerColor = colors.surfaceContainerHigh,
                             contentAlignment = Alignment.Center,
                             surface = GlassSurface.CARDS,
-                        ) { focused ->
+                        ) { _ ->
                             if (isExpanded) {
                                 // No blurred backdrop here: the preview overlay covers this card as soon
                                 // as previewRectInRowPx is known and renders the blur itself — doubling the
@@ -719,7 +719,7 @@ private fun HeroRowSection(
                                     Text(
                                         text = title,
                                         style = MaterialTheme.typography.titleSmall,
-                                        color = if (focused) colors.primary else colors.onSurface,
+                                        color = colors.onSurface,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                     )
@@ -897,7 +897,7 @@ private fun HeroRowSection(
                                 Text(
                                     text = statText,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = colors.primary,
+                                    color = colors.onSurfaceVariant,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
@@ -1145,7 +1145,7 @@ private fun LandscapeContinuationCard(
         selectedContainerColor = colors.surfaceContainerHigh,
         contentAlignment = Alignment.Center,
         surface = GlassSurface.CARDS,
-    ) { focused ->
+    ) { _ ->
         Column(modifier = Modifier.fillMaxWidth().padding(6.dp)) {
             Box(
                 modifier = Modifier
@@ -1203,7 +1203,7 @@ private fun LandscapeContinuationCard(
             Text(
                 title,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (focused) colors.primary else colors.onSurface,
+                color = colors.onSurface,
                 maxLines = 2,
                 minLines = 2,
                 overflow = TextOverflow.Ellipsis,

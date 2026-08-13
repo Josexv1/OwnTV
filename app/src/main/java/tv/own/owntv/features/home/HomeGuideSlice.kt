@@ -129,7 +129,7 @@ private fun ChannelCardsRow(
                         unfocusedContainerColor = OwnTVTheme.colors.surfaceContainerHigh,
                         selectedContainerColor = OwnTVTheme.colors.surfaceContainerHigh,
                         surface = GlassSurface.CARDS,
-                    ) { focused ->
+                    ) { _ ->
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -141,7 +141,7 @@ private fun ChannelCardsRow(
                             Text(
                                 text = channel.name,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = if (focused) OwnTVTheme.colors.primary else OwnTVTheme.colors.onSurface,
+                                color = OwnTVTheme.colors.onSurface,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
