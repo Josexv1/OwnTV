@@ -31,7 +31,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -359,7 +358,7 @@ private fun DetailPane(
         }
         Text(title, style = MaterialTheme.typography.titleLarge, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
         if (subtitle != null) {
-            Text(subtitle, style = MaterialTheme.typography.labelLarge, color = colors.primary, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
         }
         if (!plot.isNullOrBlank()) {
             Text(plot, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 5, overflow = TextOverflow.Ellipsis)
@@ -371,22 +370,21 @@ private fun DetailPane(
             shape = RoundedCornerShape(12.dp),
             contentAlignment = Alignment.Center,
             surface = GlassSurface.CARDS,
-        ) { focused ->
+        ) { _ ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(if (focused) colors.primary else colors.primaryContainer, RoundedCornerShape(12.dp))
+                    .background(colors.surfaceContainerHigh, RoundedCornerShape(12.dp))
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OwnTVIcon(OwnTVIcon.PLAY, tint = if (focused) colors.onPrimary else colors.onPrimaryContainer, modifier = Modifier.size(20.dp))
+                OwnTVIcon(OwnTVIcon.PLAY, tint = colors.onSurface, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     actionLabel,
                     style = MaterialTheme.typography.titleSmall,
-                    color = if (focused) colors.onPrimary else colors.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold,
+                    color = colors.onSurface,
                 )
             }
         }
@@ -416,7 +414,7 @@ private fun ResultRow(
         shape = RoundedCornerShape(12.dp),
         contentAlignment = Alignment.CenterStart,
         surface = GlassSurface.CARDS,
-    ) { focused ->
+    ) { _ ->
         Row(
             modifier = Modifier.fillMaxWidth().padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -436,7 +434,7 @@ private fun ResultRow(
                 Text(
                     title,
                     style = MaterialTheme.typography.titleSmall,
-                    color = if (focused) colors.primary else colors.onSurface,
+                    color = colors.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -487,7 +485,7 @@ private fun PillChip(
             if (icon != null) {
                 OwnTVIcon(icon, tint = fg, modifier = Modifier.size(15.dp))
             }
-            Text(label, style = MaterialTheme.typography.labelLarge, color = fg, fontWeight = FontWeight.SemiBold)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = fg)
         }
     }
 }
