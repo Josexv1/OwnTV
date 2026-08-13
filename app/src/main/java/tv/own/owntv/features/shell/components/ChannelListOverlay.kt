@@ -99,7 +99,7 @@ fun ChannelListOverlay(
             Text(
                 title ?: stringResource(R.string.content_channel_overlay_title),
                 style = MaterialTheme.typography.titleMedium,
-                color = colors.primary,
+                color = colors.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
             )
             LazyColumn(
