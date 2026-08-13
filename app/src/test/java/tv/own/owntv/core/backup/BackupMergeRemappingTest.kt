@@ -43,6 +43,24 @@ class BackupMergeRemappingTest {
         )
     }
 
+    /**
+     * A pre-fix device row can still carry an uppercase scheme (mpv's "Protocol not found" bug —
+     * ingest only started normalizing schemes going forward), while a freshly-exported/incoming
+     * backup row is already normalized. The match key must fold both sides the same way, or a
+     * restore of exactly the population this fix targets creates a DUPLICATE source instead of
+     * updating the existing one.
+     */
+    @Test
+    fun `sources match regardless of URL scheme case`() {
+        val existingDeviceRow = sourceMatchKey("XTREAM", "HTTP://HOST/x", "user")
+        val incomingBackupRow = sourceMatchKey("XTREAM", "http://HOST/x", "user")
+        assertEquals(
+            "an existing uppercase-scheme row must still merge onto a normalized incoming row",
+            existingDeviceRow,
+            incomingBackupRow,
+        )
+    }
+
     // --- remapKeys: profile-id-keyed and source-id-keyed settings maps ---
 
     @Test

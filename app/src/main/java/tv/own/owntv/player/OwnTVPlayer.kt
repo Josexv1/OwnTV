@@ -860,6 +860,10 @@ class OwnTVPlayer(
             // uppercase scheme ("HTTP://…") fails with "Protocol not found" even though OkHttp/Uri
             // (every other consumer) already lowercase it. This is mpv's sole loadfile call site, so
             // normalizing here self-heals every existing DB row at play time with no migration.
+            // currentUrl/diagnostics/LiveDiagnosticsLog intentionally keep the raw (un-normalized)
+            // case — they're only ever compared to themselves within a session, and LiveStreamQuirks'
+            // host keys and isHlsUrl/alternateFormatUrl already compare case-insensitively, so nothing
+            // downstream needs the normalized string except this one mpv command argument.
             command(arrayOf("loadfile", normalizeUrlScheme(url)))
             markActiveFile(true, reason)
         } catch (t: Throwable) {
