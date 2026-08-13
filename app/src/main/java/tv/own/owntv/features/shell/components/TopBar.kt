@@ -6,8 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,6 +61,32 @@ private const val TopBarFrost = 0.45f
 private fun Modifier.topBarGlassRim(shape: Shape): Modifier =
     if (LocalGlass.current.isGlassy(GlassSurface.TOPBAR)) border(1.dp, Color.White.copy(alpha = 0.18f), shape) else this
 
+/**
+ * Shared shell for the top bar's pure display-only chips: clip(shape) → glass fill → topBarGlassRim
+ * → padding(horizontal = 14.dp, vertical = 7.dp). `containerColor` is the one thing that legitimately
+ * varies between chips (accent tint for the section chip vs. neutral surface for the rest), so it's a
+ * parameter rather than baked into the shell. Interactive chips (Search/Continue pills, the focusable
+ * PlaylistChip branch) use FocusableSurface instead and don't route through this.
+ */
+@Composable
+private fun StaticGlassChip(
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val shape = TopBarChipShape
+    Row(
+        modifier
+            .clip(shape)
+            .glass(GlassSurface.TOPBAR, containerColor, shape, frostScale = TopBarFrost)
+            .topBarGlassRim(shape)
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        content = content,
+    )
+}
+
 @Composable
 fun TopBar(
     sectionLabel: String,
@@ -112,8 +138,8 @@ fun TopBar(
 private fun SectionChip(label: String) {
     val colors = OwnTVTheme.colors
     // Keeps its accent tint (marks the current section) but frosts in glass mode like the other chips.
-    val shape = TopBarChipShape
-    Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.primaryContainer, shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
+    // Purely static: no onClick, no focus handling — always display-only.
+    StaticGlassChip(containerColor = colors.primaryContainer) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
     }
 }
@@ -208,8 +234,7 @@ private fun ClockChip() {
     val formatted = remember(now) { DateFormat.getTimeFormat(context).format(Date(now)) }
     // Display-only (non-focusable) and neutral (no accent), matching the weather chip. Frosts in
     // glass mode (TOPBAR surface) so it reads as glass like the focusable chips.
-    val shape = TopBarChipShape
-    Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
+    StaticGlassChip(containerColor = colors.surfaceContainer.copy(alpha = 0.6f)) {
         Text(formatted, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
     }
 }
@@ -221,8 +246,7 @@ private fun PlaylistChip(label: String, interactive: Boolean = false, onClick: (
     // when there are 2+, opening the playlist quick-switcher.
     if (!interactive) {
         // Neutral display-only badge (no always-on accent), frosts in glass mode like the other chips.
-        val shape = TopBarChipShape
-        Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
+        StaticGlassChip(containerColor = colors.surfaceContainer.copy(alpha = 0.6f)) {
             Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         return
@@ -269,12 +293,9 @@ private fun WeatherChip(info: WeatherInfo, fahrenheit: Boolean) {
         stringResource(R.string.common_weather_celsius, info.temperatureC.toInt())
     }
     val location = if (info.city.isNotBlank()) stringResource(R.string.common_weather_city, temp, info.city) else temp
-    val shape = TopBarChipShape
-    Box(Modifier.clip(shape).glass(GlassSurface.TOPBAR, colors.surfaceContainer.copy(alpha = 0.6f), shape, frostScale = TopBarFrost).topBarGlassRim(shape).padding(horizontal = 14.dp, vertical = 7.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            WeatherConditionIcon(info = info, Modifier.size(16.dp))
-            Text(location, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+    StaticGlassChip(containerColor = colors.surfaceContainer.copy(alpha = 0.6f)) {
+        WeatherConditionIcon(info = info, Modifier.size(16.dp))
+        Text(location, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
