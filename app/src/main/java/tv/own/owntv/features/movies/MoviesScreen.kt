@@ -907,6 +907,7 @@ private fun MovieListRow(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier.onFocusChanged { if (it.hasFocus) onFocus() },
+        dimmed = completed,
         leading = {
             Box(
                 modifier = Modifier.size(width = 44.dp, height = 62.dp).clip(RoundedCornerShape(6.dp)).background(colors.surfaceContainerLowest),

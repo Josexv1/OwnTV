@@ -23,7 +23,8 @@ import tv.own.owntv.ui.theme.OwnTVTheme
  * Design contract (see docs/superpowers/specs/2026-08-12-media-browse-components-design.md §1):
  * the title is ALWAYS [OwnTVTheme.colors.onSurface] — the white focus ring from [FocusableSurface]
  * is the sole focus signal. There is deliberately no focused-color parameter. [selected] maps to
- * the sanctioned selected treatment (selection ≠ focus).
+ * the sanctioned selected treatment (selection ≠ focus). [dimmed] = semantic de-emphasis for
+ * consumed/watched items; never focus-dependent.
  */
 @Composable
 fun MediaListRow(
@@ -35,6 +36,7 @@ fun MediaListRow(
     trailing: (@Composable () -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     selected: Boolean = false,
+    dimmed: Boolean = false,
 ) {
     val colors = OwnTVTheme.colors
     FocusableSurface(
@@ -54,7 +56,7 @@ fun MediaListRow(
                 Text(
                     title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = colors.onSurface,
+                    color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
