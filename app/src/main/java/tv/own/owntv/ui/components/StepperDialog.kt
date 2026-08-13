@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -54,7 +55,13 @@ fun StepperDialog(
     // trapped inside this dialog, so silently failing to focus anything left the D-pad dead with only
     // Back working — the reported "+/- unreachable" at the top of the range. Land on whichever stepper
     // is usable, and hand focus over if the one holding it becomes disabled mid-adjustment.
-    LaunchedEffect(Unit) { runCatching { (if (plusEnabled) frPlus else frMinus).requestFocus() } }
+    // A caller can remount this dialog within the same frame another composable unmounts (e.g. a
+    // confirmation gate closing back into it) — requesting focus before the new node has completed a
+    // layout pass silently fails and falls through the trap, so wait a frame first.
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { (if (plusEnabled) frPlus else frMinus).requestFocus() }
+    }
     LaunchedEffect(plusEnabled) { if (!plusEnabled && minusEnabled) runCatching { frMinus.requestFocus() } }
     LaunchedEffect(minusEnabled) { if (!minusEnabled && plusEnabled) runCatching { frPlus.requestFocus() } }
     BackHandler { onDismiss() }

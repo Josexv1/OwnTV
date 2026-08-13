@@ -1539,7 +1539,13 @@ private fun ZoomDialog(current: Int, onSet: (Int) -> Unit, onDismiss: () -> Unit
     val target = pendingLowZoom
     if (target != null) {
         val acceptFocus = remember { FocusRequester() }
-        LaunchedEffect(Unit) { runCatching { acceptFocus.requestFocus() } }
+        // Same same-frame remount race as StepperDialog below: pressing "–" swaps the stepper panel
+        // out for this overlay within one recomposition, so the Accept button's focus node may not
+        // have completed a layout pass yet when this effect runs — wait a frame first.
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            runCatching { acceptFocus.requestFocus() }
+        }
         BackHandler { pendingLowZoom = null }
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.8f)).trapAllFocusExit().focusGroup(),
