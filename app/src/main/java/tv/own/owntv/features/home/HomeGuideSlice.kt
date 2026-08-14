@@ -245,7 +245,7 @@ private fun OnNowRow(
                 .padding(1.dp)
                 .border(
                     width = 1.dp,
-                    color = Color.Transparent,
+                    color = if (focused) colors.focusBorder else Color.Transparent,
                     shape = sectionShape,
                 )
                 .padding(10.dp),

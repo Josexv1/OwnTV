@@ -774,10 +774,11 @@ private fun TopBar(
             }
             // Live always renders the LiveBadge chip regardless of chipParts, so its chip row is never
             // truly empty; only VOD can have an empty chip row. Skipping the scrim (and the stack it
-            // wraps) when there's neither a title nor chip content avoids painting an empty scrim box —
-            // this branch only fires when metadata is empty, so it never changes layout when it exists.
+            // wraps) when there's neither a title nor chip content nor a subtitle avoids painting an
+            // empty scrim box — this branch only fires when metadata is empty, so it never changes
+            // layout when it exists.
             val chipRowEmpty = !isLive && chipParts.isEmpty()
-            if (!(displayTitle.isEmpty() && chipRowEmpty)) {
+            if (!(displayTitle.isEmpty() && chipRowEmpty && vodSubtitle.isNullOrBlank())) {
                 // Scrim hugs just the title+chips text stack, not the full-width strip the outer
                 // weight(1f) Column occupies (that width is reserved for the trailing Now/Next guide).
                 Column(Modifier.hudTextScrim()) {

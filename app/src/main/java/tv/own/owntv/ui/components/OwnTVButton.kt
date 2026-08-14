@@ -15,8 +15,7 @@ import androidx.tv.material3.Text
 import tv.own.owntv.ui.theme.LocalActionSurface
 import tv.own.owntv.ui.theme.OwnTVTheme
 
-/** Visual emphasis for [OwnTVButton]. */
-/** PRIMARY (solid accent at rest) marks the SINGLE default action of a dialog/action row; every other action is SECONDARY. (Design ruling, phase 5.) */
+/** Visual emphasis for [OwnTVButton]. PRIMARY (solid accent at rest) marks the SINGLE default action of a dialog/action row; every other action is SECONDARY. (Design ruling, phase 5.) */
 enum class OwnTVButtonStyle { PRIMARY, SECONDARY }
 
 /**

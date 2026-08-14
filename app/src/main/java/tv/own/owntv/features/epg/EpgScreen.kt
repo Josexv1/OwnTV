@@ -752,7 +752,7 @@ private fun GuideChannelRow(
             unfocusedContainerColor = colors.surfaceContainerHigh,
             contentAlignment = Alignment.CenterStart,
             surface = GlassSurface.CARDS,
-        ) { focused ->
+        ) { _ ->
             Row(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
