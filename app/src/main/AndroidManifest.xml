@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- libmpv declares minSdk 26 for AAudio, but mpv falls back to OpenSL ES at runtime (both are
+         compiled in) and the app falls back to ExoPlayer if mpv fails entirely — verified on a
+         Fire OS 6 (API 25) Toshiba Fire TV Edition. -->
+    <uses-sdk tools:overrideLibrary="dev.jdtech.mpv" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 

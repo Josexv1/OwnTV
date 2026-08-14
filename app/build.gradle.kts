@@ -33,7 +33,9 @@ android {
 
     defaultConfig {
         applicationId = "tv.own.owntv"
-        minSdk = 26
+        // 25 covers Fire OS 6 TVs (Toshiba/Insignia Fire TV Edition, Android 7.1) — the only
+        // API-26 dependency was notification channels, already version-gated in DownloadNotifications.
+        minSdk = 25
         targetSdk = 36
         // CI injects these from the git tag (see .github/workflows/android.yml) so releases never
         // need a manual edit here. The fallbacks are only used for local/debug builds — pinned HIGH

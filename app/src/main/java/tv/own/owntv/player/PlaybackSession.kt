@@ -2,6 +2,8 @@ package tv.own.owntv.player
 
 import android.content.Context
 import android.media.AudioAttributes
+import android.os.Build
+import androidx.annotation.RequiresApi
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaMetadata
@@ -158,24 +160,34 @@ class PlaybackSession(private val context: Context) {
         }
     }
 
-    private val focusRequest by lazy {
-        AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
-                    .build(),
-            )
-            // false = let the platform duck us automatically instead of handing us a callback to pause on.
-            .setWillPauseWhenDucked(false)
-            .setOnAudioFocusChangeListener(focusListener)
-            .build()
-    }
+    // Built on first focus request; only ever touched inside API-26+ branches.
+    private var focusRequest: AudioFocusRequest? = null
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun obtainFocusRequest(): AudioFocusRequest = focusRequest ?: AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                .build(),
+        )
+        // false = let the platform duck us automatically instead of handing us a callback to pause on.
+        .setWillPauseWhenDucked(false)
+        .setOnAudioFocusChangeListener(focusListener)
+        .build()
+        .also { focusRequest = it }
 
     private fun requestFocus() {
         if (hasFocus) return
-        val granted = runCatching { audioManager.requestAudioFocus(focusRequest) }
-            .getOrDefault(AudioManager.AUDIOFOCUS_REQUEST_FAILED) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        val granted = runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                audioManager.requestAudioFocus(obtainFocusRequest())
+            } else {
+                // Fire OS 6 TVs (API 25): the pre-O API takes the listener + stream directly.
+                @Suppress("DEPRECATION")
+                audioManager.requestAudioFocus(focusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+            }
+        }.getOrDefault(AudioManager.AUDIOFOCUS_REQUEST_FAILED) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         // A refusal is not a reason to refuse to play: some TV builds deny focus to background-capable
         // apps and playing silently-unmanaged is still better than not playing.
         hasFocus = granted
@@ -184,7 +196,14 @@ class PlaybackSession(private val context: Context) {
     private fun abandonFocus() {
         if (!hasFocus) return
         hasFocus = false
-        runCatching { audioManager.abandonAudioFocusRequest(focusRequest) }
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                focusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager.abandonAudioFocus(focusListener)
+            }
+        }
     }
 
     // --- Ducking ----------------------------------------------------------------------------------
