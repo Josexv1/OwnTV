@@ -197,7 +197,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles je bezplatná otevřená komunitní služba pro titulky. Přihlaste se pomocí vlastního účtu na opensubtitles.com; jeho vytvoření je bezplatné. Toto nastavení platí pouze pro aktuální profil.</string>
     <string name="player_subtitles_session_expired">Platnost vaší relace OpenSubtitles vypršela. Chcete-li dál vyhledávat a stahovat titulky, znovu se přihlaste v nabídce Nastavení → Přehrávač videa → Titulky → OpenSubtitles.</string>
     <string name="player_subtitles_account_needed">Je vyžadován účet OpenSubtitles\n\nChcete-li vyhledávat a stahovat titulky, přihlaste se v nabídce Nastavení → Přehrávač videa → Titulky → OpenSubtitles. OpenSubtitles je bezplatná otevřená komunitní služba — bezplatný účet si může kdokoli vytvořit na opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Nebyly nalezeny žádné odpovídající titulky.</string>
     <string name="player_subtitles_show_all_languages">Zobrazit všechny jazyky</string>
     <string name="player_subtitles_all_languages">Všechny jazyky</string>
     <string name="player_subtitles_try_again">Zkusit znovu</string>

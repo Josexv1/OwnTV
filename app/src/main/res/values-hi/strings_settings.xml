@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">अपडेट जाँचें</string>
     <string name="settings_search_label">सेटिंग खोजें</string>
     <string name="settings_search_hint">सेटिंग खोजें…</string>
-    <string name="settings_group_general">सामान्य</string>
     <string name="settings_language">भाषा</string>
     <string name="settings_language_description">ऐप में दिखाई जाने वाली भाषा</string>
     <string name="settings_language_system_default">सिस्टम डिफ़ॉल्ट</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">अपने-आप फ़्रेम दर मिलाना</string>
     <string name="settings_auto_frame_rate_description">फ़ुल स्क्रीन में लाइव टीवी और VOD के लिए TV की रीफ़्रेश दर को वीडियो (24/25/50/60 fps) से मिलाएँ और बाहर निकलने पर उसे पहले जैसा करें। यदि हर चैनल बदलने पर आपका TV या रिसीवर शोर के साथ फिर से HDMI हैंडशेक करता है, तो इसे बंद कर दें।</string>
     <string name="settings_surround_sound">सराउंड साउंड</string>
-    <string name="settings_surround_description">वास्तविक 5.1/7.1 रिसीवर के लिए Dolby/DTS को सराउंड (5.1/7.1) में डिकोड करें। TV स्पीकर या स्टीरियो साउंडबार के लिए इसे बंद रखें — कुछ TV/साउंडबार पर मल्टीचैनल ऑडियो वीडियो से पीछे हो सकता है। यदि सिंक बिगड़ता है, तो प्लेयर के ऑडियो मेन्यू → A/V सिंक को थोड़ा समायोजित करें।</string>
     <string name="settings_autoplay_next">अगला एपिसोड अपने-आप चलाएँ</string>
     <string name="settings_autoplay_next_description">एपिसोड समाप्त होने पर अगला एपिसोड अपने-आप शुरू करें — और अगला सीज़न भी चलाएँ।</string>
     <string name="settings_catchup">कैच-अप</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">हो गया</string>
     <string name="settings_reset">रीसेट करें</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">लाइव टीवी</string>
     <string name="settings_history_movies">फ़िल्में</string>
     <string name="settings_history_series">सीरीज़</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">लॉक हटाएँ</string>
     <string name="settings_customize_description">इस प्रोफ़ाइल के लिए चैनल, फ़िल्में और सीरीज़ छिपाएँ या फिर दिखाएँ तथा श्रेणियों का नाम या क्रम बदलें। यह रीसिंक के बाद भी बना रहता है।</string>
     <string name="settings_customize_new_category_behavior">नई श्रेणी का व्यवहार</string>
-    <string name="settings_customize_hide_new">छिपाएँ—रीसिंक में जोड़ी गई नई श्रेणियाँ डिफ़ॉल्ट रूप से छिपी रहेंगी</string>
-    <string name="settings_customize_show_new">दिखाएँ—रीसिंक में जोड़ी गई नई श्रेणियाँ डिफ़ॉल्ट रूप से दिखाई देंगी</string>
     <string name="settings_customize_hide">छिपाएँ</string>
     <string name="settings_customize_show">दिखाएँ</string>
     <string name="settings_customize_behavior_hide">छिपाना</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">सबटाइटल कस्टमाइज़ करें</string>
     <string name="settings_subtitle_customize_off">बंद रखने पर सबटाइटल ठीक वैसे ही रहते हैं, जैसे स्ट्रीम और प्लेयर उन्हें दिखाते हैं।</string>
     <string name="settings_subtitle_preview_stock">पूर्वावलोकन — मूल दिखावट</string>
-    <string name="settings_subtitle_stock_description">मूल दिखावट, जिसमें लाइव टीवी के सबटाइटल में प्रसारकों द्वारा एम्बेड किए गए रंग और स्थान शामिल हैं।</string>
     <string name="settings_subtitle_reset_all">सभी रीसेट करें</string>
     <string name="settings_subtitle_color">सबटाइटल का रंग</string>
     <string name="settings_subtitle_color_default_description">डिफ़ॉल्ट में रंग स्ट्रीम और प्लेयर के अनुसार रहता है।</string>

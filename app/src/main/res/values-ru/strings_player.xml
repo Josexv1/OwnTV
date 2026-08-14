@@ -197,7 +197,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles — бесплатный открытый общественный сервис субтитров. Войдите с помощью собственной учётной записи opensubtitles.com; её можно создать бесплатно. Это относится только к текущему профилю.</string>
     <string name="player_subtitles_session_expired">Срок действия вашего сеанса OpenSubtitles истёк. Чтобы продолжить поиск и загрузку субтитров, снова войдите в разделе «Настройки → Видеоплеер → Субтитры → OpenSubtitles».</string>
     <string name="player_subtitles_account_needed">Требуется учётная запись OpenSubtitles\n\nЧтобы искать и загружать субтитры, войдите в разделе «Настройки → Видеоплеер → Субтитры → OpenSubtitles». OpenSubtitles — бесплатный открытый общественный сервис: любой пользователь может бесплатно создать учётную запись на opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Подходящие субтитры не найдены.</string>
     <string name="player_subtitles_show_all_languages">Показать все языки</string>
     <string name="player_subtitles_all_languages">Все языки</string>
     <string name="player_subtitles_try_again">Повторить</string>

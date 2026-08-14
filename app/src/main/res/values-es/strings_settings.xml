@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Buscar actualizaciones</string>
     <string name="settings_search_label">Buscar en los ajustes</string>
     <string name="settings_search_hint">Buscar en los ajustes…</string>
-    <string name="settings_group_general">General</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_description">Idioma de la interfaz de la aplicación</string>
     <string name="settings_language_system_default">Valor predeterminado del sistema</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Frecuencia de fotogramas automática</string>
     <string name="settings_auto_frame_rate_description">Ajusta la frecuencia de refresco del televisor a la del vídeo (24/25/50/60 fps) en pantalla completa, tanto para TV en directo como para VOD, y la restaura al salir. Desactívalo si tu televisor o receptor vuelve a establecer la conexión HDMI de forma molesta cada vez que cambias de canal.</string>
     <string name="settings_surround_sound">Sonido envolvente</string>
-    <string name="settings_surround_description">Descodifica Dolby/DTS como sonido envolvente (5.1/7.1) para un receptor 5.1/7.1 real. Déjalo DESACTIVADO para los altavoces del televisor o una barra de sonido estéreo; en algunos televisores y barras de sonido, el audio multicanal puede retrasarse respecto al vídeo. Si se desincroniza, ajústalo en el menú Audio del reproductor → Sincronización A/V.</string>
     <string name="settings_autoplay_next">Reproducir automáticamente el siguiente episodio</string>
     <string name="settings_autoplay_next_description">Cuando termine un episodio, inicia automáticamente el siguiente, también al pasar a la siguiente temporada.</string>
     <string name="settings_catchup">En diferido</string>
@@ -463,7 +461,6 @@
     <string name="settings_done">Hecho</string>
     <string name="settings_reset">Restablecer</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">TV en directo</string>
     <string name="settings_history_movies">Películas</string>
     <string name="settings_history_series">series</string>
@@ -497,8 +494,6 @@
     <string name="settings_customize_remove_lock">Quitar bloqueo</string>
     <string name="settings_customize_description">Oculta y vuelve a mostrar canales, películas y series, y cambia el nombre o el orden de las categorías de este perfil. Los cambios se conservan al volver a sincronizar.</string>
     <string name="settings_customize_new_category_behavior">Comportamiento de las categories nuevas</string>
-    <string name="settings_customize_hide_new">Ocultar — las categorías nuevas añadidas al volver a sincronizar se ocultan de forma predeterminada</string>
-    <string name="settings_customize_show_new">Mostrar — las categorías nuevas añadidas al volver a sincronizar se muestran de forma predeterminada</string>
     <string name="settings_customize_hide">Ocultar</string>
     <string name="settings_customize_show">Mostrar</string>
     <string name="settings_customize_behavior_hide">Ocultar</string>
@@ -819,7 +814,6 @@
     <string name="settings_subtitle_customize">Personalizar subtítulos</string>
     <string name="settings_subtitle_customize_off">Al desactivarlo, los subtítulos se mantienen exactamente como los muestran la transmisión y el reproductor.</string>
     <string name="settings_subtitle_preview_stock">Vista previa — aspecto original</string>
-    <string name="settings_subtitle_stock_description">Aspecto original, incluidos los colores y la ubicación que las emisoras incorporan en los subtítulos de TV en directo.</string>
     <string name="settings_subtitle_reset_all">Restablecer todo</string>
     <string name="settings_subtitle_color">Color de los subtítulos</string>
     <string name="settings_subtitle_color_default_description">Con Predeterminado, el color queda a cargo de la transmisión y el reproductor.</string>

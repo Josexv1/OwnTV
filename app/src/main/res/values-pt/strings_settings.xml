@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Verificar atualização</string>
     <string name="settings_search_label">Pesquisar configurações</string>
     <string name="settings_search_hint">Pesquisar configurações…</string>
-    <string name="settings_group_general">Geral</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_language_description">Idioma de exibição do aplicativo</string>
     <string name="settings_language_system_default">Padrão do sistema</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Taxa de quadros automática</string>
     <string name="settings_auto_frame_rate_description">Ajuste a taxa de atualização da TV ao vídeo (24/25/50/60 fps) em tela cheia, para TV ao vivo e VOD, e restaure-a ao sair. Desative se a TV ou o receiver refizer a negociação HDMI com ruído a cada troca de canal.</string>
     <string name="settings_surround_sound">Som surround</string>
-    <string name="settings_surround_description">Decodifique Dolby/DTS para som surround (5.1/7.1) com um receiver 5.1/7.1 de verdade. Deixe DESATIVADO para os alto-falantes da TV ou uma soundbar estéreo — o áudio multicanal pode ficar atrasado em relação ao vídeo em algumas TVs/soundbars. Se perder a sincronização, faça um pequeno ajuste em Áudio, no menu do reprodutor → Sincronização A/V.</string>
     <string name="settings_autoplay_next">Reproduzir próximo episódio automaticamente</string>
     <string name="settings_autoplay_next_description">Quando um episódio terminar, inicie automaticamente o próximo — e continue na temporada seguinte.</string>
     <string name="settings_catchup">Programação retroativa</string>
@@ -463,7 +461,6 @@
     <string name="settings_done">Concluído</string>
     <string name="settings_reset">Redefinir</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">TV ao vivo</string>
     <string name="settings_history_movies">Filmes</string>
     <string name="settings_history_series">Séries</string>
@@ -497,8 +494,6 @@
     <string name="settings_customize_remove_lock">Remover bloqueio</string>
     <string name="settings_customize_description">Oculte e reexiba canais, filmes e séries e renomeie ou reordene categorias deste perfil. As alterações são mantidas após ressincronizações.</string>
     <string name="settings_customize_new_category_behavior">Comportamento de novas categorias</string>
-    <string name="settings_customize_hide_new">Ocultar — novas categorias adicionadas durante uma ressincronização ficam ocultas por padrão</string>
-    <string name="settings_customize_show_new">Exibir — novas categorias adicionadas durante uma ressincronização ficam visíveis por padrão</string>
     <string name="settings_customize_hide">Ocultar</string>
     <string name="settings_customize_show">Exibir</string>
     <string name="settings_customize_behavior_hide">Ocultar</string>
@@ -819,7 +814,6 @@
     <string name="settings_subtitle_customize">Personalizar legendas</string>
     <string name="settings_subtitle_customize_off">Quando desativado, as legendas são exibidas exatamente como a transmissão e o reprodutor as definem.</string>
     <string name="settings_subtitle_preview_stock">Prévia — aparência original</string>
-    <string name="settings_subtitle_stock_description">Aparência original, incluindo as cores e o posicionamento incorporados pelas emissoras às legendas da TV ao vivo.</string>
     <string name="settings_subtitle_reset_all">Redefinir tudo</string>
     <string name="settings_subtitle_color">Cor das legendas</string>
     <string name="settings_subtitle_color_default_description">A opção Padrão deixa a cor a cargo da transmissão e do reprodutor.</string>

@@ -185,7 +185,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles er en gratis og åpen underteksttjeneste drevet av fellesskapet. Logg på med din egen konto på opensubtitles.com. Det er gratis å opprette en konto. Dette gjelder bare den gjeldende profilen.</string>
     <string name="player_subtitles_session_expired">OpenSubtitles-økten din har utløpt. Logg på igjen fra Innstillinger → Videoavspiller → Undertekster → OpenSubtitles for å fortsette å søke etter og laste ned undertekster.</string>
     <string name="player_subtitles_account_needed">OpenSubtitles-konto kreves\n\nLogg på fra Innstillinger → Videoavspiller → Undertekster → OpenSubtitles for å søke etter og laste ned undertekster. OpenSubtitles er en gratis og åpen fellesskapstjeneste – alle kan opprette en gratis konto på opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Fant ingen samsvarende undertekster.</string>
     <string name="player_subtitles_show_all_languages">Vis alle språk</string>
     <string name="player_subtitles_all_languages">Alle språk</string>
     <string name="player_subtitles_try_again">Prøv igjen</string>

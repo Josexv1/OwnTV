@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Sök efter uppdatering</string>
     <string name="settings_search_label">Sök i inställningarna</string>
     <string name="settings_search_hint">Sök i inställningarna…</string>
-    <string name="settings_group_general">Allmänt</string>
     <string name="settings_language">Språk</string>
     <string name="settings_language_description">Appens visningsspråk</string>
     <string name="settings_language_system_default">Systemets standardinställning</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Automatisk bildfrekvens</string>
     <string name="settings_auto_frame_rate_description">Matcha tv:ns uppdateringsfrekvens med videon (24/25/50/60 bildrutor/s) i helskärm för live-tv och VOD och återställ den vid avslut. Stäng av om tv:n eller mottagaren genomför en ny HDMI-handskakning med störande ljud vid varje kanalbyte.</string>
     <string name="settings_surround_sound">Surroundljud</string>
-    <string name="settings_surround_description">Avkoda Dolby/DTS till surroundljud (5.1/7.1) för en riktig 5.1/7.1-mottagare. Låt vara AV för tv-högtalare eller en soundbar med stereo — flerkanalsljud kan göra att ljudet hamnar efter bilden på vissa tv-apparater/soundbar-högtalare. Om synkroniseringen glider justerar du Spelarens ljudmeny → A/V-synkronisering.</string>
     <string name="settings_autoplay_next">Spela upp nästa avsnitt automatiskt</string>
     <string name="settings_autoplay_next_description">Starta nästa avsnitt automatiskt när ett avsnitt tar slut — och fortsätt till nästa säsong.</string>
     <string name="settings_catchup">Tv-arkiv</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">Klar</string>
     <string name="settings_reset">Återställ</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Live-tv</string>
     <string name="settings_history_movies">Filmer</string>
     <string name="settings_history_series">Serier</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">Ta bort låset</string>
     <string name="settings_customize_description">Dölj och visa kanaler, filmer och serier samt byt namn på eller ändra ordning på kategorier för den här profilen. Bevaras vid omsynkroniseringar.</string>
     <string name="settings_customize_new_category_behavior">Beteende för nya kategorier</string>
-    <string name="settings_customize_hide_new">Dölj – nya kategorier som läggs till vid omsynkronisering döljs som standard</string>
-    <string name="settings_customize_show_new">Visa – nya kategorier som läggs till vid omsynkronisering visas som standard</string>
     <string name="settings_customize_hide">Dölj</string>
     <string name="settings_customize_show">Visa</string>
     <string name="settings_customize_behavior_hide">Dölj</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">Anpassa undertexter</string>
     <string name="settings_subtitle_customize_off">När inställningen är av visas undertexterna precis som strömmen och spelaren återger dem.</string>
     <string name="settings_subtitle_preview_stock">Förhandsvisning – standardutseende</string>
-    <string name="settings_subtitle_stock_description">Standardutseende, inklusive de färger och den placering som tv-bolagen bäddar in i undertexter för live-tv.</string>
     <string name="settings_subtitle_reset_all">Återställ allt</string>
     <string name="settings_subtitle_color">Undertextfärg</string>
     <string name="settings_subtitle_color_default_description">Standard låter strömmen och spelaren styra färgen.</string>

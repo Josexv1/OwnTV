@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Controlla aggiornamenti</string>
     <string name="settings_search_label">Cerca nelle impostazioni</string>
     <string name="settings_search_hint">Cerca nelle impostazioni…</string>
-    <string name="settings_group_general">Generali</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_language_description">Lingua di visualizzazione dell\'app</string>
     <string name="settings_language_system_default">Impostazione predefinita di sistema</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Frequenza fotogrammi automatica</string>
     <string name="settings_auto_frame_rate_description">Adatta la frequenza di aggiornamento della TV al video (24/25/50/60 fps) a schermo intero, per TV in diretta e VOD, e ripristinala all\'uscita. Disattiva questa opzione se la TV o il ricevitore ripete l\'handshake HDMI in modo fastidioso a ogni cambio di canale.</string>
     <string name="settings_surround_sound">Audio surround</string>
-    <string name="settings_surround_description">Decodifica Dolby/DTS in surround (5.1/7.1) per un vero ricevitore 5.1/7.1. Lascia l\'opzione DISATTIVATA per gli altoparlanti della TV o una soundbar stereo — su alcuni TV o soundbar, l\'audio multicanale può risultare in ritardo rispetto al video. Se perde la sincronizzazione, regola leggermente Menu Audio del player → Sincronizzazione A/V.</string>
     <string name="settings_autoplay_next">Riproduci automaticamente l\'episodio successivo</string>
     <string name="settings_autoplay_next_description">Al termine di un episodio, avvia automaticamente quello successivo — passando anche alla stagione seguente.</string>
     <string name="settings_catchup">Visione in differita</string>
@@ -463,7 +461,6 @@
     <string name="settings_done">Fine</string>
     <string name="settings_reset">Reimposta</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">TV in diretta</string>
     <string name="settings_history_movies">Film</string>
     <string name="settings_history_series">Serie</string>
@@ -497,8 +494,6 @@
     <string name="settings_customize_remove_lock">Rimuovi blocco</string>
     <string name="settings_customize_description">Nascondi e mostra canali, film e serie e rinomina o riordina le categorie di questo profilo. Le modifiche vengono mantenute dopo le risincronizzazioni.</string>
     <string name="settings_customize_new_category_behavior">Comportamento delle nuove categorie</string>
-    <string name="settings_customize_hide_new">Nascondi — le nuove categorie aggiunte durante la risincronizzazione sono nascoste per impostazione predefinita</string>
-    <string name="settings_customize_show_new">Mostra — le nuove categorie aggiunte durante la risincronizzazione sono mostrate per impostazione predefinita</string>
     <string name="settings_customize_hide">Nascondi</string>
     <string name="settings_customize_show">Mostra</string>
     <string name="settings_customize_behavior_hide">Nascondi</string>
@@ -819,7 +814,6 @@
     <string name="settings_subtitle_customize">Personalizza sottotitoli</string>
     <string name="settings_subtitle_customize_off">Quando l\'opzione è disattivata, i sottotitoli restano esattamente come vengono visualizzati dal flusso e dal player.</string>
     <string name="settings_subtitle_preview_stock">Anteprima — aspetto originale</string>
-    <string name="settings_subtitle_stock_description">Aspetto originale, inclusi i colori e il posizionamento incorporati dalle emittenti nei sottotitoli della TV in diretta.</string>
     <string name="settings_subtitle_reset_all">Ripristina tutto</string>
     <string name="settings_subtitle_color">Colore dei sottotitoli</string>
     <string name="settings_subtitle_color_default_description">Con l\'impostazione predefinita, il colore è determinato dal flusso e dal player.</string>

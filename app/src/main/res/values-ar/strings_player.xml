@@ -209,7 +209,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles خدمة مجتمعية مجانية ومفتوحة للترجمات. سجّل الدخول باستخدام حسابك على opensubtitles.com؛ إنشاء حساب مجاني. ينطبق هذا على الملف الشخصي الحالي فقط.</string>
     <string name="player_subtitles_session_expired">انتهت صلاحية جلسة OpenSubtitles. لمواصلة البحث عن الترجمات وتنزيلها، سجّل الدخول مجددًا من الإعدادات ← مشغّل الفيديو ← الترجمات ← OpenSubtitles.</string>
     <string name="player_subtitles_account_needed">يلزم حساب OpenSubtitles\n\nللبحث عن الترجمات وتنزيلها، سجّل الدخول من الإعدادات ← مشغّل الفيديو ← الترجمات ← OpenSubtitles. إن OpenSubtitles خدمة مجتمعية مجانية ومفتوحة — ويمكن لأي شخص إنشاء حساب مجاني على opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">لم يتم العثور على ترجمات مطابقة.</string>
     <string name="player_subtitles_show_all_languages">عرض كل اللغات</string>
     <string name="player_subtitles_all_languages">كل اللغات</string>
     <string name="player_subtitles_try_again">حاول مجددًا</string>

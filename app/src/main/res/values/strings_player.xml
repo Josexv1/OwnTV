@@ -354,8 +354,6 @@
     <string name="player_subtitles_session_expired">Your OpenSubtitles session has expired. To keep searching and downloading subtitles, sign in again from Settings \u2192 Video player \u2192 Subtitles \u2192 OpenSubtitles.</string>
     <!-- Translators: Error/dialog when the user needs an OpenSubtitles account to search. Directs to Settings path. "opensubtitles.com" is a website URL. -->
     <string name="player_subtitles_account_needed">OpenSubtitles account needed\n\nTo search and download subtitles, sign in from Settings \u2192 Video player \u2192 Subtitles \u2192 OpenSubtitles. OpenSubtitles is a free, open community service \u2014 anyone can create a free account at opensubtitles.com.</string>
-    <!-- Translators: Empty-state message in the subtitle search results when no matches are found. -->
-    <string name="player_subtitles_no_matches">No matching subtitles were found.</string>
     <!-- Translators: Button label in the subtitle search to show results in all languages. -->
     <string name="player_subtitles_show_all_languages">Show all languages</string>
     <!-- Translators: Label for the "all languages" filter option in subtitle search. -->

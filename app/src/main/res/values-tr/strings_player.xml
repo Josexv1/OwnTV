@@ -185,7 +185,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles, ücretsiz ve açık bir topluluk altyazı hizmetidir. Kendi opensubtitles.com hesabınızla oturum açın; ücretsiz hesap oluşturabilirsiniz. Bu yalnızca geçerli profil için uygulanır.</string>
     <string name="player_subtitles_session_expired">OpenSubtitles oturumunuzun süresi doldu. Altyazı aramaya ve indirmeye devam etmek için Ayarlar → Video oynatıcı → Altyazılar → OpenSubtitles bölümünden tekrar oturum açın.</string>
     <string name="player_subtitles_account_needed">OpenSubtitles hesabı gerekli\n\nAltyazı aramak ve indirmek için Ayarlar → Video oynatıcı → Altyazılar → OpenSubtitles bölümünden oturum açın. OpenSubtitles, ücretsiz ve açık bir topluluk hizmetidir — opensubtitles.com adresinden herkes ücretsiz hesap oluşturabilir.</string>
-    <string name="player_subtitles_no_matches">Eşleşen altyazı bulunamadı.</string>
     <string name="player_subtitles_show_all_languages">Tüm dilleri göster</string>
     <string name="player_subtitles_all_languages">Tüm diller</string>
     <string name="player_subtitles_try_again">Tekrar dene</string>

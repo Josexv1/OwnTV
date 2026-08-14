@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Проверить обновление</string>
     <string name="settings_search_label">Поиск настроек</string>
     <string name="settings_search_hint">Поиск настроек…</string>
-    <string name="settings_group_general">Общие</string>
     <string name="settings_language">Язык</string>
     <string name="settings_language_description">Язык интерфейса приложения</string>
     <string name="settings_language_system_default">Как в системе</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Автоматическая частота кадров</string>
     <string name="settings_auto_frame_rate_description">Согласовывать частоту обновления телевизора с видео (24/25/50/60 кадров/с) в полноэкранном режиме для прямого эфира и VOD и восстанавливать её при выходе. Отключите, если телевизор или ресивер при каждой смене канала заново устанавливает соединение HDMI с заметными помехами.</string>
     <string name="settings_surround_sound">Объёмный звук</string>
-    <string name="settings_surround_description">Декодировать Dolby/DTS в объёмный звук (5.1/7.1) для настоящего ресивера 5.1/7.1. Оставьте ВЫКЛ. для динамиков телевизора или стереофонического саундбара — на некоторых телевизорах и саундбарах многоканальный звук может отставать от видео. Если синхронизация сбивается, скорректируйте её в меню плеера «Звук → Синхронизация аудио и видео».</string>
     <string name="settings_autoplay_next">Автовоспроизведение следующей серии</string>
     <string name="settings_autoplay_next_description">Когда серия заканчивается, автоматически начинать следующую, а после завершения сезона переходить к следующему сезону.</string>
     <string name="settings_catchup">Архив</string>
@@ -465,7 +463,6 @@
     <string name="settings_done">Готово</string>
     <string name="settings_reset">Сбросить</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Прямой эфир</string>
     <string name="settings_history_movies">Фильмы</string>
     <string name="settings_history_series">Сериалы</string>
@@ -499,8 +496,6 @@
     <string name="settings_customize_remove_lock">Снять блокировку</string>
     <string name="settings_customize_description">Скрывайте и показывайте каналы, фильмы и сериалы, а также переименовывайте или меняйте порядок категорий для этого профиля. Изменения сохраняются после повторной синхронизации.</string>
     <string name="settings_customize_new_category_behavior">Поведение новых категорий</string>
-    <string name="settings_customize_hide_new">Скрывать — новые категории, добавленные при повторной синхронизации, по умолчанию скрыты</string>
-    <string name="settings_customize_show_new">Показывать — новые категории, добавленные при повторной синхронизации, по умолчанию видимы</string>
     <string name="settings_customize_hide">Скрыть</string>
     <string name="settings_customize_show">Показать</string>
     <string name="settings_customize_behavior_hide">Скрывать</string>
@@ -834,7 +829,6 @@
     <string name="settings_subtitle_customize">Настроить субтитры</string>
     <string name="settings_subtitle_customize_off">При отключении субтитры отображаются именно так, как их отрисовывают поток и плеер.</string>
     <string name="settings_subtitle_preview_stock">Предпросмотр — стандартный вид</string>
-    <string name="settings_subtitle_stock_description">Стандартный вид, включая цвета и расположение, заданные вещателями для субтитров прямого эфира.</string>
     <string name="settings_subtitle_reset_all">Сбросить всё</string>
     <string name="settings_subtitle_color">Цвет субтитров</string>
     <string name="settings_subtitle_color_default_description">При значении «По умолчанию» цвет определяется потоком и плеером.</string>

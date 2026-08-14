@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">檢查更新</string>
     <string name="settings_search_label">搜尋設定</string>
     <string name="settings_search_hint">搜尋設定…</string>
-    <string name="settings_group_general">一般</string>
     <string name="settings_language">語言</string>
     <string name="settings_language_description">應用程式顯示語言</string>
     <string name="settings_language_system_default">系統預設</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">自動影格率</string>
     <string name="settings_auto_frame_rate_description">在全螢幕播放電視直播和隨選影片時，將電視更新率配合影片調整為 24/25/50/60 fps，並在結束時還原。如果您的電視或接收器每次切換頻道時都會重新進行 HDMI 交握並產生明顯干擾，請關閉此功能。</string>
     <string name="settings_surround_sound">環繞音效</string>
-    <string name="settings_surround_description">針對真正的 5.1/7.1 接收器，將 Dolby/DTS 解碼為環繞音效（5.1/7.1）。使用電視揚聲器或立體聲聲霸時請保持關閉 — 多聲道音訊在部分電視／聲霸上可能落後於畫面。如果音訊逐漸不同步，請微調播放器的「音訊」選單 → A/V 同步。</string>
     <string name="settings_autoplay_next">自動播放下一集</string>
     <string name="settings_autoplay_next_description">一集播放完畢時自動開始播放下一集 — 並在本季結束後接續下一季。</string>
     <string name="settings_catchup">回看</string>
@@ -459,7 +457,6 @@
     <string name="settings_done">完成</string>
     <string name="settings_reset">重設</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">電視直播</string>
     <string name="settings_history_movies">電影</string>
     <string name="settings_history_series">影集</string>
@@ -493,8 +490,6 @@
     <string name="settings_customize_remove_lock">移除鎖定</string>
     <string name="settings_customize_description">為此使用者檔案隱藏或取消隱藏頻道、電影及影集，並重新命名或排列分類。重新同步後仍會保留。</string>
     <string name="settings_customize_new_category_behavior">新分類的顯示方式</string>
-    <string name="settings_customize_hide_new">隱藏 — 重新同步時新增的分類預設為隱藏</string>
-    <string name="settings_customize_show_new">顯示 — 重新同步時新增的分類預設為顯示</string>
     <string name="settings_customize_hide">隱藏</string>
     <string name="settings_customize_show">顯示</string>
     <string name="settings_customize_behavior_hide">預設隱藏</string>
@@ -789,7 +784,6 @@
     <string name="settings_subtitle_customize">自訂字幕</string>
     <string name="settings_subtitle_customize_off">關閉時，字幕會完全保留串流和播放器原本的呈現方式。</string>
     <string name="settings_subtitle_preview_stock">預覽——原始樣式</string>
-    <string name="settings_subtitle_stock_description">原始樣式，包括播送業者嵌入電視直播字幕的色彩與位置。</string>
     <string name="settings_subtitle_reset_all">全部重設</string>
     <string name="settings_subtitle_color">字幕色彩</string>
     <string name="settings_subtitle_color_default_description">預設值會由串流和播放器決定色彩。</string>

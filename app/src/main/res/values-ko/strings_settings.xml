@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">업데이트 확인</string>
     <string name="settings_search_label">설정 검색</string>
     <string name="settings_search_hint">설정 검색…</string>
-    <string name="settings_group_general">일반</string>
     <string name="settings_language">언어</string>
     <string name="settings_language_description">앱 표시 언어</string>
     <string name="settings_language_system_default">시스템 기본값</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">자동 프레임 레이트</string>
     <string name="settings_auto_frame_rate_description">전체 화면에서 실시간 TV와 VOD의 동영상에 맞게 TV 화면 주사율(24/25/50/60fps)을 조정하고 종료할 때 복원합니다. 채널을 바꿀 때마다 TV 또는 리시버가 HDMI 핸드셰이크를 다시 수행해 소음이 발생하면 끄세요.</string>
     <string name="settings_surround_sound">서라운드 사운드</string>
-    <string name="settings_surround_description">실제 5.1/7.1 리시버를 사용할 때 Dolby/DTS를 서라운드(5.1/7.1)로 디코딩합니다. TV 스피커나 스테레오 사운드바를 사용한다면 끄세요. 일부 TV/사운드바에서는 다채널 오디오가 영상보다 지연될 수 있습니다. 싱크가 어긋나면 플레이어의 오디오 메뉴 → A/V 동기화에서 미세 조정하세요.</string>
     <string name="settings_autoplay_next">다음 에피소드 자동 재생</string>
     <string name="settings_autoplay_next_description">에피소드가 끝나면 다음 에피소드를 자동으로 시작하며 다음 시즌까지 이어서 재생합니다.</string>
     <string name="settings_catchup">다시보기</string>
@@ -459,7 +457,6 @@
     <string name="settings_done">완료</string>
     <string name="settings_reset">초기화</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">실시간 TV</string>
     <string name="settings_history_movies">영화</string>
     <string name="settings_history_series">시리즈</string>
@@ -493,8 +490,6 @@
     <string name="settings_customize_remove_lock">잠금 해제</string>
     <string name="settings_customize_description">이 프로필의 채널, 영화 및 시리즈를 숨기거나 다시 표시하고 카테고리의 이름이나 순서를 변경합니다. 다시 동기화한 후에도 유지됩니다.</string>
     <string name="settings_customize_new_category_behavior">새 카테고리 동작</string>
-    <string name="settings_customize_hide_new">숨김 — 다시 동기화할 때 추가된 새 카테고리를 기본적으로 숨깁니다</string>
-    <string name="settings_customize_show_new">표시 — 다시 동기화할 때 추가된 새 카테고리를 기본적으로 표시합니다</string>
     <string name="settings_customize_hide">숨기기</string>
     <string name="settings_customize_show">표시</string>
     <string name="settings_customize_behavior_hide">숨김</string>
@@ -789,7 +784,6 @@
     <string name="settings_subtitle_customize">자막 맞춤 설정</string>
     <string name="settings_subtitle_customize_off">끄면 스트림과 플레이어가 표시하는 모습 그대로 자막이 유지됩니다.</string>
     <string name="settings_subtitle_preview_stock">미리보기 — 원본 스타일</string>
-    <string name="settings_subtitle_stock_description">실시간 TV 자막에 방송사가 삽입한 색상과 위치를 포함한 원본 스타일입니다.</string>
     <string name="settings_subtitle_reset_all">모두 초기화</string>
     <string name="settings_subtitle_color">자막 색상</string>
     <string name="settings_subtitle_color_default_description">기본값을 사용하면 자막 색상이 스트림 및 플레이어 설정을 따릅니다.</string>

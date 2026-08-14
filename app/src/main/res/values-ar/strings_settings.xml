@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">التحقق من وجود تحديث</string>
     <string name="settings_search_label">بحث في الإعدادات</string>
     <string name="settings_search_hint">بحث في الإعدادات…</string>
-    <string name="settings_group_general">عام</string>
     <string name="settings_language">اللغة</string>
     <string name="settings_language_description">لغة عرض التطبيق</string>
     <string name="settings_language_system_default">الإعداد الافتراضي للنظام</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">معدل الإطارات التلقائي</string>
     <string name="settings_auto_frame_rate_description">مطابقة معدل تحديث التلفزيون مع الفيديو (24/25/50/60 إطارًا في الثانية) في وضع ملء الشاشة، للبث التلفزيوني المباشر والفيديو حسب الطلب، واستعادته عند الخروج. عطّل هذا الخيار إذا كان التلفزيون أو جهاز الاستقبال يعيد مصافحة HDMI بصورة مزعجة عند كل تغيير للقناة.</string>
     <string name="settings_surround_sound">الصوت المحيطي</string>
-    <string name="settings_surround_description">فك ترميز Dolby/DTS إلى صوت محيطي (5.1/7.1) لجهاز استقبال حقيقي يدعم 5.1/7.1. اتركه متوقفًا لسماعات التلفزيون أو مكبّر صوت استريو — قد يتأخر الصوت متعدد القنوات عن الفيديو في بعض أجهزة التلفزيون/مكبّرات الصوت. إذا انحرفت المزامنة، فاضبط قليلًا قائمة الصوت في المشغّل ← مزامنة A/V.</string>
     <string name="settings_autoplay_next">تشغيل الحلقة التالية تلقائيًا</string>
     <string name="settings_autoplay_next_description">عند انتهاء حلقة، شغّل الحلقة التالية تلقائيًا — وانتقل إلى الموسم التالي.</string>
     <string name="settings_catchup">مشاهدة البث الفائت</string>
@@ -469,7 +467,6 @@
     <string name="settings_done">تم</string>
     <string name="settings_reset">إعادة الضبط</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">البث التلفزيوني المباشر</string>
     <string name="settings_history_movies">أفلام</string>
     <string name="settings_history_series">مسلسلات</string>
@@ -503,8 +500,6 @@
     <string name="settings_customize_remove_lock">إزالة القفل</string>
     <string name="settings_customize_description">أخفِ القنوات والأفلام والمسلسلات أو أظهرها، وأعد تسمية الفئات أو ترتيبها لهذا الملف الشخصي. تبقى هذه التخصيصات بعد عمليات إعادة المزامنة.</string>
     <string name="settings_customize_new_category_behavior">سلوك الفئات الجديدة</string>
-    <string name="settings_customize_hide_new">إخفاء — تُخفى افتراضيًا الفئات الجديدة المضافة عند إعادة المزامنة</string>
-    <string name="settings_customize_show_new">إظهار — تُعرض افتراضيًا الفئات الجديدة المضافة عند إعادة المزامنة</string>
     <string name="settings_customize_hide">إخفاء</string>
     <string name="settings_customize_show">إظهار</string>
     <string name="settings_customize_behavior_hide">إخفاء الفئات الجديدة</string>
@@ -864,7 +859,6 @@
     <string name="settings_subtitle_customize">تخصيص الترجمة</string>
     <string name="settings_subtitle_customize_off">عند الإيقاف، تظل الترجمة تمامًا كما يرسمها البث والمشغّل.</string>
     <string name="settings_subtitle_preview_stock">معاينة — المظهر الأصلي</string>
-    <string name="settings_subtitle_stock_description">المظهر الأصلي، بما في ذلك الألوان والمواضع التي تضمّنها جهات البث في ترجمة البث التلفزيوني المباشر.</string>
     <string name="settings_subtitle_reset_all">إعادة ضبط الكل</string>
     <string name="settings_subtitle_color">لون الترجمة</string>
     <string name="settings_subtitle_color_default_description">يترك الخيار الافتراضي اللون للبث والمشغّل.</string>

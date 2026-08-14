@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Auf Update prüfen</string>
     <string name="settings_search_label">Einstellungen durchsuchen</string>
     <string name="settings_search_hint">Einstellungen durchsuchen…</string>
-    <string name="settings_group_general">Allgemein</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_language_description">Anzeigesprache der App</string>
     <string name="settings_language_system_default">Systemstandard</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Automatische Bildrate</string>
     <string name="settings_auto_frame_rate_description">Die Bildwiederholfrequenz des Fernsehers im Vollbild für Live-TV und VOD an das Video anpassen (24/25/50/60 Bilder/s) und beim Beenden wiederherstellen. Deaktivieren Sie dies, wenn Ihr Fernseher oder Receiver bei jedem Senderwechsel geräuschvoll einen neuen HDMI-Handshake durchführt.</string>
     <string name="settings_surround_sound">Surround-Sound</string>
-    <string name="settings_surround_description">Dolby/DTS für einen echten 5.1-/7.1-Receiver als Surround-Sound (5.1/7.1) decodieren. Für TV-Lautsprecher oder eine Stereo-Soundbar DEAKTIVIERT lassen — Mehrkanalton kann bei manchen Fernsehern/Soundbars zu einer Verzögerung des Tons gegenüber dem Bild führen. Falls der Ton abdriftet, passen Sie ihn im Audiomenü des Players unter A/V-Synchronisierung an.</string>
     <string name="settings_autoplay_next">Nächste Folge automatisch wiedergeben</string>
     <string name="settings_autoplay_next_description">Nach dem Ende einer Folge automatisch die nächste starten — und anschließend mit der nächsten Staffel fortfahren.</string>
     <string name="settings_catchup">Catch-up</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">Fertig</string>
     <string name="settings_reset">Zurücksetzen</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Live-TV</string>
     <string name="settings_history_movies">Filme</string>
     <string name="settings_history_series">Serien</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">Sperre entfernen</string>
     <string name="settings_customize_description">Sender, Filme und Serien für dieses Profil ein- oder ausblenden sowie Kategorien umbenennen oder neu anordnen. Bleibt auch nach erneuten Synchronisierungen erhalten.</string>
     <string name="settings_customize_new_category_behavior">Verhalten bei neuen Kategorien</string>
-    <string name="settings_customize_hide_new">Ausblenden – bei erneuter Synchronisierung hinzugefügte neue Kategorien werden standardmäßig ausgeblendet</string>
-    <string name="settings_customize_show_new">Anzeigen – bei erneuter Synchronisierung hinzugefügte neue Kategorien werden standardmäßig angezeigt</string>
     <string name="settings_customize_hide">Ausblenden</string>
     <string name="settings_customize_show">Anzeigen</string>
     <string name="settings_customize_behavior_hide">Ausblenden</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">Untertitel anpassen</string>
     <string name="settings_subtitle_customize_off">Bei „Aus“ bleiben die Untertitel genau so, wie Stream und Player sie darstellen.</string>
     <string name="settings_subtitle_preview_stock">Vorschau – Originaldarstellung</string>
-    <string name="settings_subtitle_stock_description">Originaldarstellung einschließlich der Farben und Positionierung, die Sender in Live-TV-Untertiteln vorgeben.</string>
     <string name="settings_subtitle_reset_all">Alles zurücksetzen</string>
     <string name="settings_subtitle_color">Untertitelfarbe</string>
     <string name="settings_subtitle_color_default_description">Bei „Standard“ bestimmen Stream und Player die Farbe.</string>

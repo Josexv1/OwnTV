@@ -179,7 +179,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitlesは、無料でオープンなコミュニティ字幕サービスです。自分のopensubtitles.comアカウントでログインしてください。アカウントは無料で作成できます。この設定は現在のプロフィールにのみ適用されます。</string>
     <string name="player_subtitles_session_expired">OpenSubtitlesセッションの有効期限が切れました。字幕の検索とダウンロードを続けるには、「設定」→「ビデオプレーヤー」→「字幕」→「OpenSubtitles」から再度ログインしてください。</string>
     <string name="player_subtitles_account_needed">OpenSubtitlesアカウントが必要です\n\n字幕を検索してダウンロードするには、「設定」→「ビデオプレーヤー」→「字幕」→「OpenSubtitles」からログインしてください。OpenSubtitlesは無料でオープンなコミュニティサービスです — opensubtitles.comで誰でも無料アカウントを作成できます。</string>
-    <string name="player_subtitles_no_matches">一致する字幕が見つかりませんでした。</string>
     <string name="player_subtitles_show_all_languages">すべての言語を表示</string>
     <string name="player_subtitles_all_languages">すべての言語</string>
     <string name="player_subtitles_try_again">もう一度試す</string>

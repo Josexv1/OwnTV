@@ -191,7 +191,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles è un servizio di sottotitoli gratuito, aperto e gestito dalla comunità. Accedi con il tuo account opensubtitles.com; la creazione di un account è gratuita. Questa impostazione si applica solo al profilo corrente.</string>
     <string name="player_subtitles_session_expired">La tua sessione OpenSubtitles è scaduta. Per continuare a cercare e scaricare sottotitoli, accedi di nuovo da Impostazioni → Player video → Sottotitoli → OpenSubtitles.</string>
     <string name="player_subtitles_account_needed">Account OpenSubtitles necessario\n\nPer cercare e scaricare sottotitoli, accedi da Impostazioni → Player video → Sottotitoli → OpenSubtitles. OpenSubtitles è un servizio gratuito, aperto e gestito dalla comunità: chiunque può creare gratuitamente un account su opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Non è stato trovato alcun sottotitolo corrispondente.</string>
     <string name="player_subtitles_show_all_languages">Mostra tutte le lingue</string>
     <string name="player_subtitles_all_languages">Tutte le lingue</string>
     <string name="player_subtitles_try_again">Riprova</string>

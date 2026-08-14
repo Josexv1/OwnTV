@@ -260,8 +260,6 @@
     <string name="settings_search_label">Search settings</string>
     <!-- Translators: Placeholder text in the settings search field. -->
     <string name="settings_search_hint">Search settings…</string>
-    <!-- Translators: Settings navigation group label for General settings (language, etc.). -->
-    <string name="settings_group_general">General</string>
     <!-- Translators: Settings navigation label for the app display language picker. -->
     <string name="settings_language">Language</string>
     <!-- Translators: Description of the app display language setting. -->
@@ -376,8 +374,6 @@
     <string name="settings_auto_frame_rate_turn_on_anyway">Turn on anyway</string>
     <!-- Translators: Setting label for surround sound decoding. -->
     <string name="settings_surround_sound">Surround sound</string>
-    <!-- Translators: Description of the surround sound setting. Explains when to leave it OFF. -->
-    <string name="settings_surround_description">Decode Dolby/DTS to surround (5.1/7.1) for a real 5.1/7.1 receiver. Leave OFF for TV speakers or a stereo soundbar — multichannel can lag audio behind video on some TVs/soundbars. If it drifts, nudge the player\'s Audio menu → A/V sync.</string>
     <!-- Translators: Setting label to auto-play the next episode. -->
     <string name="settings_autoplay_next">Auto-play next episode</string>
     <!-- Translators: Description of the auto-play next episode setting. -->
@@ -932,8 +928,6 @@ Choose Balanced if a channel becomes unreliable.</string>
     <string name="settings_reset">Reset</string>
     <!-- Translators: Device information display. 'model' is the device model, 'android' is the Android version. -->
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <!-- Translators: Playback error log entry format. 'time' is the timestamp, 'engine' is the video engine, 'kind' is the error type. -->
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <!-- Translators: History scope label for Live TV. -->
     <string name="settings_history_live">Live TV</string>
     <!-- Translators: History scope label for Movies. -->
@@ -1002,10 +996,6 @@ Choose Balanced if a channel becomes unreliable.</string>
     <string name="settings_customize_description">Hide &amp; unhide channels, movies and series, and rename or reorder categories for this profile. Survives re-syncs.</string>
     <!-- Translators: Setting label for new-category visibility behavior. -->
     <string name="settings_customize_new_category_behavior">New category behavior</string>
-    <!-- Translators: Option to hide new categories added on re-sync. -->
-    <string name="settings_customize_hide_new">Hide — new categories added on re-sync are hidden by default</string>
-    <!-- Translators: Option to show new categories added on re-sync. -->
-    <string name="settings_customize_show_new">Show — new categories added on re-sync are shown by default</string>
     <!-- Translators: Imperative command button to hide one or more categories. Translate as an action, not the state "Hidden". -->
     <string name="settings_customize_hide">Hide</string>
     <!-- Translators: Imperative command button to reveal one or more hidden categories. Translate as an action, not the state "Shown". -->
@@ -1592,8 +1582,6 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <string name="settings_subtitle_customize_off">Off keeps subtitles exactly as the stream and the player draw them.</string>
     <!-- Translators: Heading above the custom subtitle preview. -->
     <string name="settings_subtitle_preview_stock">Preview — stock look</string>
-    <!-- Translators: Explains that the disabled preview retains embedded broadcaster styling. -->
-    <string name="settings_subtitle_stock_description">Stock look, including the colors and placement broadcasters embed in Live TV subtitles.</string>
     <!-- Translators: Button that restores every subtitle appearance setting to its default. -->
     <string name="settings_subtitle_reset_all">Reset all</string>
     <!-- Translators: Subtitle color setting title. -->

@@ -191,7 +191,6 @@
     <string name="player_subtitles_free_description_full">O OpenSubtitles é um serviço comunitário aberto e gratuito de legendas. Inicie sessão com a sua própria conta opensubtitles.com; a criação de uma conta é gratuita. Isto aplica-se apenas ao perfil atual.</string>
     <string name="player_subtitles_session_expired">A sua sessão do OpenSubtitles expirou. Para continuar a pesquisar e a transferir legendas, inicie novamente sessão em Definições → Leitor de vídeo → Legendas → OpenSubtitles.</string>
     <string name="player_subtitles_account_needed">É necessária uma conta OpenSubtitles\n\nPara pesquisar e transferir legendas, inicie sessão em Definições → Leitor de vídeo → Legendas → OpenSubtitles. O OpenSubtitles é um serviço comunitário aberto e gratuito — qualquer pessoa pode criar uma conta gratuita em opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Não foram encontradas legendas correspondentes.</string>
     <string name="player_subtitles_show_all_languages">Mostrar todos os idiomas</string>
     <string name="player_subtitles_all_languages">Todos os idiomas</string>
     <string name="player_subtitles_try_again">Tentar novamente</string>

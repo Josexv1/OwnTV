@@ -197,7 +197,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles to bezpłatna, otwarta społecznościowa usługa napisów. Zaloguj się przy użyciu własnego konta opensubtitles.com; możesz je utworzyć bezpłatnie. Dotyczy to tylko bieżącego profilu.</string>
     <string name="player_subtitles_session_expired">Twoja sesja OpenSubtitles wygasła. Aby nadal wyszukiwać i pobierać napisy, zaloguj się ponownie w Ustawienia → Odtwarzacz wideo → Napisy → OpenSubtitles.</string>
     <string name="player_subtitles_account_needed">Wymagane konto OpenSubtitles\n\nAby wyszukiwać i pobierać napisy, zaloguj się w Ustawienia → Odtwarzacz wideo → Napisy → OpenSubtitles. OpenSubtitles to bezpłatna, otwarta usługa społecznościowa — każdy może utworzyć bezpłatne konto na opensubtitles.com.</string>
-    <string name="player_subtitles_no_matches">Nie znaleziono pasujących napisów.</string>
     <string name="player_subtitles_show_all_languages">Pokaż wszystkie języki</string>
     <string name="player_subtitles_all_languages">Wszystkie języki</string>
     <string name="player_subtitles_try_again">Spróbuj ponownie</string>

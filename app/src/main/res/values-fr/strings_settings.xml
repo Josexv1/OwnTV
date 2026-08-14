@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Rechercher une mise à jour</string>
     <string name="settings_search_label">Rechercher dans les paramètres</string>
     <string name="settings_search_hint">Rechercher dans les paramètres…</string>
-    <string name="settings_group_general">Général</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_description">Langue d’affichage de l’application</string>
     <string name="settings_language_system_default">Valeur par défaut du système</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Fréquence d’images automatique</string>
     <string name="settings_auto_frame_rate_description">Adapter la fréquence de rafraîchissement du téléviseur à la vidéo (24/25/50/60 ips) en plein écran, pour la TV en direct et la VOD, puis la rétablir en quittant la lecture. Désactivez cette option si votre téléviseur ou récepteur relance bruyamment la négociation HDMI à chaque changement de chaîne.</string>
     <string name="settings_surround_sound">Son surround</string>
-    <string name="settings_surround_description">Décoder Dolby/DTS en son surround (5.1/7.1) pour un véritable récepteur 5.1/7.1. Laissez cette option DÉSACTIVÉE avec les haut-parleurs du téléviseur ou une barre de son stéréo — sur certains téléviseurs et certaines barres de son, le multicanal peut retarder le son par rapport à l’image. En cas de décalage progressif, ajustez le menu Audio du lecteur → Synchronisation A/V.</string>
     <string name="settings_autoplay_next">Lire automatiquement l’épisode suivant</string>
     <string name="settings_autoplay_next_description">Lorsqu’un épisode se termine, lancer automatiquement le suivant — et passer à la saison suivante.</string>
     <string name="settings_catchup">Rattrapage</string>
@@ -463,7 +461,6 @@
     <string name="settings_done">Terminé</string>
     <string name="settings_reset">Réinitialiser</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">TV en direct</string>
     <string name="settings_history_movies">Films</string>
     <string name="settings_history_series">Séries</string>
@@ -497,8 +494,6 @@
     <string name="settings_customize_remove_lock">Supprimer le verrouillage</string>
     <string name="settings_customize_description">Masquez et réaffichez des chaînes, des films et des séries, et renommez ou réorganisez les catégories de ce profil. Ces réglages sont conservés après les resynchronisations.</string>
     <string name="settings_customize_new_category_behavior">Comportement des nouvelles catégories</string>
-    <string name="settings_customize_hide_new">Masquer — les nouvelles catégories ajoutées lors d’une resynchronisation sont masquées par défaut</string>
-    <string name="settings_customize_show_new">Afficher — les nouvelles catégories ajoutées lors d’une resynchronisation sont affichées par défaut</string>
     <string name="settings_customize_hide">Masquer</string>
     <string name="settings_customize_show">Afficher</string>
     <string name="settings_customize_behavior_hide">Masquer</string>
@@ -819,7 +814,6 @@
     <string name="settings_subtitle_customize">Personnaliser les sous-titres</string>
     <string name="settings_subtitle_customize_off">Lorsque cette option est désactivée, les sous-titres restent exactement tels que le flux et le lecteur les affichent.</string>
     <string name="settings_subtitle_preview_stock">Aperçu — apparence d’origine</string>
-    <string name="settings_subtitle_stock_description">Apparence d’origine, y compris les couleurs et le positionnement intégrés par les diffuseurs aux sous-titres de la TV en direct.</string>
     <string name="settings_subtitle_reset_all">Tout réinitialiser</string>
     <string name="settings_subtitle_color">Couleur des sous-titres</string>
     <string name="settings_subtitle_color_default_description">Par défaut, la couleur est déterminée par le flux et le lecteur.</string>

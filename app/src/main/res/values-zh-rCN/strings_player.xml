@@ -179,7 +179,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles 是一项免费、开放的社区字幕服务。请使用您自己的 opensubtitles.com 账户登录；账户可免费创建。此设置仅适用于当前用户档案。</string>
     <string name="player_subtitles_session_expired">您的 OpenSubtitles 会话已过期。要继续搜索和下载字幕，请前往“设置 → 视频播放器 → 字幕 → OpenSubtitles”重新登录。</string>
     <string name="player_subtitles_account_needed">需要 OpenSubtitles 账户\n\n要搜索和下载字幕，请前往“设置 → 视频播放器 → 字幕 → OpenSubtitles”登录。OpenSubtitles 是一项免费、开放的社区服务——任何人都可以在 opensubtitles.com 免费创建账户。</string>
-    <string name="player_subtitles_no_matches">未找到匹配的字幕。</string>
     <string name="player_subtitles_show_all_languages">显示所有语言</string>
     <string name="player_subtitles_all_languages">所有语言</string>
     <string name="player_subtitles_try_again">重试</string>

@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Zkontrolovat aktualizaci</string>
     <string name="settings_search_label">Vyhledávání v nastavení</string>
     <string name="settings_search_hint">Vyhledávání v nastavení…</string>
-    <string name="settings_group_general">Obecné</string>
     <string name="settings_language">Jazyk</string>
     <string name="settings_language_description">Jazyk rozhraní aplikace</string>
     <string name="settings_language_system_default">Podle systému</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Automatická snímková frekvence</string>
     <string name="settings_auto_frame_rate_description">Při zobrazení na celé obrazovce přizpůsobit obnovovací frekvenci televizoru videu (24/25/50/60 sn./s) pro živé vysílání i VOD a při ukončení ji obnovit. Vypněte, pokud televizor nebo přijímač při každé změně kanálu rušivě znovu navazuje spojení HDMI.</string>
     <string name="settings_surround_sound">Prostorový zvuk</string>
-    <string name="settings_surround_description">Dekódovat Dolby/DTS do prostorového zvuku (5.1/7.1) pro skutečný přijímač 5.1/7.1. U reproduktorů televizoru nebo stereofonního soundbaru ponechte VYPNUTO — na některých televizorech a soundbarech může vícekanálový zvuk zaostávat za obrazem. Pokud se rozchází, upravte v nabídce Zvuk přehrávače → Synchronizace A/V.</string>
     <string name="settings_autoplay_next">Automaticky přehrát další epizodu</string>
     <string name="settings_autoplay_next_description">Po skončení epizody automaticky spustit další — a pokračovat i do následující řady.</string>
     <string name="settings_catchup">TV archiv</string>
@@ -465,7 +463,6 @@
     <string name="settings_done">Hotovo</string>
     <string name="settings_reset">Obnovit výchozí</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Živé vysílání</string>
     <string name="settings_history_movies">Filmy</string>
     <string name="settings_history_series">Seriály</string>
@@ -499,8 +496,6 @@
     <string name="settings_customize_remove_lock">Odstranit zámek</string>
     <string name="settings_customize_description">Skrývejte a znovu zobrazujte kanály, filmy a seriály a přejmenovávejte nebo měňte pořadí kategorií pro tento profil. Změny se zachovají i po opětovné synchronizaci.</string>
     <string name="settings_customize_new_category_behavior">Chování nových kategorií</string>
-    <string name="settings_customize_hide_new">Skrývat — nové kategorie přidané při opětovné synchronizaci budou ve výchozím nastavení skryté</string>
-    <string name="settings_customize_show_new">Zobrazovat — nové kategorie přidané při opětovné synchronizaci budou ve výchozím nastavení zobrazené</string>
     <string name="settings_customize_hide">Skrýt</string>
     <string name="settings_customize_show">Zobrazit</string>
     <string name="settings_customize_behavior_hide">Skrývat</string>
@@ -834,7 +829,6 @@
     <string name="settings_subtitle_customize">Přizpůsobit titulky</string>
     <string name="settings_subtitle_customize_off">Vypnutí ponechá titulky přesně v podobě, v jaké je vykreslují stream a přehrávač.</string>
     <string name="settings_subtitle_preview_stock">Náhled – výchozí vzhled</string>
-    <string name="settings_subtitle_stock_description">Výchozí vzhled včetně barev a umístění, které vysílatelé vkládají do titulků živého vysílání.</string>
     <string name="settings_subtitle_reset_all">Obnovit vše</string>
     <string name="settings_subtitle_color">Barva titulků</string>
     <string name="settings_subtitle_color_default_description">Při výchozím nastavení určují barvu stream a přehrávač.</string>

@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Controleren op update</string>
     <string name="settings_search_label">Instellingen doorzoeken</string>
     <string name="settings_search_hint">Instellingen doorzoeken…</string>
-    <string name="settings_group_general">Algemeen</string>
     <string name="settings_language">Taal</string>
     <string name="settings_language_description">Weergavetaal van de app</string>
     <string name="settings_language_system_default">Systeemstandaard</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Automatische beeldfrequentie</string>
     <string name="settings_auto_frame_rate_description">Stem in volledig scherm de vernieuwingsfrequentie van de tv af op de video (24/25/50/60 fps), voor live-tv en VOD, en herstel deze bij afsluiten. Schakel dit uit als je tv of ontvanger bij elke zenderwissel de HDMI-verbinding hoorbaar opnieuw opbouwt.</string>
     <string name="settings_surround_sound">Surroundsound</string>
-    <string name="settings_surround_description">Decodeer Dolby/DTS naar surround (5.1/7.1) voor een echte 5.1/7.1-ontvanger. Laat dit UIT voor tv-luidsprekers of een stereosoundbar — meerkanaalsaudio kan op sommige tv\'s/soundbars achterlopen op het beeld. Als het geluid wegdrijft, pas je dit licht aan via het menu Audio van de speler → A/V-synchronisatie.</string>
     <string name="settings_autoplay_next">Volgende aflevering automatisch afspelen</string>
     <string name="settings_autoplay_next_description">Wanneer een aflevering eindigt, wordt automatisch de volgende gestart — en daarna het volgende seizoen.</string>
     <string name="settings_catchup">Terugkijken</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">Gereed</string>
     <string name="settings_reset">Opnieuw instellen</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Live-tv</string>
     <string name="settings_history_movies">Films</string>
     <string name="settings_history_series">Series</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">Vergrendeling verwijderen</string>
     <string name="settings_customize_description">Verberg en toon zenders, films en series en wijzig de naam of volgorde van categorieën voor dit profiel. Blijft behouden na opnieuw synchroniseren.</string>
     <string name="settings_customize_new_category_behavior">Gedrag voor nieuwe categorieën</string>
-    <string name="settings_customize_hide_new">Verbergen — nieuwe categorieën die bij opnieuw synchroniseren worden toegevoegd, zijn standaard verborgen</string>
-    <string name="settings_customize_show_new">Tonen — nieuwe categorieën die bij opnieuw synchroniseren worden toegevoegd, worden standaard getoond</string>
     <string name="settings_customize_hide">Verbergen</string>
     <string name="settings_customize_show">Tonen</string>
     <string name="settings_customize_behavior_hide">Verbergen</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">Ondertiteling aanpassen</string>
     <string name="settings_subtitle_customize_off">Als deze optie uitstaat, blijft de ondertiteling precies zoals de stream en de speler die weergeven.</string>
     <string name="settings_subtitle_preview_stock">Voorbeeld — standaardweergave</string>
-    <string name="settings_subtitle_stock_description">Standaardweergave, inclusief de kleuren en plaatsing die omroepen in ondertiteling voor live-tv hebben vastgelegd.</string>
     <string name="settings_subtitle_reset_all">Alles resetten</string>
     <string name="settings_subtitle_color">Kleur van ondertiteling</string>
     <string name="settings_subtitle_color_default_description">Bij Standaard bepalen de stream en de speler de kleur.</string>

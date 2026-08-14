@@ -185,7 +185,6 @@
     <string name="player_subtitles_free_description_full">OpenSubtitles একটি বিনামূল্যের, উন্মুক্ত কমিউনিটি সাবটাইটেল পরিষেবা। আপনার নিজের opensubtitles.com অ্যাকাউন্ট দিয়ে সাইন ইন করুন; বিনামূল্যে একটি অ্যাকাউন্ট তৈরি করা যায়। এটি শুধু বর্তমান প্রোফাইলের ক্ষেত্রে প্রযোজ্য।</string>
     <string name="player_subtitles_session_expired">আপনার OpenSubtitles সেশনের মেয়াদ শেষ হয়েছে। সাবটাইটেল অনুসন্ধান ও ডাউনলোড চালিয়ে যেতে সেটিংস → ভিডিও প্লেয়ার → সাবটাইটেলগুলো → OpenSubtitles থেকে আবার সাইন ইন করুন।</string>
     <string name="player_subtitles_account_needed">OpenSubtitles অ্যাকাউন্ট প্রয়োজন\n\nসাবটাইটেল অনুসন্ধান ও ডাউনলোড করতে সেটিংস → ভিডিও প্লেয়ার → সাবটাইটেলগুলো → OpenSubtitles থেকে সাইন ইন করুন। OpenSubtitles একটি বিনামূল্যের, উন্মুক্ত কমিউনিটি পরিষেবা — opensubtitles.com-এ যে কেউ বিনামূল্যে অ্যাকাউন্ট তৈরি করতে পারেন।</string>
-    <string name="player_subtitles_no_matches">মিলে যায় এমন কোনো সাবটাইটেল পাওয়া যায়নি।</string>
     <string name="player_subtitles_show_all_languages">সব ভাষা দেখান</string>
     <string name="player_subtitles_all_languages">সব ভাষা</string>
     <string name="player_subtitles_try_again">আবার চেষ্টা করুন</string>

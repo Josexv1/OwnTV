@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">আপডেট পরীক্ষা করুন</string>
     <string name="settings_search_label">সেটিংস অনুসন্ধান</string>
     <string name="settings_search_hint">সেটিংস অনুসন্ধান করুন…</string>
-    <string name="settings_group_general">সাধারণ</string>
     <string name="settings_language">ভাষা</string>
     <string name="settings_language_description">অ্যাপ প্রদর্শনের ভাষা</string>
     <string name="settings_language_system_default">সিস্টেমের ডিফল্ট</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">স্বয়ংক্রিয় ফ্রেম রেট</string>
     <string name="settings_auto_frame_rate_description">পূর্ণ পর্দায় লাইভ টিভি ও VOD-এর জন্য ভিডিওর সঙ্গে TV-এর রিফ্রেশ রেট (24/25/50/60 fps) মিলিয়ে নিন এবং বের হলে আগের অবস্থায় ফিরিয়ে দিন। প্রতিবার চ্যানেল বদলালে আপনার TV বা রিসিভার HDMI-তে শব্দসহ আবার হ্যান্ডশেক করলে এটি বন্ধ করুন।</string>
     <string name="settings_surround_sound">সারাউন্ড সাউন্ড</string>
-    <string name="settings_surround_description">প্রকৃত 5.1/7.1 রিসিভারের জন্য Dolby/DTS অডিও সারাউন্ডে (5.1/7.1) ডিকোড করুন। TV স্পিকার বা স্টেরিও সাউন্ডবারের জন্য বন্ধ রাখুন — কিছু TV/সাউন্ডবারে মাল্টিচ্যানেল অডিও ভিডিওর চেয়ে পিছিয়ে যেতে পারে। তাল হারালে প্লেয়ারের অডিও মেনু → A/V সিঙ্ক সামান্য সমন্বয় করুন।</string>
     <string name="settings_autoplay_next">পরের পর্ব স্বয়ংক্রিয়ভাবে চালান</string>
     <string name="settings_autoplay_next_description">একটি পর্ব শেষ হলে পরেরটি স্বয়ংক্রিয়ভাবে চালান — এবং পরের সিজনেও চলে যান।</string>
     <string name="settings_catchup">ক্যাচ-আপ</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">সম্পন্ন</string>
     <string name="settings_reset">রিসেট করুন</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">লাইভ টিভি</string>
     <string name="settings_history_movies">সিনেমা</string>
     <string name="settings_history_series">সিরিজ</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">লক সরান</string>
     <string name="settings_customize_description">এই প্রোফাইলের জন্য চ্যানেল, সিনেমা ও সিরিজ লুকান বা আবার দেখান এবং বিভাগগুলোর নাম পরিবর্তন বা ক্রম বদলান। পুনরায় সিঙ্ক করলেও এগুলো বজায় থাকবে।</string>
     <string name="settings_customize_new_category_behavior">নতুন বিভাগের আচরণ</string>
-    <string name="settings_customize_hide_new">লুকিয়ে রাখুন—পুনরায় সিঙ্কে যোগ হওয়া নতুন বিভাগ ডিফল্টভাবে লুকানো থাকবে</string>
-    <string name="settings_customize_show_new">দেখান—পুনরায় সিঙ্কে যোগ হওয়া নতুন বিভাগ ডিফল্টভাবে দেখানো হবে</string>
     <string name="settings_customize_hide">লুকান</string>
     <string name="settings_customize_show">দেখান</string>
     <string name="settings_customize_behavior_hide">লুকানো থাকবে</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">সাবটাইটেল নিজের মতো সাজান</string>
     <string name="settings_subtitle_customize_off">বন্ধ রাখলে স্ট্রিম ও প্লেয়ার সাবটাইটেল যেভাবে দেখায়, তা ঠিক সেভাবেই থাকে।</string>
     <string name="settings_subtitle_preview_stock">প্রিভিউ—অপরিবর্তিত রূপ</string>
-    <string name="settings_subtitle_stock_description">লাইভ টিভির সাবটাইটেলে সম্প্রচারকারীদের যুক্ত করে দেওয়া রং ও অবস্থানসহ মূল চেহারা।</string>
     <string name="settings_subtitle_reset_all">সব রিসেট করুন</string>
     <string name="settings_subtitle_color">সাবটাইটেলের রং</string>
     <string name="settings_subtitle_color_default_description">ডিফল্ট রাখলে রংটি স্ট্রিম ও প্লেয়ার নির্ধারণ করে।</string>

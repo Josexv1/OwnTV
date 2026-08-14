@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">അപ്‌ഡേറ്റിനായി പരിശോധിക്കുക</string>
     <string name="settings_search_label">ക്രമീകരണങ്ങൾ തിരയുക</string>
     <string name="settings_search_hint">ക്രമീകരണങ്ങൾ തിരയുക…</string>
-    <string name="settings_group_general">പൊതുവായത്</string>
     <string name="settings_language">ഭാഷ</string>
     <string name="settings_language_description">ആപ്പിൽ പ്രദർശിപ്പിക്കേണ്ട ഭാഷ</string>
     <string name="settings_language_system_default">സിസ്റ്റം ഡിഫോൾട്ട്</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">സ്വയമേവയുള്ള ഫ്രെയിം നിരക്ക്</string>
     <string name="settings_auto_frame_rate_description">തത്സമയ ടിവിക്കും VOD-ക്കും പൂർണ്ണ സ്ക്രീനിൽ ടിവിയുടെ പുതുക്കൽ നിരക്ക് വീഡിയോയുമായി (24/25/50/60 fps) പൊരുത്തപ്പെടുത്തി, പുറത്തുകടക്കുമ്പോൾ പഴയ നിലയിലാക്കുക. ഓരോ ചാനൽ മാറ്റത്തിലും നിങ്ങളുടെ ടിവിയോ റിസീവറോ HDMI ഹാൻഡ്‌ഷേക്ക് ശബ്ദത്തോടെ വീണ്ടും നടത്തുകയാണെങ്കിൽ ഇത് പ്രവർത്തനരഹിതമാക്കുക.</string>
     <string name="settings_surround_sound">സറൗണ്ട് സൗണ്ട്</string>
-    <string name="settings_surround_description">യഥാർഥ 5.1/7.1 റിസീവറിനായി Dolby/DTS സറൗണ്ടിലേക്ക് (5.1/7.1) ഡീകോഡ് ചെയ്യുക. ടിവി സ്പീക്കറുകൾക്കോ സ്റ്റീരിയോ സൗണ്ട്ബാറിനോ ഇത് പ്രവർത്തനരഹിതമായി വിടുക — ചില ടിവികളിലും സൗണ്ട്ബാറുകളിലും മൾട്ടിചാനൽ ശബ്ദം വീഡിയോയെക്കാൾ വൈകാൻ ഇടയാക്കാം. സമന്വയം തെറ്റുകയാണെങ്കിൽ പ്ലെയറിലെ ഓഡിയോ മെനു → A/V സമന്വയം ക്രമീകരിക്കുക.</string>
     <string name="settings_autoplay_next">അടുത്ത എപ്പിസോഡ് സ്വയം പ്ലേ ചെയ്യുക</string>
     <string name="settings_autoplay_next_description">ഒരു എപ്പിസോഡ് അവസാനിക്കുമ്പോൾ അടുത്തത് സ്വയം ആരംഭിക്കുക — തുടർന്ന് അടുത്ത സീസണിലേക്കും കടക്കുക.</string>
     <string name="settings_catchup">ക്യാച്ച്-അപ്പ്</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">പൂർത്തിയായി</string>
     <string name="settings_reset">പുനഃസജ്ജമാക്കുക</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">തത്സമയ ടിവി</string>
     <string name="settings_history_movies">സിനിമകൾ</string>
     <string name="settings_history_series">സീരീസ്</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">ലോക്ക് നീക്കംചെയ്യുക</string>
     <string name="settings_customize_description">ഈ പ്രൊഫൈലിനായി ചാനലുകൾ, സിനിമകൾ, സീരീസ് എന്നിവ മറയ്ക്കുകയോ വീണ്ടും കാണിക്കുകയോ ചെയ്യുക; വിഭാഗങ്ങളുടെ പേര് മാറ്റുകയോ ക്രമം മാറ്റുകയോ ചെയ്യുക. വീണ്ടും സമന്വയിപ്പിച്ചാലും മാറ്റങ്ങൾ നിലനിൽക്കും.</string>
     <string name="settings_customize_new_category_behavior">പുതിയ വിഭാഗങ്ങളുടെ പ്രവർത്തനം</string>
-    <string name="settings_customize_hide_new">മറയ്ക്കുക — വീണ്ടും സമന്വയിപ്പിക്കുമ്പോൾ ചേർക്കുന്ന പുതിയ വിഭാഗങ്ങൾ ഡിഫോൾട്ടായി മറച്ചിരിക്കും</string>
-    <string name="settings_customize_show_new">കാണിക്കുക — വീണ്ടും സമന്വയിപ്പിക്കുമ്പോൾ ചേർക്കുന്ന പുതിയ വിഭാഗങ്ങൾ ഡിഫോൾട്ടായി കാണിക്കും</string>
     <string name="settings_customize_hide">മറയ്ക്കുക</string>
     <string name="settings_customize_show">കാണിക്കുക</string>
     <string name="settings_customize_behavior_hide">മറച്ചിടൽ</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">സബ്‌ടൈറ്റിലുകൾ ഇഷ്ടാനുസൃതമാക്കുക</string>
     <string name="settings_subtitle_customize_off">ഓഫ് ആക്കിയാൽ സ്ട്രീമും പ്ലെയറും പ്രദർശിപ്പിക്കുന്നതുപോലെ തന്നെ സബ്‌ടൈറ്റിലുകൾ നിലനിർത്തും.</string>
     <string name="settings_subtitle_preview_stock">പ്രിവ്യൂ — യഥാസ്ഥിതി രൂപം</string>
-    <string name="settings_subtitle_stock_description">പ്രക്ഷേപകർ തത്സമയ ടിവി സബ്‌ടൈറ്റിലുകളിൽ ഉൾച്ചേർക്കുന്ന നിറങ്ങളും സ്ഥാനവും ഉൾപ്പെടെയുള്ള യഥാസ്ഥിതി രൂപം.</string>
     <string name="settings_subtitle_reset_all">എല്ലാം പുനഃസജ്ജമാക്കുക</string>
     <string name="settings_subtitle_color">സബ്‌ടൈറ്റിൽ നിറം</string>
     <string name="settings_subtitle_color_default_description">ഡിഫോൾട്ട് ആക്കിയാൽ നിറം സ്ട്രീമിന്റെയും പ്ലെയറിന്റെയും നിയന്ത്രണത്തിൽ തുടരും.</string>

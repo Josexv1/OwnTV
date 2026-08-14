@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Sprawdź aktualizację</string>
     <string name="settings_search_label">Wyszukaj ustawienia</string>
     <string name="settings_search_hint">Wyszukaj ustawienia…</string>
-    <string name="settings_group_general">Ogólne</string>
     <string name="settings_language">Język</string>
     <string name="settings_language_description">Język interfejsu aplikacji</string>
     <string name="settings_language_system_default">Ustawienie domyślne systemu</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Automatyczne dopasowanie klatek</string>
     <string name="settings_auto_frame_rate_description">Dopasuj częstotliwość odświeżania telewizora do filmu (24/25/50/60 kl./s) na pełnym ekranie w telewizji na żywo i VOD, a po zakończeniu przywróć poprzednią wartość. Wyłącz tę opcję, jeśli telewizor lub amplituner głośno ponawia uzgadnianie połączenia HDMI przy każdej zmianie kanału.</string>
     <string name="settings_surround_sound">Dźwięk przestrzenny</string>
-    <string name="settings_surround_description">Dekoduj Dolby/DTS do dźwięku przestrzennego (5.1/7.1) dla prawdziwego amplitunera 5.1/7.1. Pozostaw WYŁĄCZONE w przypadku głośników telewizora lub stereofonicznego soundbara — dźwięk wielokanałowy może być opóźniony względem obrazu na niektórych telewizorach i soundbarach. Jeśli synchronizacja się rozjeżdża, skoryguj ją w menu Dźwięk odtwarzacza → Synchronizacja A/V.</string>
     <string name="settings_autoplay_next">Automatycznie odtwarzaj następny odcinek</string>
     <string name="settings_autoplay_next_description">Po zakończeniu odcinka automatycznie rozpocznij następny — również z kolejnego sezonu.</string>
     <string name="settings_catchup">Oglądanie wstecz</string>
@@ -465,7 +463,6 @@
     <string name="settings_done">Gotowe</string>
     <string name="settings_reset">Resetuj</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Telewizja na żywo</string>
     <string name="settings_history_movies">Filmy</string>
     <string name="settings_history_series">Seriale</string>
@@ -499,8 +496,6 @@
     <string name="settings_customize_remove_lock">Usuń blokadę</string>
     <string name="settings_customize_description">Ukrywaj i pokazuj kanały, filmy oraz seriale, a także zmieniaj nazwy i kolejność kategorii w tym profilu. Ustawienia pozostają zachowane po ponownej synchronizacji.</string>
     <string name="settings_customize_new_category_behavior">Sposób obsługi nowych kategorii</string>
-    <string name="settings_customize_hide_new">Ukrywaj — nowe kategorie dodane podczas ponownej synchronizacji są domyślnie ukryte</string>
-    <string name="settings_customize_show_new">Pokazuj — nowe kategorie dodane podczas ponownej synchronizacji są domyślnie widoczne</string>
     <string name="settings_customize_hide">Ukryj</string>
     <string name="settings_customize_show">Pokaż</string>
     <string name="settings_customize_behavior_hide">Ukrywaj</string>
@@ -834,7 +829,6 @@
     <string name="settings_subtitle_customize">Dostosuj napisy</string>
     <string name="settings_subtitle_customize_off">Po wyłączeniu wygląd napisów pozostaje dokładnie taki, jaki określają strumień i odtwarzacz.</string>
     <string name="settings_subtitle_preview_stock">Podgląd — wygląd standardowy</string>
-    <string name="settings_subtitle_stock_description">Standardowy wygląd, w tym kolory i rozmieszczenie osadzone przez nadawców w napisach telewizji na żywo.</string>
     <string name="settings_subtitle_reset_all">Resetuj wszystko</string>
     <string name="settings_subtitle_color">Kolor napisów</string>
     <string name="settings_subtitle_color_default_description">Ustawienie domyślne pozostawia wybór koloru strumieniowi i odtwarzaczowi.</string>

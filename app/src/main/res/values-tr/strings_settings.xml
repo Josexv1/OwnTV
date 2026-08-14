@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">Güncellemeleri denetle</string>
     <string name="settings_search_label">Ayarlarda ara</string>
     <string name="settings_search_hint">Ayarlarda ara…</string>
-    <string name="settings_group_general">Genel</string>
     <string name="settings_language">Dil</string>
     <string name="settings_language_description">Uygulamanın görüntüleme dili</string>
     <string name="settings_language_system_default">Sistem varsayılanı</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">Otomatik kare hızı</string>
     <string name="settings_auto_frame_rate_description">Canlı TV ve VOD içeriklerinde tam ekrandayken TV\'nin yenileme hızını videoyla (24/25/50/60 fps) eşleştirin ve çıkışta eski hâline getirin. TV\'niz veya alıcınız her kanal değişikliğinde HDMI el sıkışmasını gürültülü biçimde tekrarlıyorsa bu seçeneği kapatın.</string>
     <string name="settings_surround_sound">Çevresel ses</string>
-    <string name="settings_surround_description">Gerçek bir 5.1/7.1 alıcı için Dolby/DTS sesini çevresel sese (5.1/7.1) dönüştürün. TV hoparlörleri veya stereo soundbar kullanıyorsanız KAPALI bırakın — çok kanallı ses bazı TV\'lerde/soundbar\'larda sesin görüntünün gerisinde kalmasına yol açabilir. Eşitleme kayarsa oynatıcının Ses menüsü → A/V eşitleme ayarını hafifçe değiştirin.</string>
     <string name="settings_autoplay_next">Sonraki bölümü otomatik oynat</string>
     <string name="settings_autoplay_next_description">Bir bölüm sona erdiğinde sonraki bölümü otomatik olarak başlatın — sezon bitince sonraki sezona geçin.</string>
     <string name="settings_catchup">Geri izleme</string>
@@ -461,7 +459,6 @@
     <string name="settings_done">Bitti</string>
     <string name="settings_reset">Sıfırla</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">Canlı TV</string>
     <string name="settings_history_movies">Filmler</string>
     <string name="settings_history_series">Diziler</string>
@@ -495,8 +492,6 @@
     <string name="settings_customize_remove_lock">Kilidi kaldır</string>
     <string name="settings_customize_description">Bu profil için kanalları, filmleri ve dizileri gizleyin veya yeniden gösterin; kategorileri yeniden adlandırın ya da sıralayın. Yeniden eşitlemelerden etkilenmez.</string>
     <string name="settings_customize_new_category_behavior">Yeni kategori davranışı</string>
-    <string name="settings_customize_hide_new">Gizle — yeniden eşitleme sırasında eklenen yeni kategoriler varsayılan olarak gizlenir</string>
-    <string name="settings_customize_show_new">Göster — yeniden eşitleme sırasında eklenen yeni kategoriler varsayılan olarak gösterilir</string>
     <string name="settings_customize_hide">Gizle</string>
     <string name="settings_customize_show">Göster</string>
     <string name="settings_customize_behavior_hide">Gizli</string>
@@ -804,7 +799,6 @@
     <string name="settings_subtitle_customize">Altyazıları özelleştir</string>
     <string name="settings_subtitle_customize_off">Kapalı olduğunda altyazılar, akışın ve oynatıcının çizdiği biçimde aynen kalır.</string>
     <string name="settings_subtitle_preview_stock">Önizleme — özgün görünüm</string>
-    <string name="settings_subtitle_stock_description">Yayıncıların Canlı TV altyazılarına yerleştirdiği renkler ve konumlandırma dâhil özgün görünüm.</string>
     <string name="settings_subtitle_reset_all">Tümünü sıfırla</string>
     <string name="settings_subtitle_color">Altyazı rengi</string>
     <string name="settings_subtitle_color_default_description">Varsayılan seçeneği renk seçimini akışa ve oynatıcıya bırakır.</string>

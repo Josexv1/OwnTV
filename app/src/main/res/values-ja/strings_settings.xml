@@ -128,7 +128,6 @@
     <string name="settings_quick_check_update">更新を確認</string>
     <string name="settings_search_label">設定を検索</string>
     <string name="settings_search_hint">設定を検索…</string>
-    <string name="settings_group_general">一般</string>
     <string name="settings_language">言語</string>
     <string name="settings_language_description">アプリの表示言語</string>
     <string name="settings_language_system_default">システムのデフォルト</string>
@@ -181,7 +180,6 @@
     <string name="settings_auto_frame_rate">自動フレームレート</string>
     <string name="settings_auto_frame_rate_description">全画面表示でライブTVとVODの再生時にTVのリフレッシュレートを動画（24/25/50/60 fps）に合わせ、終了時に元に戻します。チャンネルを切り替えるたびにTVやレシーバーが大きな音を伴ってHDMIを再ハンドシェイクする場合はオフにしてください。</string>
     <string name="settings_surround_sound">サラウンドサウンド</string>
-    <string name="settings_surround_description">実際の5.1/7.1対応レシーバー向けにDolby/DTSをサラウンド（5.1/7.1）へデコードします。TVスピーカーまたはステレオサウンドバーではオフのままにしてください。一部のTV／サウンドバーでは、マルチチャンネル音声が映像より遅れることがあります。ずれが生じる場合は、プレーヤーの「音声」メニュー→「A/V同期」で微調整してください。</string>
     <string name="settings_autoplay_next">次のエピソードを自動再生</string>
     <string name="settings_autoplay_next_description">エピソードの終了時に次のエピソードを自動的に開始し、シーズンの最後では次のシーズンに進みます。</string>
     <string name="settings_catchup">見逃し配信</string>
@@ -459,7 +457,6 @@
     <string name="settings_done">完了</string>
     <string name="settings_reset">リセット</string>
     <string name="settings_device_details"><xliff:g id="model">%1$s</xliff:g> · <xliff:g id="android">%2$s</xliff:g></string>
-    <string name="settings_playback_entry"><xliff:g id="time">%1$s</xliff:g> · <xliff:g id="engine">%2$s</xliff:g> · <xliff:g id="kind">%3$s</xliff:g></string>
     <string name="settings_history_live">ライブTV</string>
     <string name="settings_history_movies">映画</string>
     <string name="settings_history_series">シリーズ</string>
@@ -493,8 +490,6 @@
     <string name="settings_customize_remove_lock">ロックを解除</string>
     <string name="settings_customize_description">このプロフィールのチャンネル、映画、シリーズの表示／非表示を切り替え、カテゴリの名前や順序を変更します。再同期後も設定は維持されます。</string>
     <string name="settings_customize_new_category_behavior">新しいカテゴリの動作</string>
-    <string name="settings_customize_hide_new">非表示 — 再同期で追加された新しいカテゴリをデフォルトで非表示にします</string>
-    <string name="settings_customize_show_new">表示 — 再同期で追加された新しいカテゴリをデフォルトで表示します</string>
     <string name="settings_customize_hide">非表示にする</string>
     <string name="settings_customize_show">表示する</string>
     <string name="settings_customize_behavior_hide">非表示</string>
@@ -789,7 +784,6 @@
     <string name="settings_subtitle_customize">字幕をカスタマイズ</string>
     <string name="settings_subtitle_customize_off">オフでは、字幕はストリームとプレーヤーが描画するとおりに表示されます。</string>
     <string name="settings_subtitle_preview_stock">プレビュー — 標準表示</string>
-    <string name="settings_subtitle_stock_description">ライブTVの字幕に放送局が埋め込んだ色や配置も含め、標準の表示になります。</string>
     <string name="settings_subtitle_reset_all">すべてリセット</string>
     <string name="settings_subtitle_color">字幕の色</string>
     <string name="settings_subtitle_color_default_description">デフォルトでは、色の指定はストリームとプレーヤーに委ねられます。</string>
