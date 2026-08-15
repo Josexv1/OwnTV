@@ -52,9 +52,14 @@ class MetadataRepository(
             val ttl = if (match.tmdbId == null) NEGATIVE_TTL_MS else POSITIVE_TTL_MS
             if (now - match.updatedAt < ttl) {
                 val tmdbId = match.tmdbId ?: return null // fresh negative cache
-                dao.getCache(cacheKey(tmdbId, lang))?.takeIf { it.isUsable() }?.let { return it }
-                // Match known but cache row missing/evicted → re-fetch details below.
-                return fetchAndCache(tmdbId, lang, localKey, match.confidence)
+                val cached = dao.getCache(cacheKey(tmdbId, lang))
+                if (cached != null && cached.isUsable()) return cached
+                // Match known but cache row missing/evicted/legacy → re-fetch details below.
+                // `?: cached` matters: a legacy-format row is only stale because it cannot carry cast
+                // photos, and everything else in it — overview, genres, backdrop — is still correct.
+                // Dropping it when the network (or the default Worker) is unavailable turns a missing
+                // photo into a detail page with no description at all.
+                return fetchAndCache(tmdbId, lang, localKey, match.confidence) ?: cached
             }
         }
 
@@ -97,8 +102,9 @@ class MetadataRepository(
             val ttl = if (match.tmdbId == null) NEGATIVE_TTL_MS else POSITIVE_TTL_MS
             if (now - match.updatedAt < ttl) {
                 val tmdbId = match.tmdbId ?: return null
-                dao.getCache(tvCacheKey(tmdbId, lang))?.takeIf { it.isUsable() }?.let { return it }
-                return fetchAndCacheTv(tmdbId, lang, null)
+                val cached = dao.getCache(tvCacheKey(tmdbId, lang))
+                if (cached != null && cached.isUsable()) return cached
+                return fetchAndCacheTv(tmdbId, lang, null) ?: cached
             }
         }
 
@@ -126,10 +132,9 @@ class MetadataRepository(
         val lang = currentLang()
         val now = System.currentTimeMillis()
         dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_MOVIE, tmdbId, confidence = 1.0, updatedAt = now))
-        dao.getCache(cacheKey(tmdbId, lang))?.let { cached ->
-            if (now - cached.updatedAt < POSITIVE_TTL_MS && cached.isUsable()) return cached
-        }
-        return fetchAndCache(tmdbId, lang, localKey, confidence = 1.0)
+        val cached = dao.getCache(cacheKey(tmdbId, lang))
+        if (cached != null && now - cached.updatedAt < POSITIVE_TTL_MS && cached.isUsable()) return cached
+        return fetchAndCache(tmdbId, lang, localKey, confidence = 1.0) ?: cached
     }
 
     /** Series counterpart to [resolveKnownMovie], using the exact Trending TV id. */
@@ -142,10 +147,9 @@ class MetadataRepository(
         val lang = currentLang()
         val now = System.currentTimeMillis()
         dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_TV, tmdbId, confidence = 1.0, updatedAt = now))
-        dao.getCache(tvCacheKey(tmdbId, lang))?.let { cached ->
-            if (now - cached.updatedAt < POSITIVE_TTL_MS && cached.isUsable()) return cached
-        }
-        return fetchAndCacheTv(tmdbId, lang, fallback = null)
+        val cached = dao.getCache(tvCacheKey(tmdbId, lang))
+        if (cached != null && now - cached.updatedAt < POSITIVE_TTL_MS && cached.isUsable()) return cached
+        return fetchAndCacheTv(tmdbId, lang, fallback = null) ?: cached
     }
 
     private suspend fun fetchAndCacheTv(tmdbId: Int, lang: String, fallback: MetadataSearchResult?): MetadataCacheEntity? {
@@ -198,15 +202,16 @@ class MetadataRepository(
             MetadataType.TV -> tvCacheKey(tmdbId, lang)
             MetadataType.EPISODE -> return null
         }
-        dao.getCache(key)?.let {
-            if (System.currentTimeMillis() - it.updatedAt < POSITIVE_TTL_MS && it.isUsable()) return it
+        val cached = dao.getCache(key)
+        if (cached != null && System.currentTimeMillis() - cached.updatedAt < POSITIVE_TTL_MS && cached.isUsable()) {
+            return cached
         }
-        if (!allowNetwork) return null
+        if (!allowNetwork) return cached
         return when (type) {
             MetadataType.MOVIE -> fetchAndCache(tmdbId, lang)
             MetadataType.TV -> fetchAndCacheTv(tmdbId, lang, fallback = null)
             MetadataType.EPISODE -> null
-        }
+        } ?: cached
     }
 
     /**
