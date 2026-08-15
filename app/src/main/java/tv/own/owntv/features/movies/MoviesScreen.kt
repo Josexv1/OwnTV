@@ -1621,7 +1621,7 @@ private fun formatLanguageLine(label: String, languages: List<String>, maxVisibl
     val visible = languages.take(maxVisible)
     val joined = visible.joinToString(stringResource(R.string.content_genres_separator))
     val more = languages.size - visible.size
-    val tail = if (more > 0) " " + stringResource(R.string.content_languages_more, more) else ""
+    val tail = if (more > 0) " " + pluralStringResource(R.plurals.content_languages_more, more, more) else ""
     return "$label: $joined$tail"
 }
 

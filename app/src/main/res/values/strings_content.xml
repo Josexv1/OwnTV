@@ -165,7 +165,10 @@
     <!-- Translators: Label before the list of available subtitle languages on cinematic movie detail. -->
     <string name="content_subtitle_languages">Subtitles</string>
     <!-- Translators: Shown after the first few subtitle languages when more remain, e.g. "English, Spanish (3 more)". -->
-    <string name="content_languages_more">(<xliff:g id="count">%1$d</xliff:g> more)</string>
+    <plurals name="content_languages_more">
+        <item quantity="one">(<xliff:g id="count">%1$d</xliff:g> more)</item>
+        <item quantity="other">(<xliff:g id="count">%1$d</xliff:g> more)</item>
+    </plurals>
     <!-- Translators: Title of the genre browse page opened from a cinematic genre chip. %1$s is the genre name. -->
     <string name="content_genre_movies_title"><xliff:g id="genre">%1$s</xliff:g> movies</string>
     <!-- Translators: Empty state when no local catalog titles match a TMDB genre yet. -->
