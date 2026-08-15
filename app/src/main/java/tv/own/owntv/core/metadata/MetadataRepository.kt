@@ -615,8 +615,13 @@ class MetadataRepository(
          * 3 = 8K/HQ/LQ quality tags + trailing sequel-number search variants ("Enola Holmes 1").
          * 4 = multilingual catalog titles (TMDB top+year fallback + alternate language search).
          * 5 = year-number titles preserved ("ES - 1917 (2019)" → query 1917, year 2019).
+         * 6 = not a matcher change: the shared default Worker went away (its host now answers 404,
+         *     and its replacement 403s without an edge key no fork carries). Every lookup made
+         *     against it recorded a "searched, no confident match" row that was really just a dead
+         *     backend, and those false misses would otherwise suppress metadata for 7 days after
+         *     the user configures a working TMDB key. Same remedy, so it reuses the same bump.
          */
-        private const val MATCH_HEURISTICS_VERSION = 5
+        private const val MATCH_HEURISTICS_VERSION = 6
 
         /**
          * Focus debounce for on-demand metadata resolves, shared by the movie / series / episode panes.

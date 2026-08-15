@@ -26,6 +26,14 @@ AGENT_HANDOVER.md
 *.jks
 keystore.properties
 signing.properties
+# API credentials. The TMDB key is entered in the app at runtime (Settings -> Metadata ->
+# Advanced) and must never reach a build file or the repo; these patterns are the safety net
+# for a local scratch copy. The real one for this fork lives in F:\Developing\OwnTV-signing\.
+*api-key*.txt
+*api_key*.txt
+secrets.properties
+.env
+.env.*
 
 # Internal planning documents — kept local, never committed
 future-plan/
