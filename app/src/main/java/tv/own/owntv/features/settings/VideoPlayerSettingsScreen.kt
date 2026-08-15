@@ -594,7 +594,10 @@ private fun ResetPlayerChoicesDialog(onConfirm: () -> Unit, onCancel: () -> Unit
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
     BackHandler { onCancel() }
     Box(
-        modifier = Modifier.fillMaxSize().modalScrim().trapAllFocusExit().focusGroup(),
+        // Upstream calls its glass-aware Modifier.modalScrim() here; this fork has no such helper
+        // because it dropped the glass surfaces, so use the flat scrim every other dialog uses.
+        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.75f))
+            .trapAllFocusExit().focusGroup(),
         contentAlignment = Alignment.Center,
     ) {
         Column(modifier = Modifier.dialogPanel(width = 500.dp, padding = 28.dp)) {
