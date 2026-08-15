@@ -271,9 +271,7 @@ class SubtitleRepository(
         val request = Request.Builder().url(url).build()
         okHttpClient.newCall(request).execute().use { resp ->
             if (!resp.isSuccessful) throw IOException()
-            // `?: throw` rather than upstream's plain `resp.body`: OkHttp only made the body
-            // non-nullable in 5.x, and this fork is still on 4.12.
-            val body = resp.body ?: throw IOException()
+            val body = resp.body
             if (body.contentLength() > MAX_SUBTITLE_BYTES) {
                 throw IOException("subtitle too large: ${body.contentLength()} bytes")
             }
