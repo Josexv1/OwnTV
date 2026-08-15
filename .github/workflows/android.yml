@@ -32,19 +32,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # One variant, not `test`/`lint` across every flavor: standard+debug is the variant the JVM
       # tests are written against, and the ABI flavors differ only in the packaged native libs.
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload test and lint reports
         if: always()   # the reports matter most when the step above failed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: check-reports
           path: |
@@ -81,19 +81,19 @@ jobs:
       APK_OUT: ""
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'   # matches gradle/gradle-daemon-jvm.properties (toolchainVersion=21)
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Compute version (from the git tag on releases)
         id: ver
@@ -117,6 +117,10 @@ jobs:
       - name: Decode signing keystore (if configured)
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          # Needed here, not just in the build step: the readability probe below opens the decoded
+          # keystore, which is the only place a truncated secret or a wrong password is still
+          # attributable to the secret rather than surfacing as an apksigner failure minutes later.
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           # Runs on every push (not just tags) so dev builds are also signed RELEASE builds —
           # required since R8 was enabled: only assembleRelease exercises shrinking/keep rules,
@@ -125,7 +129,21 @@ jobs:
           if [ "${{ inputs.force_debug }}" = "true" ]; then
             echo "force_debug requested — building a debug-signed APK."
           elif [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            # tr -d strips CR/LF first: a secret pasted or piped in from Windows carries a trailing
+            # \r, which is not valid base64, and `base64 -d` then dies with a bare "invalid input"
+            # that names neither the secret nor the cause.
+            printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n' | base64 -d > "$RUNNER_TEMP/release.keystore" || {
+              echo "::error::KEYSTORE_BASE64 is not valid base64. Regenerate it with:"
+              echo "::error::  base64 -w0 release.keystore    (Linux/macOS)"
+              echo "::error::  [Convert]::ToBase64String([IO.File]::ReadAllBytes('release.jks'))    (PowerShell)"
+              exit 1
+            }
+            # A truncated secret decodes "successfully" into garbage; the build then fails much later
+            # inside apksigner. Catch it here, where the message can still point at the secret.
+            keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1 || {
+              echo "::error::The decoded keystore is unreadable — KEYSTORE_BASE64 is truncated, or KEYSTORE_PASSWORD is wrong."
+              exit 1
+            }
             echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
             echo "Release signing configured."
           else
@@ -243,7 +261,7 @@ jobs:
           echo "✅ Google TV Streamer 4K gate passed (arm64-v8a, minSdk $MIN, targetSdk $TGT, leanback launcher, v2+ signed)"
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           # Upload the whole dist/ so both the arm APK and the x86_64 APK are captured.
           name: ${{ env.APK_OUT }}
@@ -287,7 +305,7 @@ jobs:
 
       - name: Publish GitHub Release
         if: env.IS_TAG == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: OwnTV ${{ github.ref_name }}
           # A glob, not an explicit list: without KEYSTORE_BASE64 the x86_64 APK is never built,
