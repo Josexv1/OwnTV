@@ -38,6 +38,10 @@ audit/
 # public, unprotected self-host copy users are told to deploy — is NOT caught by this.
 /worker/
 
+# Upstream triage notebook: which ahXN00/OwnTV and flashingcursor/SteadfastTV commits we take.
+# Working notes for this fork only — never pushed.
+UPSTREAM_TRIAGE.md
+
 # i18n seed tool run state (batch inputs, IDs, raw results) — never committed
 /runs/
 

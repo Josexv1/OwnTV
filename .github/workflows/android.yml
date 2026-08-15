@@ -12,6 +12,11 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      force_debug:
+        description: "Build a debug-signed APK even if release signing secrets are configured"
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # required so tag builds can create a Release
@@ -117,7 +122,9 @@ jobs:
           # required since R8 was enabled: only assembleRelease exercises shrinking/keep rules,
           # and a release-signed dev APK installs straight over a published release for testing.
           # Fork PRs have no secrets, so they fall back to a debug build below.
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ "${{ inputs.force_debug }}" = "true" ]; then
+            echo "force_debug requested — building a debug-signed APK."
+          elif [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
             echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
             echo "Release signing configured."
@@ -183,6 +190,61 @@ jobs:
             fi
           fi
 
+      # Gate the artifact on "will this actually install and launch on a Google TV Streamer 4K?".
+      # That device is MediaTek MT8696 (4x Cortex-A55, 64-bit) running Google TV 14 / Android 14
+      # (API 34), so every assertion below is checked against API 34 + arm64-v8a. A failure here
+      # means the APK would be refused by the installer or hidden by the launcher — the exact
+      # "the app isn't compatible with your TV" class of bug — so it must fail the job, not warn.
+      - name: Verify Google TV Streamer 4K compatibility
+        run: |
+          set -euo pipefail
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)
+          AAPT2="$BT/aapt2"; APKSIGNER="$BT/apksigner"
+          APK="dist/$APK_OUT"
+          echo "Inspecting $APK with $(basename "$BT") build-tools"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          # Field names verified against build-tools 36.0.0 output: it prints `minSdkVersion:` (not
+          # `sdkVersion:`), and uses-feature lines are INDENTED under a `feature-group:` header, so
+          # none of these patterns may be anchored with ^ on the feature checks.
+          echo "$BADGING" | grep -E "(^package:|^minSdkVersion|^targetSdkVersion|^native-code|launchable-activity|uses-feature)" || true
+
+          fail() { echo "::error::Streamer 4K gate: $1"; exit 1; }
+
+          # 1. ABI. The Streamer is arm64 (MT8696). A missing arm64-v8a slice is the single most
+          #    common cause of an APK that installs everywhere else and not here.
+          echo "$BADGING" | grep -q "native-code:.*'arm64-v8a'" \
+            || fail "no arm64-v8a native slice — the Streamer 4K cannot run this APK"
+
+          # 2. minSdk must be <= 34 (Android 14), targetSdk >= 23 (Android rejects lower outright).
+          MIN=$(echo "$BADGING" | sed -n "s/^minSdkVersion:'\([0-9]*\)'.*/\1/p")
+          TGT=$(echo "$BADGING" | sed -n "s/^targetSdkVersion:'\([0-9]*\)'.*/\1/p")
+          [ -n "$MIN" ] || fail "could not read minSdkVersion from badging — aapt2 output format changed"
+          [ -n "$TGT" ] || fail "could not read targetSdkVersion from badging — aapt2 output format changed"
+          [ "$MIN" -le 34 ] || fail "minSdk $MIN is above the Streamer's API 34"
+          [ "$TGT" -ge 23 ] || fail "targetSdk $TGT is below 23; Android 14 blocks the install"
+
+          # 3. Nothing may be *required* that the Streamer lacks. It has no touchscreen, and a
+          #    required leanback feature has historically hidden apps from non-certified launchers.
+          #    Required features print as `uses-feature:`; `uses-feature-not-required:` is the safe
+          #    form. Match on the colon to keep the two apart despite the shared prefix.
+          REQUIRED=$(echo "$BADGING" | grep -oE "uses-feature: name='[^']*'" | grep -E "touchscreen|telephony|camera" || true)
+          [ -z "$REQUIRED" ] || fail "a feature the Streamer lacks is marked required: $REQUIRED"
+
+          # 4. It has to show up on the Google TV launcher at all. aapt2 emits a dedicated
+          #    `leanback-launchable-activity:` line when LEANBACK_LAUNCHER is present, which is a
+          #    far more direct signal than grepping the decoded manifest tree.
+          echo "$BADGING" | grep -q "leanback-launchable-activity:" \
+            || fail "no LEANBACK_LAUNCHER activity — the app would be invisible on Google TV"
+
+          # 5. Signature scheme. Android 11+ refuses to install an APK that only carries the
+          #    legacy v1 JAR signature when targetSdk >= 30, so v2 (or v3) must be present.
+          VERIFY=$("$APKSIGNER" verify --verbose "$APK")
+          echo "$VERIFY"
+          echo "$VERIFY" | grep -qE "\(APK Signature Scheme v[23]\).*true" \
+            || fail "APK is not signed with signature scheme v2/v3 — Android 14 would refuse it"
+
+          echo "✅ Google TV Streamer 4K gate passed (arm64-v8a, minSdk $MIN, targetSdk $TGT, leanback launcher, v2+ signed)"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -231,10 +293,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: OwnTV ${{ github.ref_name }}
-          files: |
-            dist/${{ env.APK_OUT }}
-            dist/OwnTV.apk
-            dist/OwnTV-x86_64-v${{ steps.ver.outputs.name }}.apk
+          # A glob, not an explicit list: without KEYSTORE_BASE64 the x86_64 APK is never built,
+          # and naming it here made every unsigned tag build emit an unmatched-file warning and
+          # publish a release whose asset list didn't match what was actually produced.
+          files: dist/*.apk
+          fail_on_unmatched_files: true
           body_path: dist/RELEASE_NOTES.md
           # Must stay false: it appends GitHub's auto commit/PR list under the body, which buries the
           # short in-app notes the updater dialog shows.
