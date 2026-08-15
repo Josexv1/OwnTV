@@ -30,6 +30,10 @@ signing.properties
 # Internal planning documents — kept local, never committed
 future-plan/
 
+# Upstream triage notebook: which ahXN00/OwnTV and flashingcursor/SteadfastTV commits we take.
+# Working notes for this fork only — never pushed.
+UPSTREAM_TRIAGE.md
+
 # i18n seed tool run state (batch inputs, IDs, raw results) — never committed
 /runs/
 
