@@ -218,9 +218,11 @@ jobs:
           APK="dist/$APK_OUT"
           echo "Inspecting $APK with $(basename "$BT") build-tools"
           BADGING=$("$AAPT2" dump badging "$APK")
-          # Field names verified against build-tools 36.0.0 output: it prints `minSdkVersion:` (not
-          # `sdkVersion:`), and uses-feature lines are INDENTED under a `feature-group:` header, so
-          # none of these patterns may be anchored with ^ on the feature checks.
+          # Field names verified against build-tools 36.0.0 (local) and 37.0.0 (this runner): both
+          # print `minSdkVersion:`, NOT the `sdkVersion:` the older docs show, and both INDENT the
+          # uses-feature lines under a `feature-group:` header. So the minSdk pattern must use the
+          # real name and the feature patterns must not be anchored with ^ — get either wrong and
+          # the checks silently match nothing and wave a broken APK through.
           echo "$BADGING" | grep -E "(^package:|^minSdkVersion|^targetSdkVersion|^native-code|launchable-activity|uses-feature)" || true
 
           fail() { echo "::error::Streamer 4K gate: $1"; exit 1; }
