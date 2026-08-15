@@ -242,6 +242,30 @@ class SetupViewModel(
             )
         }
 
+    /**
+     * Debug-only helper: create a "Demo" profile (if needed) and import a free public M3U sample so
+     * first-run testing can skip the full source form. Release builds never call this.
+     */
+    fun startDemo() {
+        viewModelScope.launch {
+            if (createdProfileId <= 0) {
+                createdProfileName = DemoCatalog.PROFILE_NAME
+                createdProfileId = profileDao.insert(
+                    ProfileEntity(
+                        name = DemoCatalog.PROFILE_NAME,
+                        avatarColor = 0,
+                        avatarId = 0,
+                    ),
+                )
+            }
+            startM3u(
+                name = DemoCatalog.SOURCE_NAME,
+                url = DemoCatalog.M3U_URL,
+                autoRefresh = PlaylistAutoRefresh.OFF,
+            )
+        }
+    }
+
     private fun runImport(
         autoRefresh: PlaylistAutoRefresh = PlaylistAutoRefresh.OFF,
         contentTypes: SyncContentTypes = SyncContentTypes(),

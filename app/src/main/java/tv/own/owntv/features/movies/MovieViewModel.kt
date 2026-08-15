@@ -269,9 +269,37 @@ class MovieViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /**
+     * TMDB-related titles for the focused/opened movie, mapped onto local catalog rows when possible.
+     * Empty when metadata is off, unresolved, or the provider catalog has no playable neighbours.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val similarMovies: StateFlow<List<SimilarMovie>> = selectedMovieMeta
+        .mapLatest { meta ->
+            val movie = _selectedMovie.value
+            if (meta == null || movie == null || meta.movieId != movie.id || meta.cache == null) {
+                emptyList()
+            } else {
+                runCatching { loadSimilarMovies(movie) }.getOrDefault(emptyList())
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     /** TMDB metadata tagged with the movie id it was resolved for, so the UI never shows stale meta on a
      *  different card during the debounce window. [cache] is null while resolving or on no match. */
     data class MovieMeta(val movieId: Long, val cache: tv.own.owntv.core.database.entity.MetadataCacheEntity?)
+
+    /**
+     * One card in the cinematic "Similar movies" rail. [movie] is non-null only when we found a
+     * playable local catalog match — the UI only shows those so OK always opens something watchable.
+     */
+    data class SimilarMovie(
+        val tmdbId: Int,
+        val title: String,
+        val year: Int?,
+        val posterUrl: String?,
+        val movie: MovieEntity?,
+    )
 
     /** Source mode (plan §4.1) — the detail pane uses it to flip provider/TMDB field precedence. */
     val metadataMode: StateFlow<tv.own.owntv.core.metadata.MetadataMode> = settings.metadataMode
@@ -371,6 +399,90 @@ class MovieViewModel(
     fun select(key: LiveKey) { _selected.value = key }
     fun setSearchQuery(query: String) { _search.value = query }
     fun onMovieFocused(movie: MovieEntity) { _selectedMovie.value = movie }
+
+    /**
+     * Map TMDB related titles onto playable local catalog rows for the cinematic similar rail.
+     * Preference order per hit:
+     *  1. already-resolved local→TMDB match (fast, exact)
+     *  2. fuzzy name search within the active profile's sources
+     * Hits with no local match are dropped so every card is watchable.
+     */
+    private suspend fun loadSimilarMovies(movie: MovieEntity): List<SimilarMovie> {
+        val hits = metadata.relatedMovies(movie)
+        if (hits.isEmpty()) return emptyList()
+        val sourceIds = ctx.value.sourceIds
+        if (sourceIds.isEmpty()) return emptyList()
+
+        val known = metadata.localKeysForTmdbIds(hits.map { it.tmdbId })
+        val out = ArrayList<SimilarMovie>(hits.size.coerceAtMost(12))
+        val usedIds = HashSet<Long>()
+        usedIds += movie.id
+
+        for (hit in hits) {
+            if (out.size >= 12) break
+            val local = resolveLocalSimilar(hit, known[hit.tmdbId], sourceIds) ?: continue
+            if (!usedIds.add(local.id)) continue
+            out += SimilarMovie(
+                tmdbId = hit.tmdbId,
+                title = hit.title,
+                year = hit.year,
+                posterUrl = tv.own.owntv.core.metadata.MetadataImages.poster(hit.posterPath)
+                    ?: local.posterUrl?.takeIf { it.isNotBlank() },
+                movie = local,
+            )
+        }
+        return out
+    }
+
+    private suspend fun resolveLocalSimilar(
+        hit: tv.own.owntv.core.metadata.MetadataSearchResult,
+        localKey: String?,
+        sourceIds: List<Long>,
+    ): MovieEntity? {
+        // localKey shape: "movie:<sourceId>:<remoteId|name>"
+        if (!localKey.isNullOrBlank()) {
+            val parts = localKey.split(':', limit = 3)
+            if (parts.size == 3) {
+                val sourceId = parts[1].toLongOrNull()
+                val identity = parts[2]
+                if (sourceId != null && sourceId in sourceIds) {
+                    movieDao.findByRemote(sourceId, identity)?.let { return it }
+                    movieDao.findByName(sourceId, identity)?.let { return it }
+                }
+            }
+        }
+
+        val query = hit.title.trim()
+        if (query.length < 2) return null
+        val candidates = movieDao.searchByName(sourceIds, query, limit = 8)
+        if (candidates.isEmpty()) return null
+        val q = query.lowercase()
+        val qTokens = q.split(Regex("""\s+""")).filter { it.length > 1 }.toSet()
+        return candidates
+            .asSequence()
+            .map { candidate ->
+                val name = candidate.name.lowercase()
+                val yearBonus = when {
+                    hit.year == null || candidate.year == null -> 0
+                    hit.year == candidate.year -> 2
+                    kotlin.math.abs(hit.year - candidate.year) == 1 -> 1
+                    else -> -2
+                }
+                val score = when {
+                    name == q -> 100
+                    name.contains(q) || q.contains(name) -> 80
+                    else -> {
+                        val cTokens = name.split(Regex("""\s+""")).filter { it.length > 1 }.toSet()
+                        if (qTokens.isEmpty() || cTokens.isEmpty()) 0
+                        else ((qTokens.intersect(cTokens).size * 60) / qTokens.size)
+                    }
+                } + yearBonus
+                candidate to score
+            }
+            .filter { it.second >= 55 }
+            .maxByOrNull { it.second }
+            ?.first
+    }
 
     /**
      * Manual "Refetch TMDB details" (plan §11.2 U5a): clear this movie's cached match/details (incl. a 7-day

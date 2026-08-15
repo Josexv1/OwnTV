@@ -160,4 +160,10 @@ interface MetadataProvider {
 
     /** Per-episode details for a resolved show; null on failure or if that episode isn't on TMDB. */
     suspend fun tvEpisodeDetails(tvId: Int, season: Int, episode: Int): EpisodeDetails?
+
+    /**
+     * Related movies for a resolved TMDB id (recommendations preferred, similar as fallback/fill).
+     * Same null-vs-empty contract as [searchMovie]: null = transport failure, empty = no related titles.
+     */
+    suspend fun relatedMovies(tmdbId: Int): List<MetadataSearchResult>?
 }

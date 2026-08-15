@@ -2,7 +2,7 @@
 # --- Build toolchain ---
 # AGP 9.2.x ships built-in Kotlin 2.3.10. The Compose compiler plugin (and later
 # KSP) must track this exact Kotlin version. Verified 2026-06-08.
-agp = "9.2.1"
+agp = "9.3.1"
 kotlin = "2.3.10"
 
 # --- AndroidX / Jetpack ---

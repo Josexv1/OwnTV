@@ -645,6 +645,16 @@ class SettingsViewModel(
     val rememberLastMovies: StateFlow<Boolean> =
         settings.rememberLastMovies.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setRememberLastMovies(enabled: Boolean) { viewModelScope.launch { settings.setRememberLastMovies(enabled) } }
+
+    val moviesLayoutMode: StateFlow<tv.own.owntv.features.settings.data.SettingsRepository.MoviesLayoutMode> =
+        settings.moviesLayoutMode.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            tv.own.owntv.features.settings.data.SettingsRepository.MoviesLayoutMode.CLASSIC,
+        )
+    fun setMoviesLayoutMode(mode: tv.own.owntv.features.settings.data.SettingsRepository.MoviesLayoutMode) {
+        viewModelScope.launch { settings.setMoviesLayoutMode(mode) }
+    }
     val rememberLastSeries: StateFlow<Boolean> =
         settings.rememberLastSeries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setRememberLastSeries(enabled: Boolean) { viewModelScope.launch { settings.setRememberLastSeries(enabled) } }

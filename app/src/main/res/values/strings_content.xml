@@ -143,6 +143,23 @@
     <string name="content_close">Close</string>
     <!-- Translators: Empty-state hint on the Movies screen when no movie is focused. -->
     <string name="content_focus_movie">Focus a movie to see details.</string>
+    <string name="content_movie_detail_back">Back to movies</string>
+    <!-- Translators: Primary action on the cinematic movie detail page when resume progress exists. -->
+    <string name="content_resume">Resume</string>
+    <!-- Translators: Section title under the cinematic movie detail page for TMDB-related titles that also exist in the user's catalog. -->
+    <string name="content_similar_movies">Similar movies</string>
+    <!-- Translators: Focus tooltip for the cinematic Play action. -->
+    <string name="content_action_play_movie">Play movie</string>
+    <!-- Translators: Focus tooltip for the cinematic Resume action. -->
+    <string name="content_action_resume_movie">Resume movie</string>
+    <!-- Translators: Focus tooltip for the cinematic Trailer action. -->
+    <string name="content_action_watch_trailer">Watch trailer</string>
+    <!-- Translators: Focus tooltip for the cinematic Favorite action when the title is not yet favourited. -->
+    <string name="content_action_save_favourite">Save to favorites</string>
+    <!-- Translators: Focus tooltip for the cinematic Favorite action when the title is already favourited. -->
+    <string name="content_action_remove_favourite">Remove from favorites</string>
+    <!-- Translators: Focus tooltip for the cinematic Download action. -->
+    <string name="content_action_download_movie">Download movie</string>
     <!-- Translators: Empty-state hint on the Live TV screen when no channel is focused. -->
     <string name="content_focus_channel">Focus a channel to see it here.</string>
     <!-- Translators: Instructional text on the Live TV channel card. The dot is a separator. -->

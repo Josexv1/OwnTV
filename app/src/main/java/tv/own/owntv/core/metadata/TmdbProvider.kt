@@ -145,6 +145,38 @@ class TmdbProvider(
         }.getOrNull()
     }
 
+    /**
+     * Related titles for the cinematic "Similar movies" rail. Prefers TMDB recommendations (better
+     * Prime-style taste match), then fills from `/similar` so sparse catalogs still get a row.
+     */
+    override suspend fun relatedMovies(tmdbId: Int): List<MetadataSearchResult>? {
+        if (tmdbId <= 0) return null
+        val recommendations = movieListEndpoint(tmdbId, "recommendations")
+        val similar = movieListEndpoint(tmdbId, "similar")
+        // Both null → transport failure. Either list (including empty) means TMDB answered.
+        if (recommendations == null && similar == null) return null
+        val out = LinkedHashMap<Int, MetadataSearchResult>()
+        (recommendations.orEmpty() + similar.orEmpty()).forEach { hit ->
+            if (hit.tmdbId != tmdbId) out.putIfAbsent(hit.tmdbId, hit)
+        }
+        return out.values.toList()
+    }
+
+    /** GET `/3/movie/{id}/{path}` list endpoints (`recommendations` / `similar`). Null on transport failure. */
+    private suspend fun movieListEndpoint(tmdbId: Int, path: String): List<MetadataSearchResult>? {
+        val ep = resolveEndpoint()
+        val url = buildString {
+            append(ep.baseUrl).append("/3/movie/").append(tmdbId).append('/').append(path)
+            append("?include_adult=false")
+            append(ep.langParam())
+            ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+        }
+        val json = runCatching { http.getText(url) }
+            .onFailure { Log.w(TAG, "TMDB movie $path failed id=$tmdbId: ${it.message}") }
+            .getOrNull() ?: return null
+        return parseResults(MetadataType.MOVIE, json)
+    }
+
     private fun parseTvDetails(body: String, preferredLang: String): MovieDetails? {
         val o = JSONObject(body)
         val id = o.optInt("id", 0)

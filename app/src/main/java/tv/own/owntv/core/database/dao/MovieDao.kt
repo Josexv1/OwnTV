@@ -66,6 +66,13 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE sourceId = :sourceId AND name = :name LIMIT 1")
     suspend fun findByName(sourceId: Long, name: String): MovieEntity?
 
+    /** Fuzzy title candidates used to map TMDB "similar" hits onto the local IPTV catalog. */
+    @Query(
+        "SELECT * FROM movies WHERE sourceId IN (:sourceIds) AND name LIKE '%' || :query || '%' " +
+            "ORDER BY name ASC LIMIT :limit",
+    )
+    suspend fun searchByName(sourceIds: List<Long>, query: String, limit: Int = 8): List<MovieEntity>
+
     @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY sortOrder ASC, name ASC")
     fun pagingByCategory(categoryId: Long): PagingSource<Int, MovieEntity>
 

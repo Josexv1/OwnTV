@@ -62,6 +62,8 @@ data class MediaDetailsUi(
     val subtitle: String? = null,       // e.g. "S2 · E5 · aired 2019-04-14"
     val backdropUrl: String? = null,    // 16:9 hero
     val posterUrl: String? = null,      // 2:3 poster (or 16:9 still for episodes)
+    /** TMDB title logo URL (cinematic treatment); null falls back to plain [title] text. */
+    val logoUrl: String? = null,
     val metaLine: String = "",          // "2026 · ★ 7.6 · 2h 10m"
     val genres: List<String> = emptyList(),
     val plot: String? = null,

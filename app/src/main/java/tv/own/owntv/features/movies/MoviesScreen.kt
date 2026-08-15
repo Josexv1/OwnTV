@@ -1,5 +1,9 @@
 package tv.own.owntv.features.movies
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +18,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -37,13 +46,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -78,6 +96,7 @@ import tv.own.owntv.features.shell.components.RailCategory
 import tv.own.owntv.ui.components.MoveOrderOverlay
 import tv.own.owntv.ui.components.InAppToast
 import tv.own.owntv.ui.components.rememberInAppToast
+import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVIcon
@@ -125,22 +144,25 @@ fun MoviesScreen(
     val viewMode by vm.viewMode.collectAsStateWithLifecycle()
     val selectedMovie by vm.selectedMovie.collectAsStateWithLifecycle()
     val selectedMovieMeta by vm.selectedMovieMeta.collectAsStateWithLifecycle()
+    val similarMovies by vm.similarMovies.collectAsStateWithLifecycle()
     val metadataMode by vm.metadataMode.collectAsStateWithLifecycle()
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     var contextMovie by remember { mutableStateOf<MovieEntity?>(null) }
-    // The movie the "Move to category…" flow is moving (issue #87), with the origin captured at
+    // The movie the "Move to categoryâ€¦" flow is moving (issue #87), with the origin captured at
     // menu-open time (the rail can't change under the modal, but capturing is still safer).
     var moveItem by remember { mutableStateOf<MovieEntity?>(null) }
     var moveOriginKey by remember { mutableStateOf<String?>(null) }
     var moveOriginName by remember { mutableStateOf<String?>(null) }
     var creatingCategory by remember { mutableStateOf(false) }
-    // Fullscreen TMDB details window (§11.1); null = closed.
+    // Fullscreen TMDB details window (Â§11.1); null = closed.
     var detailsMovie by remember { mutableStateOf<MovieEntity?>(null) }
-    // "Set TMDB name" dialog target (§11.2 U5b); null = closed.
+    // Cinematic layout: opened movie detail page (series-style), null = browsing list.
+    var openedMovie by remember { mutableStateOf<MovieEntity?>(null) }
+    // "Set TMDB name" dialog target (Â§11.2 U5b); null = closed.
     var setTmdbNameMovie by remember { mutableStateOf<MovieEntity?>(null) }
-    // In-app trailer playback (§7.3 U4); non-null = fullscreen player open with this YouTube key.
+    // In-app trailer playback (Â§7.3 U4); non-null = fullscreen player open with this YouTube key.
     var trailerVideoKey by remember { mutableStateOf<String?>(null) }
-    // Downloaded subtitles for the movie whose context menu is open (subtitle plan §11); drives the
+    // Downloaded subtitles for the movie whose context menu is open (subtitle plan Â§11); drives the
     // "Delete subtitles" action + its popup. Reloaded on menu open and after each delete.
     var contextMovieSubs by remember { mutableStateOf<List<tv.own.owntv.core.database.dao.LinkedSubtitle>>(emptyList()) }
     var showDeleteSubs by remember { mutableStateOf(false) }
@@ -167,7 +189,7 @@ fun MoviesScreen(
     val selectedItem = railItems.getOrNull(selectedIndex)
     val selectedLabel = selectedItem?.displayLabel(R.string.content_category_all_movies) ?: stringResource(R.string.content_category_all_movies)
 
-    // Resume flow: AUTO continues silently, ASK prompts (≥10s saved), NEVER starts from zero.
+    // Resume flow: AUTO continues silently, ASK prompts (â‰¥10s saved), NEVER starts from zero.
     val scope = rememberCoroutineScope()
     var resumePrompt by remember { mutableStateOf<Pair<MovieEntity, Long>?>(null) }
     val startMovie: (MovieEntity) -> Unit = { m ->
@@ -179,6 +201,15 @@ fun MoviesScreen(
                 else -> { vm.play(m, 0); goFullscreen() }
             }
         }
+    }
+    // Cinematic detail exposes explicit Play / Resume, so those skip the ASK prompt.
+    val playFromStart: (MovieEntity) -> Unit = { m ->
+        vm.play(m, 0)
+        goFullscreen()
+    }
+    val resumeMovie: (MovieEntity, Long) -> Unit = { m, pos ->
+        vm.play(m, pos)
+        goFullscreen()
     }
 
     val gridState = rememberLazyGridState()
@@ -193,13 +224,32 @@ fun MoviesScreen(
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
     val rememberMovies by settingsVm.rememberLastMovies.collectAsStateWithLifecycle()
+    val moviesLayoutMode by settingsVm.moviesLayoutMode.collectAsStateWithLifecycle()
+    val cinematic = moviesLayoutMode == SettingsRepository.MoviesLayoutMode.CINEMATIC
+    val openMovie: (MovieEntity) -> Unit = { movie ->
+        vm.onMovieFocused(movie)
+        if (cinematic) openedMovie = movie else startMovie(movie)
+    }
+    // Keep the opened cinematic detail in sync if the focused/selected entity refreshes.
+    LaunchedEffect(selectedMovie?.id, cinematic) {
+        if (!cinematic) {
+            openedMovie = null
+            return@LaunchedEffect
+        }
+        val open = openedMovie
+        val sel = selectedMovie
+        if (open != null && sel != null && open.id == sel.id && open !== sel) {
+            openedMovie = sel
+        }
+    }
+    BackHandler(enabled = openedMovie != null) { openedMovie = null }
 
-    // "Remember last item per category": ON → each category keeps its own scroll position (per-category
-    // grid + list states, so view-mode toggles also keep their offsets). OFF → reset the shared grid/list
+    // "Remember last item per category": ON â†’ each category keeps its own scroll position (per-category
+    // grid + list states, so view-mode toggles also keep their offsets). OFF â†’ reset the shared grid/list
     // states to the top whenever the category changes (fixes the cross-category scroll-leak bug).
     val perCategoryGrid = remember { mutableStateMapOf<LiveKey, LazyGridState>() }
     val perCategoryList = remember { mutableStateMapOf<LiveKey, LazyListState>() }
-    // NOTE: plain constructors, not remember*State() — these are created lazily inside getOrPut, so a
+    // NOTE: plain constructors, not remember*State() â€” these are created lazily inside getOrPut, so a
     // @Composable/rememberSaveable call here would register slots conditionally and corrupt the slot table.
     val effectiveGridState = if (rememberMovies) perCategoryGrid.getOrPut(selectedKey) { LazyGridState() } else gridState
     val effectiveListState = if (rememberMovies) perCategoryList.getOrPut(selectedKey) { LazyListState() } else listState
@@ -210,8 +260,14 @@ fun MoviesScreen(
     var gridPaneFocused by remember { mutableStateOf(false) }
     var railPaneFocused by remember { mutableStateOf(false) }
     // Returning from the player: scroll to and focus the movie you just played (waits for the grid to load).
-    LaunchedEffect(restoreFocus, movies.itemCount) {
-        if (!restoreFocus || movies.itemCount == 0) return@LaunchedEffect
+    // In cinematic detail the page stays open and owns focus, so skip the grid restore path.
+    LaunchedEffect(restoreFocus, movies.itemCount, openedMovie?.id) {
+        if (!restoreFocus) return@LaunchedEffect
+        if (openedMovie != null) {
+            onRestored()
+            return@LaunchedEffect
+        }
+        if (movies.itemCount == 0) return@LaunchedEffect
         val sel = selectedMovie
         val idx = if (sel != null) movies.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
         if (idx >= 0) {
@@ -230,7 +286,7 @@ fun MoviesScreen(
     LaunchedEffect(contextMovie, moveItem, creatingCategory) {
         if (contextMovie != null) return@LaunchedEffect
         // Opening the TMDB Details window or the Set TMDB name dialog closes the menu; don't yank focus
-        // back to the grid — they need it (and trap it). The grid is refocused when they close (see below).
+        // back to the grid â€” they need it (and trap it). The grid is refocused when they close (see below).
         if (detailsMovie != null) return@LaunchedEffect
         if (setTmdbNameMovie != null) return@LaunchedEffect
         if (trailerVideoKey != null) return@LaunchedEffect
@@ -242,7 +298,7 @@ fun MoviesScreen(
         val items = movies.itemSnapshotList.items
         val idx = items.indexOfFirst { it.id == targetId }
         if (idx >= 0) {
-            // Item survived — re-focus it directly.
+            // Item survived â€” re-focus it directly.
             runCatching {
                 if (viewMode == SettingsRepository.VodViewMode.LIST) effectiveListState.scrollToItem(idx)
                 else effectiveGridState.scrollToItem(idx)
@@ -273,11 +329,45 @@ fun MoviesScreen(
         contextMovieIndex = -1
     }
 
-    // Manual panel widths (Settings → Panel Width Adjustment). Null = this section is at Default, and
-    // the three panels below keep their stock Dimens/weight() sizing.
+    // Manual panel widths (Settings â†’ Panel Width Adjustment). Null = this section is at Default, and
+    // the three panels below keep their stock Dimens/weight() sizing. Cinematic mode ignores the
+    // preview panel and always uses rail + full-width list (or the full-bleed detail page).
     val panelShares = rememberPanelShares(PanelSection.MOVIES, settingsVm)
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
     val panels = panelShares?.let { computePanelWidths(it, maxWidth) }
+    val opened = openedMovie
+    if (cinematic && opened != null) {
+        val openedMeta = selectedMovieMeta?.takeIf { it.movieId == opened.id }?.cache
+        val details = buildMovieDetails(opened, openedMeta, metadataMode.tmdbWins)
+        val alreadyDownloaded = downloadStates[opened.id] != null
+        val resumeMs = selectedProgress
+            ?.takeIf { selectedMovie?.id == opened.id && !vm.isMovieCompleted(it) }
+            ?.positionMs
+            ?.takeIf { it > 0 }
+        val similarForOpened = similarMovies.takeIf { selectedMovie?.id == opened.id }.orEmpty()
+        MovieCinematicDetail(
+            details = details,
+            isFavorite = favoriteIds.contains(opened.id),
+            resumePositionMs = resumeMs,
+            trailerKey = openedMeta?.trailerKey,
+            similarMovies = similarForOpened,
+            downloadStrip = downloadStates[opened.id]?.let { tv.own.owntv.ui.components.downloadStripFor(listOf(it)) },
+            onPlay = { playFromStart(opened) },
+            onResume = resumeMs?.let { pos -> { resumeMovie(opened, pos) } },
+            onPlayTrailer = { key -> trailerVideoKey = key },
+            onOpenSimilar = { movie ->
+                openedMovie = movie
+                vm.onMovieFocused(movie)
+            },
+            onToggleFavorite = { vm.toggleFavorite(opened) },
+            onDownload = {
+                if (alreadyDownloaded) toast.show(alreadyDownloadedMessage) else vm.download(opened)
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .onFocusChanged { if (it.hasFocus) onChildFocused() },
+        )
+    } else {
     Row(modifier = Modifier.fillMaxSize().onFocusChanged { if (it.hasFocus) onChildFocused() }, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         CategoryRail(
             width = panels?.category ?: Dimens.RailWidthFixed,
@@ -300,7 +390,13 @@ fun MoviesScreen(
 
         Column(
             modifier = Modifier
-                .then(if (panels != null) Modifier.width(panels.list) else Modifier.weight(1.8f))
+                .then(
+                    when {
+                        cinematic -> Modifier.weight(1f)
+                        panels != null -> Modifier.width(panels.list)
+                        else -> Modifier.weight(1.8f)
+                    },
+                )
                 .fillMaxSize()
                 .roundedPanel(fillColor = ContentPanelFill)
                 .onFocusChanged { gridPaneFocused = it.hasFocus }
@@ -312,7 +408,7 @@ fun MoviesScreen(
                     downSkip = chNavDownSkip,
                     isFocused = { gridPaneFocused },
                     // On the "All" list (every movie) a long-press jump to the very last item is
-                    // pointless and janks, so disable long-press there — short-press skipping stays.
+                    // pointless and janks, so disable long-press there â€” short-press skipping stays.
                     longPressEnabled = { selectedKey != LiveKey.All },
                     lastIndex = { movies.itemCount - 1 },
                     currentTargetIndex = {
@@ -359,16 +455,21 @@ fun MoviesScreen(
                     }
                 }
                 // Held Up/Down can outrun the lazy grid's composition and escape this pane
-                // (landing on the top bar) — trap vertical exits; Left/Right/Back leave normally.
+                // (landing on the top bar) â€” trap vertical exits; Left/Right/Back leave normally.
                 .trapVerticalFocusExit()
                 .focusGroup()
                 .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
         ) {
-            CategoryHeader(
-                title = stringResource(R.string.content_section_category, stringResource(R.string.common_nav_movies), selectedLabel),
-                subtitle = pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
-            )
-            Spacer(Modifier.height(14.dp))
+            // Cinematic browse: the rail already shows the active category, so the breadcrumb
+            // title + "Category (N movies)" subtitle is pure redundancy and steals a full poster row.
+            // Keep search/sort/view controls only so the grid can show two complete rows.
+            if (!cinematic) {
+                CategoryHeader(
+                    title = stringResource(R.string.content_section_category, stringResource(R.string.common_nav_movies), selectedLabel),
+                    subtitle = pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
+                )
+                Spacer(Modifier.height(14.dp))
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SearchBar(
                     query = searchQuery,
@@ -387,7 +488,7 @@ fun MoviesScreen(
                     style = tv.own.owntv.ui.components.OwnTVButtonStyle.SECONDARY,
                 )
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(if (cinematic) 12.dp else 14.dp))
 
             if (movies.itemCount == 0) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -420,7 +521,7 @@ fun MoviesScreen(
                                     firstItemFocus = firstItemFocus,
                                 ),
                                 onFocus = { vm.onMovieFocused(movie) },
-                                onClick = { startMovie(movie) },
+                                onClick = { openMovie(movie) },
                                 onLongClick = { contextMovie = movie; contextMovieId = movie.id; contextMovieIndex = index },
                             )
                         }
@@ -457,7 +558,7 @@ fun MoviesScreen(
                                     firstItemFocus = firstItemFocus,
                                 ),
                                 onFocus = { vm.onMovieFocused(movie) },
-                                onClick = { startMovie(movie) },
+                                onClick = { openMovie(movie) },
                                 onLongClick = { contextMovie = movie; contextMovieId = movie.id; contextMovieIndex = index },
                             )
                         }
@@ -466,7 +567,9 @@ fun MoviesScreen(
             }
         }
 
-        if (panelShares?.preview != 0) {
+        // Classic layout keeps the right-hand preview pane (unless panel width hid it at 0%).
+        // Cinematic layout is rail + full-width list only; details live on the dedicated page.
+        if (!cinematic && panelShares?.preview != 0) {
             Box(
                 modifier = Modifier
                     .then(if (panels != null) Modifier.width(panels.preview) else Modifier.weight(1f))
@@ -485,6 +588,7 @@ fun MoviesScreen(
         }
     }
     }
+    }
 
     resumePrompt?.let { (m, pos) ->
         ResumeDialog(
@@ -495,12 +599,12 @@ fun MoviesScreen(
         )
     }
 
-    // Load the opened movie's downloaded subtitles so the menu can show "Delete subtitles" (§11).
+    // Load the opened movie's downloaded subtitles so the menu can show "Delete subtitles" (Â§11).
     LaunchedEffect(contextMovie?.id) {
         contextMovieSubs = contextMovie?.let { runCatching { vm.downloadedSubtitles(it) }.getOrDefault(emptyList()) } ?: emptyList()
     }
 
-    // Long-press a movie → context menu.
+    // Long-press a movie â†’ context menu.
     contextMovie?.let { m ->
         val alreadyDownloaded = downloadStates[m.id] != null
         // TMDB Details is shown only when enrichment is on AND a confident match resolved for THIS movie.
@@ -537,7 +641,7 @@ fun MoviesScreen(
             onRemoveFromHistory = { vm.removeFromHistory(m.id); contextMovie = null },
             onDownload = {
                 contextMovie = null
-                // Idempotent (§11.1): don't re-queue an existing download — nudge to the Downloads menu.
+                // Idempotent (Â§11.1): don't re-queue an existing download â€” nudge to the Downloads menu.
                 if (alreadyDownloaded) {
                     toast.show(alreadyDownloadedMessage)
                 } else vm.download(m)
@@ -555,7 +659,7 @@ fun MoviesScreen(
         )
     }
 
-    // Move to… a combined category (issue #87), incl. the "＋ New category…" name prompt.
+    // Move toâ€¦ a combined category (issue #87), incl. the "ï¼‹ New categoryâ€¦" name prompt.
     val moveTargets by vm.moveTargets.collectAsStateWithLifecycle()
     if (creatingCategory) {
         TextInputDialog(
@@ -584,7 +688,7 @@ fun MoviesScreen(
         }
     }
 
-    // Per-item "Delete subtitles" popup (§11) — individual deletion; closes when none remain.
+    // Per-item "Delete subtitles" popup (Â§11) â€” individual deletion; closes when none remain.
     if (showDeleteSubs) {
         val m = contextMovie
         if (m == null || contextMovieSubs.isEmpty()) {
@@ -596,7 +700,7 @@ fun MoviesScreen(
                 onDelete = { sub ->
                     vm.deleteSubtitle(sub.cacheId)
                     contextMovieSubs = contextMovieSubs.filterNot { it.cacheId == sub.cacheId }
-                    // Last one deleted → close the popup AND the context menu so focus returns to the
+                    // Last one deleted â†’ close the popup AND the context menu so focus returns to the
                     // movie tile (the menu's Delete action is gone anyway).
                     if (contextMovieSubs.isEmpty()) { showDeleteSubs = false; contextMovie = null }
                 },
@@ -608,13 +712,30 @@ fun MoviesScreen(
     // When the TMDB Details window closes, return focus to the movie it was opened from (the window
     // trapped focus, so without this it would fall to the sidebar).
     LaunchedEffect(detailsMovie) {
-        if (detailsMovie == null && contextMovieId != null) {
+        if (detailsMovie == null && contextMovieId != null && openedMovie == null) {
             withFrameNanos { }
             runCatching { contextFocus.requestFocus() }
         }
     }
 
-    // Windowed TMDB details popup (§11.1) — read-only, Back exits.
+    // Leaving the cinematic detail page: put focus back on the movie that was open.
+    LaunchedEffect(openedMovie) {
+        if (openedMovie != null) return@LaunchedEffect
+        val targetId = selectedMovie?.id ?: return@LaunchedEffect
+        if (!cinematic) return@LaunchedEffect
+        val items = movies.itemSnapshotList.items
+        val idx = items.indexOfFirst { it.id == targetId }
+        if (idx >= 0) {
+            runCatching {
+                if (viewMode == SettingsRepository.VodViewMode.LIST) effectiveListState.scrollToItem(idx)
+                else effectiveGridState.scrollToItem(idx)
+            }
+            withFrameNanos { }
+            runCatching { selFocus.requestFocus() }
+        }
+    }
+
+    // Windowed TMDB details popup (Â§11.1) â€” read-only, Back exits.
     detailsMovie?.let { m ->
         val cache = selectedMovieMeta?.takeIf { it.movieId == m.id }?.cache
         MediaDetailsScreen(
@@ -623,7 +744,7 @@ fun MoviesScreen(
         )
     }
 
-    // "Set TMDB name" override dialog (§11.2 U5b). Prefill once per target (saved override, else cleaned title).
+    // "Set TMDB name" override dialog (Â§11.2 U5b). Prefill once per target (saved override, else cleaned title).
     LaunchedEffect(setTmdbNameMovie) {
         if (setTmdbNameMovie == null && contextMovieId != null) {
             withFrameNanos { }
@@ -653,7 +774,7 @@ fun MoviesScreen(
         }
     }
 
-    // In-app trailer player (§7.3 U4) — fullscreen over everything; Back/Exit closes and refocuses the movie.
+    // In-app trailer player (Â§7.3 U4) â€” fullscreen over everything; Back/Exit closes and refocuses the movie.
     LaunchedEffect(trailerVideoKey) {
         if (trailerVideoKey == null && contextMovieId != null) {
             withFrameNanos { }
@@ -680,6 +801,439 @@ fun MoviesScreen(
     InAppToast(toast)
 }
 
+/**
+ * Compact circular icon action for the cinematic detail row. Label lives in a shared focus tooltip
+ * above the row (and as contentDescription for a11y) so the chrome stays small and centered.
+ */
+@Composable
+private fun CinematicActionButton(
+    icon: OwnTVIcon,
+    tooltip: String,
+    primary: Boolean,
+    onClick: () -> Unit,
+    onTooltip: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+    iconFilled: Boolean = true,
+) {
+    val colors = OwnTVTheme.colors
+    FocusableSurface(
+        onClick = onClick,
+        modifier = modifier
+            .size(48.dp)
+            .semantics { contentDescription = tooltip }
+            .onFocusChanged { focus ->
+                // Only publish on gain. Clearing on loss races the next button's focus gain and
+                // briefly blanks the shared tooltip while moving across the action row.
+                if (focus.isFocused || focus.hasFocus) onTooltip(tooltip)
+            },
+        shape = RoundedCornerShape(50),
+        focusedScale = 1.08f,
+        glowElevation = 10,
+        surface = tv.own.owntv.ui.theme.LocalActionSurface.current,
+        glassFrostScale = 0.9f,
+        glassIdleRimAlpha = 0.18f,
+        unfocusedContainerColor = if (primary) colors.primary else colors.card,
+        focusedContainerColor = if (primary) colors.primary else colors.primaryContainer,
+        selectedContainerColor = if (primary) colors.primary else colors.card,
+        contentAlignment = Alignment.Center,
+    ) { focused ->
+        val tint = when {
+            primary -> colors.onPrimary
+            focused -> colors.onPrimaryContainer
+            else -> Color.White.copy(alpha = 0.92f)
+        }
+        OwnTVIcon(
+            icon = icon,
+            tint = tint,
+            filled = iconFilled,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+/**
+ * Full-bleed cinematic movie detail used by [SettingsRepository.MoviesLayoutMode.CINEMATIC].
+ *
+ * Prime-style layout:
+ * - fixed hero (no page scroll, no Back button — D-pad Back / system back exits)
+ * - Similar rail peeks at the bottom and lifts over the hero when focused
+ */
+@Composable
+private fun MovieCinematicDetail(
+    details: tv.own.owntv.features.shell.components.MediaDetailsUi,
+    isFavorite: Boolean,
+    resumePositionMs: Long?,
+    trailerKey: String?,
+    similarMovies: List<MovieViewModel.SimilarMovie>,
+    downloadStrip: tv.own.owntv.ui.components.DownloadStripState?,
+    onPlay: () -> Unit,
+    onResume: (() -> Unit)?,
+    onPlayTrailer: (String) -> Unit,
+    onOpenSimilar: (MovieEntity) -> Unit,
+    onToggleFavorite: () -> Unit,
+    onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = OwnTVTheme.colors
+    val density = LocalDensity.current
+    val playFocus = remember { FocusRequester() }
+    // First similar poster — Down from any action button lands here (not the Nth poster under the Nth icon).
+    val firstSimilarFocus = remember { FocusRequester() }
+    LaunchedEffect(details.title, resumePositionMs != null) {
+        runCatching { playFocus.requestFocus() }
+    }
+
+    val playableSimilar = remember(similarMovies) {
+        similarMovies.mapNotNull { item -> item.movie?.let { m -> item to m } }
+    }
+    var similarFocused by remember { mutableStateOf(false) }
+    // Rest: rail peeks under the hero. Focused: rail rises and covers the lower hero (Prime-like).
+    val similarHeight by animateDpAsState(
+        targetValue = when {
+            playableSimilar.isEmpty() -> 0.dp
+            similarFocused -> 310.dp
+            else -> 168.dp
+        },
+        animationSpec = tween(durationMillis = 280),
+        label = "similarHeight",
+    )
+    val heroShift by animateDpAsState(
+        targetValue = if (similarFocused && playableSimilar.isNotEmpty()) (-36).dp else 0.dp,
+        animationSpec = tween(durationMillis = 280),
+        label = "heroShift",
+    )
+    val heroScale by animateFloatAsState(
+        targetValue = if (similarFocused && playableSimilar.isNotEmpty()) 0.94f else 1f,
+        animationSpec = tween(durationMillis = 280),
+        label = "heroScale",
+    )
+    val heroDim by animateFloatAsState(
+        targetValue = if (similarFocused && playableSimilar.isNotEmpty()) 0.72f else 1f,
+        animationSpec = tween(durationMillis = 280),
+        label = "heroDim",
+    )
+    // Keep cast/plot readable when the rail is only peeking; collapse denser text once lifted.
+    val plotMaxLines = if (similarFocused) 3 else 5
+    val showCast = !similarFocused
+
+    val rootModifier = modifier
+        .clip(RoundedCornerShape(Dimens.CornerLarge))
+        .background(colors.background)
+        .focusGroup()
+    val hScrim = Brush.horizontalGradient(
+        listOf(
+            Color.Black.copy(alpha = 0.88f),
+            Color.Black.copy(alpha = 0.70f),
+            Color.Black.copy(alpha = 0.30f),
+            Color.Black.copy(alpha = 0.12f),
+        ),
+    )
+    val vScrim = Brush.verticalGradient(
+        listOf(
+            Color.Black.copy(alpha = 0.42f),
+            Color.Transparent,
+            Color.Black.copy(alpha = 0.42f),
+            Color.Black.copy(alpha = 0.90f),
+        ),
+    )
+    val plotText = details.plot?.takeIf { it.isNotBlank() }
+    val castText = details.cast.take(8).joinToString(", ").takeIf { it.isNotBlank() }
+    val primaryIsResume = onResume != null && resumePositionMs != null
+
+    Box(modifier = rootModifier) {
+        // Full-bleed backdrop stays put while the similar rail lifts over it.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.surfaceContainerLowest),
+        ) {
+            val backdrop = details.backdropUrl
+            if (!backdrop.isNullOrBlank()) {
+                AsyncImage(
+                    model = backdrop,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            Box(modifier = Modifier.fillMaxSize().background(hScrim))
+            Box(modifier = Modifier.fillMaxSize().background(vScrim))
+        }
+
+        // Fixed hero — no vertical page scroll. Back is handled by the parent BackHandler / remote.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 36.dp, end = 36.dp, top = 28.dp)
+                .padding(bottom = if (playableSimilar.isEmpty()) 28.dp else similarHeight)
+                .graphicsLayer {
+                    translationY = with(density) { heroShift.toPx() }
+                    scaleX = heroScale
+                    scaleY = heroScale
+                    alpha = heroDim
+                    transformOrigin = TransformOrigin(0f, 0f)
+                },
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(28.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .aspectRatio(2f / 3f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(colors.surfaceContainerLowest),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val poster = details.posterUrl
+                    if (!poster.isNullOrBlank()) {
+                        AsyncImage(
+                            model = poster,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        OwnTVIcon(
+                            OwnTVIcon.MOVIES,
+                            tint = colors.onSurfaceVariant,
+                            modifier = Modifier.height(48.dp),
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    // Always text — TMDB "logos" are often brand marks (the Avengers A), not titles.
+                    Text(
+                        text = details.title,
+                        style = MaterialTheme.typography.displaySmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (details.metaLine.isNotBlank()) {
+                        Text(
+                            text = details.metaLine,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color.White.copy(alpha = 0.78f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (details.genres.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            details.genres.take(6).forEach { genre ->
+                                Text(
+                                    text = genre,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color.White.copy(alpha = 0.92f),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(Color.White.copy(alpha = 0.14f))
+                                        .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                )
+                            }
+                        }
+                    }
+                    if (resumePositionMs != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.content_resume_at,
+                                tv.own.owntv.ui.components.formatTimestamp(resumePositionMs),
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = colors.primary,
+                        )
+                    }
+                    if (downloadStrip != null) {
+                        tv.own.owntv.ui.components.DownloadStatusStrip(downloadStrip)
+                    }
+                    if (plotText != null) {
+                        Text(
+                            text = plotText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White.copy(alpha = 0.88f),
+                            maxLines = plotMaxLines,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 720.dp),
+                        )
+                    }
+                    if (showCast && castText != null) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = stringResource(R.string.content_media_cast),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White.copy(alpha = 0.70f),
+                            )
+                            Text(
+                                text = castText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.82f),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    // Compact icon-only actions with a shared focus tooltip (Prime-style chrome).
+                    // Down from ANY action always enters the similar rail at the first poster —
+                    // geometric focus would otherwise land on the Nth poster under the Nth icon.
+                    var actionTooltip by remember { mutableStateOf<String?>(null) }
+                    val actionDown: Modifier.() -> Modifier = {
+                        if (playableSimilar.isNotEmpty()) {
+                            focusProperties { down = firstSimilarFocus }
+                        } else {
+                            this
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = actionTooltip.orEmpty(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .height(20.dp)
+                                .alpha(if (actionTooltip.isNullOrBlank()) 0f else 1f),
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (primaryIsResume) {
+                                CinematicActionButton(
+                                    icon = OwnTVIcon.PLAY,
+                                    tooltip = stringResource(R.string.content_action_resume_movie),
+                                    primary = true,
+                                    onClick = onResume!!,
+                                    onTooltip = { actionTooltip = it },
+                                    modifier = Modifier.focusRequester(playFocus).actionDown(),
+                                )
+                                CinematicActionButton(
+                                    icon = OwnTVIcon.PLAY,
+                                    tooltip = stringResource(R.string.content_action_play_movie),
+                                    primary = false,
+                                    onClick = onPlay,
+                                    onTooltip = { actionTooltip = it },
+                                    modifier = Modifier.actionDown(),
+                                )
+                            } else {
+                                CinematicActionButton(
+                                    icon = OwnTVIcon.PLAY,
+                                    tooltip = stringResource(R.string.content_action_play_movie),
+                                    primary = true,
+                                    onClick = onPlay,
+                                    onTooltip = { actionTooltip = it },
+                                    modifier = Modifier.focusRequester(playFocus).actionDown(),
+                                )
+                            }
+                            if (!trailerKey.isNullOrBlank()) {
+                                CinematicActionButton(
+                                    icon = OwnTVIcon.VIDEO,
+                                    tooltip = stringResource(R.string.content_action_watch_trailer),
+                                    primary = false,
+                                    onClick = { onPlayTrailer(trailerKey) },
+                                    onTooltip = { actionTooltip = it },
+                                    modifier = Modifier.actionDown(),
+                                )
+                            }
+                            CinematicActionButton(
+                                icon = OwnTVIcon.FAVORITE,
+                                tooltip = stringResource(
+                                    if (isFavorite) R.string.content_action_remove_favourite
+                                    else R.string.content_action_save_favourite,
+                                ),
+                                primary = false,
+                                onClick = onToggleFavorite,
+                                onTooltip = { actionTooltip = it },
+                                iconFilled = isFavorite,
+                                modifier = Modifier.actionDown(),
+                            )
+                            CinematicActionButton(
+                                icon = OwnTVIcon.DOWNLOADS,
+                                tooltip = stringResource(R.string.content_action_download_movie),
+                                primary = false,
+                                onClick = onDownload,
+                                onTooltip = { actionTooltip = it },
+                                modifier = Modifier.actionDown(),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (playableSimilar.isNotEmpty()) {
+            val railScrim = Brush.verticalGradient(
+                listOf(
+                    Color.Transparent,
+                    Color.Black.copy(alpha = 0.55f),
+                    Color.Black.copy(alpha = 0.92f),
+                ),
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(similarHeight)
+                    .background(railScrim)
+                    .onFocusChanged { similarFocused = it.hasFocus }
+                    .focusGroup()
+                    .padding(start = 36.dp, end = 36.dp, top = 12.dp, bottom = 18.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.content_similar_movies),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(10.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    itemsIndexed(
+                        items = playableSimilar,
+                        key = { _, (item, movie) -> "${item.tmdbId}-${movie.id}" },
+                    ) { index, pair ->
+                        val (item, movie) = pair
+                        // Slightly smaller cards while peeking so the hero stays dominant.
+                        val cardWidth = if (similarFocused) 148.dp else 118.dp
+                        // Up from any similar poster returns to the primary action (Play/Resume),
+                        // not whatever action happened to sit above that column.
+                        val cardFocus = Modifier
+                            .width(cardWidth)
+                            .focusProperties { up = playFocus }
+                            .then(if (index == 0) Modifier.focusRequester(firstSimilarFocus) else Modifier)
+                        PosterCard(
+                            posterUrl = item.posterUrl,
+                            title = item.title,
+                            rating = null,
+                            showTitle = false,
+                            modifier = cardFocus,
+                            onClick = { onOpenSimilar(movie) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun MovieContextMenu(
     title: String,
@@ -694,7 +1248,7 @@ private fun MovieContextMenu(
     onToggleFavorite: () -> Unit,
     onToggleWatched: () -> Unit,
     onMove: () -> Unit,
-    // "Move to category…" (issue #87): send this movie into a user's combined category.
+    // "Move to category..." (issue #87): send this movie into a user's combined category.
     onMoveToCategory: () -> Unit,
     onHide: () -> Unit,
     onRemoveFromHistory: () -> Unit,
@@ -703,7 +1257,7 @@ private fun MovieContextMenu(
     onRefetch: () -> Unit,
     onSetTmdbName: () -> Unit,
     onPlayTrailer: (String) -> Unit,
-    // Non-null only when this movie has downloaded OpenSubtitles subtitles (subtitle plan §11).
+    // Non-null only when this movie has downloaded OpenSubtitles subtitles (subtitle plan Â§11).
     onDeleteSubtitles: (() -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
@@ -721,19 +1275,19 @@ private fun MovieContextMenu(
     if (isHistory) entries += MenuEntry(stringResource(R.string.content_remove_history), onRemoveFromHistory)
     entries += MenuEntry(stringResource(R.string.common_hide), onHide)
     entries += MenuEntry(stringResource(R.string.content_download), onDownload, OwnTVIcon.DOWNLOADS)
-    // Delete subtitles — only when this movie has downloaded OpenSubtitles subs (§11).
+    // Delete subtitles â€” only when this movie has downloaded OpenSubtitles subs (Â§11).
     onDeleteSubtitles?.let { entries += MenuEntry(stringResource(R.string.content_delete_subtitles), it, OwnTVIcon.SUBTITLE) }
     // Phase B: one-off external playback, independent of the global "External player" toggle.
     entries += MenuEntry(stringResource(R.string.content_play_external), onPlayExternal, OwnTVIcon.PLAY)
-    // TMDB Details — only when a confident match resolved (§11.1).
+    // TMDB Details â€” only when a confident match resolved (Â§11.1).
     if (hasTmdbDetails) entries += MenuEntry(stringResource(R.string.content_tmdb_details), onShowDetails, OwnTVIcon.MENU)
-    // Play Trailer (§7.3 U4) — only when TMDB actually has a trailer for this title (§11.1 gating).
+    // Play Trailer (Â§7.3 U4) â€” only when TMDB actually has a trailer for this title (Â§11.1 gating).
     trailerKey?.let { key -> entries += MenuEntry(stringResource(R.string.content_play_trailer), { onPlayTrailer(key) }) }
-    // Refetch TMDB details (§11.2 U5a) — always available when enrichment is on, so a "no match"
+    // Refetch TMDB details (Â§11.2 U5a) â€” always available when enrichment is on, so a "no match"
     // (7-day negative cache) or a stale match can be cleared and re-searched immediately.
     if (canRefetchTmdb) {
         entries += MenuEntry(stringResource(R.string.content_refetch_tmdb), onRefetch)
-        // Set TMDB name (§11.2 U5b) — hand-type the exact title to override the auto-match.
+        // Set TMDB name (Â§11.2 U5b) â€” hand-type the exact title to override the auto-match.
         entries += MenuEntry(stringResource(R.string.content_set_tmdb_name), onSetTmdbName)
     }
     MediaContextMenu(
@@ -757,7 +1311,7 @@ private fun MovieDetailsPane(
         PreviewPane(hint = stringResource(R.string.content_focus_movie))
         return
     }
-    // Merge (§7.1 / §4.1). Provider+TMDB → provider wins (provider ?: tmdb); TMDB-only → tmdb wins
+    // Merge (Â§7.1 / Â§4.1). Provider+TMDB â†’ provider wins (provider ?: tmdb); TMDB-only â†’ tmdb wins
     // (tmdb ?: provider). TMDB fields are never written back to the content row.
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
@@ -773,7 +1327,7 @@ private fun MovieDetailsPane(
             .verticalScroll(rememberScrollState())
             .padding(Dimens.GapLarge),
     ) {
-        // Non-focusable download status strip — only present while this movie is actually downloading.
+        // Non-focusable download status strip â€” only present while this movie is actually downloading.
         if (downloadStrip != null) {
             tv.own.owntv.ui.components.DownloadStatusStrip(downloadStrip)
             Spacer(Modifier.height(12.dp))
@@ -810,7 +1364,7 @@ private fun MovieDetailsPane(
         Text(movie.name, style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
         Spacer(Modifier.height(6.dp))
         Text(metaLine(movie, meta, tmdbWins), style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), color = colors.onSurfaceVariant)
-        // Genres & cast are TMDB-only (§7.1) — a whole layer the provider never had.
+        // Genres & cast are TMDB-only (Â§7.1) â€” a whole layer the provider never had.
         val genres = jsonList(meta?.genresJson)
         if (genres.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
@@ -828,8 +1382,8 @@ private fun MovieDetailsPane(
             Text(cast.take(6).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.height(20.dp))
-        // Display-only pane (§11.1): actions live on the poster — OK plays, long-press opens the menu
-        // (Favorite / Download / TMDB Details). Keeping the pane non-focusable fixes grid→pane navigation.
+        // Display-only pane (Â§11.1): actions live on the poster â€” OK plays, long-press opens the menu
+        // (Favorite / Download / TMDB Details). Keeping the pane non-focusable fixes gridâ†’pane navigation.
         Text(
             stringResource(R.string.content_ok_play_options),
             style = MaterialTheme.typography.labelMedium,
@@ -841,8 +1395,11 @@ private fun MovieDetailsPane(
 @Composable
 private fun metaLine(movie: MovieEntity, meta: tv.own.owntv.core.database.entity.MetadataCacheEntity? = null, tmdbWins: Boolean = false): String {
     val parts = mutableListOf<String>()
-    // §7.1 / §4.1: precedence flips with the source mode.
-    val year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year
+    // §7.1 / §4.1: precedence flips with the source mode. Many IPTV rows leave year null and only
+    // bake it into the name ("… (2018)") — fall back to the normalizer so the cinematic page still
+    // shows year before TMDB resolves.
+    val nameYear = tv.own.owntv.core.metadata.TitleNormalizer.normalize(movie.name).year
+    val year = if (tmdbWins) meta?.year ?: movie.year ?: nameYear else movie.year ?: meta?.year ?: nameYear
     val rating = if (tmdbWins) meta?.rating?.takeIf { it > 0 } ?: movie.rating?.takeIf { it > 0 }
         else movie.rating?.takeIf { it > 0 } ?: meta?.rating?.takeIf { it > 0 }
     year?.let { parts.add(localizedInteger(it, grouping = false)) }
@@ -866,13 +1423,18 @@ private fun buildMovieDetails(
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
     // Backdrop is TMDB-only (providers don't carry one); fall back to the provider's if it exists.
-    val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
+    val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: movie.plot else movie.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
+    // Prefer the enriched TMDB title whenever we have one — IPTV names are usually noisy
+    // ("D+ - Avengers 3 Infinity War (2018)") while TMDB is the clean display title.
+    val tmdbTitle = meta?.title?.takeIf { it.isNotBlank() && it != "?" }
+    val title = tmdbTitle ?: movie.name
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
-        title = movie.name,
+        title = title,
         backdropUrl = backdrop,
         posterUrl = poster,
+        logoUrl = null, // cinematic page uses text title; brand logos are a poor title substitute
         metaLine = metaLine(movie, meta, tmdbWins),
         genres = jsonList(meta?.genresJson),
         plot = plot,
@@ -889,7 +1451,7 @@ private fun jsonList(json: String?): List<String> {
     }.getOrDefault(emptyList())
 }
 
-/** Compact one-line row used by the List view mode — fits many titles on screen at once (#10). */
+/** Compact one-line row used by the List view mode â€” fits many titles on screen at once (#10). */
 @Composable
 private fun MovieListRow(
     movie: MovieEntity,
@@ -931,7 +1493,7 @@ private fun MovieListRow(
                             modifier = Modifier.size(20.dp).clip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.onSurface)
+                            Text("âœ“", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.onSurface)
                         }
                     }
                     if (isFavorite) {

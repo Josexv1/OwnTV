@@ -1645,6 +1645,12 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <string name="settings_surround_forced_description">Surround — send Dolby/DTS to a real 5.1/7.1 receiver. If it goes silent or stutters, OwnTV still falls back to stereo and tells you.</string>
     <string name="settings_panel_width">Panel Width Adjustment</string>
     <string name="settings_panel_width_description">Resize the category, list and preview panels in Live TV, Movies &amp; Series.</string>
+    <string name="settings_movies_layout">Movies layout</string>
+    <string name="settings_movies_layout_description">Choose the classic three-panel Movies browse, or a cinematic rail + full-width list with a full-bleed detail page.</string>
+    <string name="settings_movies_layout_dialog">Movies layout</string>
+    <string name="settings_movies_layout_classic">Classic panels</string>
+    <string name="settings_movies_layout_cinematic">Cinematic</string>
+    <string name="settings_search_keywords_movies_layout">movies layout cinematic classic panels poster detail sidebar categories full width</string>
     <string name="settings_search_keywords_epg_offset">epg guide time offset shift timezone east west hours</string>
     <string name="settings_search_keywords_panel_width">panel width size resize category list preview poster column layout live movies series</string>
     <string name="settings_search_keywords_live_preroll">prebuffer preroll pre-roll buffering buffer before playing rebuffer stutter freeze per playlist</string>

@@ -200,6 +200,9 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
         val LAST_LIVE_CHANNEL = androidx.datastore.preferences.core.longPreferencesKey("last_live_channel")
         val VOD_VIEW_MODE = stringPreferencesKey("vod_view_mode")
+        // Movies browse chrome: CLASSIC keeps the 3-panel (rail · list · preview) layout; CINEMATIC
+        // is rail + full-width list, with a full-bleed detail page on open (Play/Favorite/Download).
+        val MOVIES_LAYOUT_MODE = stringPreferencesKey("movies_layout_mode")
         // Global proxy (Approach 1 — one app-wide HTTP proxy). HTTP only; no per-source override yet.
         val PROXY_ENABLED = booleanPreferencesKey("proxy_enabled")
         val PROXY_HOST = stringPreferencesKey("proxy_host")
@@ -665,6 +668,19 @@ class SettingsRepository(private val context: Context, private val localeStore: 
     }
     suspend fun setVodViewMode(mode: VodViewMode) {
         context.dataStore.edit { it[Keys.VOD_VIEW_MODE] = mode.name }
+    }
+
+    /**
+     * Movies section chrome. CLASSIC = existing rail · list · preview panels. CINEMATIC = rail +
+     * full-width list, and opening a title lands on a full-bleed detail page with actions.
+     */
+    enum class MoviesLayoutMode { CLASSIC, CINEMATIC }
+    val moviesLayoutMode: Flow<MoviesLayoutMode> = prefsFlow { prefs ->
+        prefs[Keys.MOVIES_LAYOUT_MODE]?.let { runCatching { MoviesLayoutMode.valueOf(it) }.getOrNull() }
+            ?: MoviesLayoutMode.CLASSIC
+    }
+    suspend fun setMoviesLayoutMode(mode: MoviesLayoutMode) {
+        context.dataStore.edit { it[Keys.MOVIES_LAYOUT_MODE] = mode.name }
     }
 
     val sortGuide: Flow<GuideSort> = prefsFlow { prefs ->
@@ -1434,6 +1450,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         Keys.THEME_MODE, Keys.ACCENT, Keys.ACCENT_CUSTOM, Keys.DEFAULT_ZOOM,
         Keys.PREF_AUDIO_LANG, Keys.PREF_SUB_LANG, Keys.SUB_SEARCH_LANGS, Keys.SORT_LIVE, Keys.SORT_GUIDE, Keys.SORT_MOVIES,
         Keys.SORT_SERIES, Keys.RESUME_MODE, Keys.CATCHUP_TZ, Keys.CATCHUP_PLAYER, Keys.ANIMATION_LEVEL, Keys.VOD_VIEW_MODE,
+        Keys.MOVIES_LAYOUT_MODE,
         Keys.WEATHER_LOCATION, Keys.RECENT_SEARCHES,
         // Global proxy — non-secret fields only. The proxy password (Keys.PROXY_PASS) is NEVER part of
         // this whitelist; it is handled separately by BackupManager (encrypted or omitted).

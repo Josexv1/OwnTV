@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import tv.own.owntv.BuildConfig
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.sync.importProgressDisplay
@@ -68,6 +69,8 @@ private enum class Step { WELCOME, DISCLAIMER, SETUP_CHOICE, CREATE_PROFILE, ADD
  * Onboarding for one profile. [firstRun] shows language/welcome/disclaimer; otherwise it starts at profile
  * creation (used by "Add profile"). [onDone] receives the newly active profile id and enters the
  * app; [onCancel] backs out (to the gate).
+ *
+ * Debug builds can auto-load [DemoCatalog] on first run so emulator testing skips the empty-profile gate.
  */
 @Composable
 fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit, modifier: Modifier = Modifier) {
@@ -76,15 +79,50 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultIptvName = stringResource(R.string.setup_default_iptv)
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
-    var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
+    // Debug first-run jumps straight into the free-sample import so local testing lands in the shell
+    // with channels instead of the profile/source wizard.
+    var step by rememberSaveable(firstRun) {
+        mutableStateOf(
+            when {
+                firstRun && BuildConfig.DEBUG -> Step.IMPORTING
+                firstRun -> Step.WELCOME
+                else -> Step.CREATE_PROFILE
+            },
+        )
+    }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
     val epgSync by vm.epgSync.collectAsStateWithLifecycle()
     var existing by remember { mutableStateOf<List<SourceEntity>>(emptyList()) }
     // Where "Try Again" returns to when an import fails (new source vs. linking existing).
-    var importOrigin by remember { mutableStateOf(Step.ADD_SOURCE) }
+    var importOrigin by remember { mutableStateOf(if (BuildConfig.DEBUG && firstRun) Step.SETUP_CHOICE else Step.ADD_SOURCE) }
     // Where Back from the backup-restore picker returns to (first-run choice vs. add-content step).
     var backupOrigin by remember { mutableStateOf(Step.ADD_CONTENT) }
+    var demoAutoStarted by rememberSaveable(firstRun) { mutableStateOf(false) }
+
+    // Debug first-run: create Demo profile + free public M3U once, then the IMPORTING step shows progress.
+    LaunchedEffect(firstRun) {
+        if (firstRun && BuildConfig.DEBUG && !demoAutoStarted) {
+            demoAutoStarted = true
+            importOrigin = Step.SETUP_CHOICE
+            vm.startDemo()
+        }
+    }
+
+    // Debug demo: once the sample catalog is in, skip the "All set!" button and enter the shell.
+    var demoAutoFinished by rememberSaveable(firstRun) { mutableStateOf(false) }
+    LaunchedEffect(importState, firstRun) {
+        if (
+            firstRun &&
+            BuildConfig.DEBUG &&
+            !demoAutoFinished &&
+            importState is SetupViewModel.ImportState.Success
+        ) {
+            demoAutoFinished = true
+            vm.dismissPendingEpg()
+            vm.finish(onDone)
+        }
+    }
 
     // Refresh the "existing playlists" availability whenever we land on the add-content step.
     LaunchedEffect(step) { if (step == Step.ADD_CONTENT) existing = runCatching { vm.availableExistingSources() }.getOrDefault(emptyList()) }
@@ -98,6 +136,15 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
             Step.SETUP_CHOICE -> SetupChoiceScreen(
                 onCreate = { step = Step.CREATE_PROFILE },
                 onRestore = { backupOrigin = Step.SETUP_CHOICE; step = Step.IMPORT_BACKUP_CHOOSER },
+                onDemo = if (BuildConfig.DEBUG) {
+                    {
+                        importOrigin = Step.SETUP_CHOICE
+                        vm.startDemo()
+                        step = Step.IMPORTING
+                    }
+                } else {
+                    null
+                },
                 onBack = { step = Step.DISCLAIMER },
             )
             Step.CREATE_PROFILE -> ProfileEditorDialog(
@@ -110,6 +157,15 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onNew = { step = Step.ADD_SOURCE_CHOOSER },
                 onExisting = { step = Step.EXISTING },
                 onImport = { backupOrigin = Step.ADD_CONTENT; step = Step.IMPORT_BACKUP_CHOOSER },
+                onDemo = if (BuildConfig.DEBUG) {
+                    {
+                        importOrigin = Step.ADD_CONTENT
+                        vm.startDemo()
+                        step = Step.IMPORTING
+                    }
+                } else {
+                    null
+                },
                 onSkip = { vm.finish(onDone) },
             )
             Step.ADD_SOURCE_CHOOSER -> AddSourceChooserScreen(
@@ -235,7 +291,12 @@ private fun DisclaimerScreen(onAgree: () -> Unit, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBack: () -> Unit) {
+private fun SetupChoiceScreen(
+    onCreate: () -> Unit,
+    onRestore: () -> Unit,
+    onDemo: (() -> Unit)?,
+    onBack: () -> Unit,
+) {
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     BackHandler { onBack() }
@@ -244,14 +305,36 @@ private fun SetupChoiceScreen(onCreate: () -> Unit, onRestore: () -> Unit, onBac
         subtitle = { Text(stringResource(R.string.setup_setup_choice_description)) },
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            ChoiceCard(icon = OwnTVIcon.PERSON, title = stringResource(R.string.setup_new_profile), desc = stringResource(R.string.setup_create_profile_add_sources), modifier = Modifier.focusRequester(fr), onClick = onCreate)
+            if (onDemo != null) {
+                ChoiceCard(
+                    icon = OwnTVIcon.LIVE_TV,
+                    title = stringResource(R.string.setup_demo_playlist),
+                    desc = stringResource(R.string.setup_demo_playlist_description),
+                    modifier = Modifier.focusRequester(fr),
+                    onClick = onDemo,
+                )
+            }
+            ChoiceCard(
+                icon = OwnTVIcon.PERSON,
+                title = stringResource(R.string.setup_new_profile),
+                desc = stringResource(R.string.setup_create_profile_add_sources),
+                modifier = if (onDemo == null) Modifier.focusRequester(fr) else Modifier,
+                onClick = onCreate,
+            )
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_restore_backup), desc = stringResource(R.string.setup_import_profiles_playlists), onClick = onRestore)
         }
     }
 }
 
 @Composable
-private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting: () -> Unit, onImport: () -> Unit, onSkip: () -> Unit) {
+private fun AddContentScreen(
+    hasExisting: Boolean,
+    onNew: () -> Unit,
+    onExisting: () -> Unit,
+    onImport: () -> Unit,
+    onDemo: (() -> Unit)?,
+    onSkip: () -> Unit,
+) {
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
     SetupScaffold(
@@ -264,6 +347,14 @@ private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting
                 ChoiceCard(icon = OwnTVIcon.PLAYLIST, title = stringResource(R.string.setup_existing), desc = stringResource(R.string.setup_use_other_profile_playlists), onClick = onExisting)
             }
             ChoiceCard(icon = OwnTVIcon.DOWNLOADS, title = stringResource(R.string.setup_import), desc = stringResource(R.string.setup_restore_backup_file), onClick = onImport)
+            if (onDemo != null) {
+                ChoiceCard(
+                    icon = OwnTVIcon.LIVE_TV,
+                    title = stringResource(R.string.setup_demo_playlist),
+                    desc = stringResource(R.string.setup_demo_playlist_description),
+                    onClick = onDemo,
+                )
+            }
         }
         Spacer(Modifier.height(24.dp))
         OwnTVButton(

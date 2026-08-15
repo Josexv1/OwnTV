@@ -76,6 +76,9 @@
     <string name="setup_restore_backup">Restore backup</string>
     <!-- Translators: Description text beneath the "Restore backup" choice card. -->
     <string name="setup_import_profiles_playlists">Import profiles &amp; playlists from a file</string>
+    <!-- Debug-only card / auto-seed labels. Not shown in release builds. -->
+    <string name="setup_demo_playlist" translatable="false">Demo playlist</string>
+    <string name="setup_demo_playlist_description" translatable="false">Load a free public IPTV sample and skip setup</string>
     <!-- Translators: Heading on the "add a playlist" step of the setup wizard. -->
     <string name="setup_add_playlist">Add a playlist</string>
     <!-- Translators: Description on the "add a playlist" step. -->

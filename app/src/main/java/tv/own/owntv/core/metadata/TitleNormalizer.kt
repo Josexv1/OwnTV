@@ -51,10 +51,15 @@ object TitleNormalizer {
     // A 4-digit year, optionally in parens/brackets: (2021), [1999], 2015.
     private val YEAR = Regex("""[\[(]?\b(19\d{2}|20\d{2})\b[\])]?""")
 
+    // Franchise "part" numbering IPTV catalogs invent: "Avengers 3 Infinity War", "Fast 7 Furious",
+    // "John Wick Chapter 2". Standalone 1–3 digit tokens between words (not years) are noise for TMDB.
+    private val PART_NUMBER = Regex("""(?<=\S)\s+(?:part|chapter|pt\.?|vol\.?|volume)?\s*(\d{1,2})\s+(?=\S)""", RegexOption.IGNORE_CASE)
+
     // Trailing junk separators/flags left after stripping.
     private val EMOJI_FLAG = Regex("""[🇦-🇿]""")
     private val MULTI_SPACE = Regex("""\s{2,}""")
     private val EDGE_JUNK = Regex("""^[\s\-–—|:._]+|[\s\-–—|:._]+$""")
+    private val NON_WORD = Regex("""[^\p{L}\p{N}\s]+""")
 
     fun normalize(raw: String): Normalized {
         if (raw.isBlank()) return Normalized("", null)
@@ -65,7 +70,7 @@ object TitleNormalizer {
             .lastOrNull()?.takeIf { it in 1900..2099 }
 
         // 2. Strip leading provider/language tags repeatedly: pipe/colon tags first ("EN| 4K| Movie"),
-        //    then provider prefixes that end at a " - " separator ("4K-OSN+ - Gangs of London").
+        //    then provider prefixes that end at a " - " separator ("4K-OSN+ - Gangs of London", "D+ - Title").
         var prev: String
         do { prev = s; s = s.replace(PIPE_TAG, ""); s = stripDashPrefix(s) } while (s != prev)
 
@@ -88,6 +93,41 @@ object TitleNormalizer {
             .trim()
 
         return Normalized(s, year)
+    }
+
+    /**
+     * Extra TMDB search variants for a cleaned query. IPTV titles often insert franchise numbering
+     * ("Avengers 3 Infinity War") that TMDB doesn't use ("Avengers: Infinity War") — searching both
+     * forms massively improves hit rate without changing the primary cleaned title used for scoring.
+     */
+    fun searchVariants(query: String): List<String> {
+        val primary = query.trim()
+        if (primary.isEmpty()) return emptyList()
+        val out = LinkedHashSet<String>()
+        out += primary
+
+        val withoutParts = primary.replace(PART_NUMBER, " ")
+            .replace(MULTI_SPACE, " ")
+            .trim()
+        if (withoutParts.isNotBlank()) out += withoutParts
+
+        // Punctuation-light form helps TMDB when the cleaned title still carries ":" / "-" noise.
+        val plain = primary.replace(NON_WORD, " ").replace(MULTI_SPACE, " ").trim()
+        if (plain.isNotBlank()) out += plain
+        val plainNoParts = withoutParts.replace(NON_WORD, " ").replace(MULTI_SPACE, " ").trim()
+        if (plainNoParts.isNotBlank()) out += plainNoParts
+
+        return out.toList()
+    }
+
+    /** Lowercase alnum tokens used by the matcher — strips punctuation so "Avengers:" == "avengers". */
+    fun matchTokens(title: String): List<String> {
+        if (title.isBlank()) return emptyList()
+        return title.lowercase()
+            .replace(NON_WORD, " ")
+            .split(Regex("""\s+"""))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
     }
 
     /**

@@ -184,7 +184,9 @@ fun SettingsScreen(
     var showBgRemote by remember { mutableStateOf(false) }
     var showGlassEffect by remember { mutableStateOf(false) }
     var showBrowsing by remember { mutableStateOf(false) }
+    var showMoviesLayout by remember { mutableStateOf(false) }
     val browsingRowFocus = remember { FocusRequester() }
+    val moviesLayoutRowFocus = remember { FocusRequester() }
     // U2 — background-image ingest copies a multi-megabyte file; it runs here, off the main thread.
     val ingestScope = rememberCoroutineScope()
 
@@ -221,13 +223,13 @@ fun SettingsScreen(
     // doesn't visibly jump/scroll when the dialog opens or when we refocus the opener row afterward.
     val scrollState = rememberScrollState()
     var savedScroll by remember { mutableIntStateOf(0) }
-    val anyDialogOpen = showZoom || showTheme || showAccent || showFolderPicker || showUpdate || showAbout || showCatchupTime || showEpgOffset || showClearHistory || showAnimations || showStartup || showErrorLog || showAfrWarning || showLivePreviewPanelWarning || showBgImageChooser || showBgPicker || showGlassEffect || showBrowsing
+    val anyDialogOpen = showZoom || showTheme || showAccent || showFolderPicker || showUpdate || showAbout || showCatchupTime || showEpgOffset || showClearHistory || showAnimations || showStartup || showErrorLog || showAfrWarning || showLivePreviewPanelWarning || showBgImageChooser || showBgPicker || showGlassEffect || showBrowsing || showMoviesLayout
     // When a dialog closes, restore focus to the row that opened it. NOTE: this restore crosses
     // INTO the root focus group from outside (the dialog), but onEnter does NOT fire for programmatic
     // requestsFocus (only for directional entry) — so dialogReturn must be cleared HERE, not in onEnter.
     // If it's left set, the next directional entry (e.g. sidebar→here) would re-route to a stale row.
     var dialogReturn by remember { mutableStateOf<FocusRequester?>(null) }
-    LaunchedEffect(showZoom, showTheme, showAccent, showFolderPicker, showUpdate, showAbout, showCatchupTime, showEpgOffset, showClearHistory, showAnimations, showStartup, showErrorLog, showAfrWarning, showLivePreviewPanelWarning, showBgImageChooser, showBgPicker, showGlassEffect, showBrowsing) {
+    LaunchedEffect(showZoom, showTheme, showAccent, showFolderPicker, showUpdate, showAbout, showCatchupTime, showEpgOffset, showClearHistory, showAnimations, showStartup, showErrorLog, showAfrWarning, showLivePreviewPanelWarning, showBgImageChooser, showBgPicker, showGlassEffect, showBrowsing, showMoviesLayout) {
         if (!anyDialogOpen) {
             // When a scrim dialog is torn down, Compose's focus re-search through the newly-exposed
             // scrollable Column resets its scroll to 0 and then bringIntoView-animates to wherever
@@ -277,6 +279,7 @@ fun SettingsScreen(
     val rememberCatLive by settingsVm.rememberCategoryLive.collectAsStateWithLifecycle()
     val rememberCatMovies by settingsVm.rememberCategoryMovies.collectAsStateWithLifecycle()
     val rememberCatSeries by settingsVm.rememberCategorySeries.collectAsStateWithLifecycle()
+    val moviesLayoutMode by settingsVm.moviesLayoutMode.collectAsStateWithLifecycle()
     // "Custom" on the Panel Width row as soon as any one of the three sections is switched on.
     val panelWidthLive by settingsVm.panelWidthEnabled.getValue(tv.own.owntv.features.settings.data.PanelSection.LIVE).collectAsStateWithLifecycle()
     val panelWidthMovies by settingsVm.panelWidthEnabled.getValue(tv.own.owntv.features.settings.data.PanelSection.MOVIES).collectAsStateWithLifecycle()
@@ -506,6 +509,19 @@ fun SettingsScreen(
             chipTone = if (panelWidthCustom) TileTone.PRIMARY else TileTone.SECONDARY,
             onClick = { open(SettingsTab.PANEL_WIDTH) }, showChevron = true,
             modifier = Modifier.focusRequester(rowFocus.getValue(SettingsTab.PANEL_WIDTH)),
+        )
+        SettingsRow(
+            tone = TileTone.PRIMARY, icon = OwnTVIcon.MOVIES,
+            title = stringResource(R.string.settings_movies_layout),
+            desc = stringResource(R.string.settings_movies_layout_description),
+            chip = when (moviesLayoutMode) {
+                SettingsRepository.MoviesLayoutMode.CLASSIC -> stringResource(R.string.settings_movies_layout_classic)
+                SettingsRepository.MoviesLayoutMode.CINEMATIC -> stringResource(R.string.settings_movies_layout_cinematic)
+            },
+            chipTone = if (moviesLayoutMode == SettingsRepository.MoviesLayoutMode.CINEMATIC) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { savedScroll = scrollState.value; dialogReturn = moviesLayoutRowFocus; showMoviesLayout = true },
+            showChevron = true,
+            modifier = Modifier.focusRequester(moviesLayoutRowFocus),
         )
         SettingsRow(
             tone = TileTone.PRIMARY, icon = OwnTVIcon.PLAYLIST,
@@ -751,6 +767,18 @@ fun SettingsScreen(
                     chip = if (chNavEnabled) stringResource(R.string.common_on) else stringResource(R.string.common_off), chipTone = if (chNavEnabled) TileTone.PRIMARY else TileTone.SECONDARY) { open(SettingsTab.CH_NAV) },
                 SettingsSearchEntry(stringResource(R.string.settings_group_content), stringResource(R.string.settings_panel_width), stringResource(R.string.settings_search_keywords_panel_width), OwnTVIcon.ZOOM, TileTone.PRIMARY,
                     chip = if (panelWidthCustom) stringResource(R.string.settings_live_latency_custom) else stringResource(R.string.settings_subtitle_default), chipTone = if (panelWidthCustom) TileTone.PRIMARY else TileTone.SECONDARY) { open(SettingsTab.PANEL_WIDTH) },
+                SettingsSearchEntry(
+                    stringResource(R.string.settings_group_content),
+                    stringResource(R.string.settings_movies_layout),
+                    stringResource(R.string.settings_search_keywords_movies_layout),
+                    OwnTVIcon.MOVIES,
+                    TileTone.PRIMARY,
+                    chip = when (moviesLayoutMode) {
+                        SettingsRepository.MoviesLayoutMode.CLASSIC -> stringResource(R.string.settings_movies_layout_classic)
+                        SettingsRepository.MoviesLayoutMode.CINEMATIC -> stringResource(R.string.settings_movies_layout_cinematic)
+                    },
+                    chipTone = if (moviesLayoutMode == SettingsRepository.MoviesLayoutMode.CINEMATIC) TileTone.PRIMARY else TileTone.SECONDARY,
+                ) { savedScroll = scrollState.value; dialogReturn = searchFieldFocus; showMoviesLayout = true },
                 SettingsSearchEntry(stringResource(R.string.settings_group_content), stringResource(R.string.settings_browsing_lists), stringResource(R.string.settings_search_keywords_browsing), OwnTVIcon.PLAYLIST, TileTone.PRIMARY) { savedScroll = scrollState.value; dialogReturn = browsingRowFocus; showBrowsing = true },
                 SettingsSearchEntry(stringResource(R.string.settings_group_content), stringResource(R.string.settings_home_root), stringResource(R.string.settings_search_keywords_home), OwnTVIcon.HOME, TileTone.SECONDARY) { open(SettingsTab.HOME) },
                 SettingsSearchEntry(stringResource(R.string.settings_group_content), stringResource(R.string.settings_metadata), stringResource(R.string.settings_search_keywords_metadata), OwnTVIcon.VIDEO, TileTone.PRIMARY) { open(SettingsTab.METADATA) },
@@ -910,6 +938,21 @@ fun SettingsScreen(
             onToggleItemMovies = { settingsVm.setRememberLastMovies(!rememberLastMovies) },
             onToggleItemSeries = { settingsVm.setRememberLastSeries(!rememberLastSeries) },
             onDismiss = { showBrowsing = false },
+        )
+    }
+    if (showMoviesLayout) {
+        tv.own.owntv.features.settings.PickerDialog(
+            title = stringResource(R.string.settings_movies_layout_dialog),
+            options = listOf(
+                SettingsRepository.MoviesLayoutMode.CLASSIC.name to stringResource(R.string.settings_movies_layout_classic),
+                SettingsRepository.MoviesLayoutMode.CINEMATIC.name to stringResource(R.string.settings_movies_layout_cinematic),
+            ),
+            selected = moviesLayoutMode.name,
+            onSelect = {
+                settingsVm.setMoviesLayoutMode(SettingsRepository.MoviesLayoutMode.valueOf(it))
+                showMoviesLayout = false
+            },
+            onDismiss = { showMoviesLayout = false },
         )
     }
     if (showGlassEffect) {

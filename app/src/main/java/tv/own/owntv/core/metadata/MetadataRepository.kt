@@ -51,17 +51,17 @@ class MetadataRepository(
         val q = resolveQuery(localKey, movie.name, movie.year)
         if (q.query.isBlank()) return null
 
-        // null = transport failure (offline / rate-limited / proxy down): bail WITHOUT negative-caching,
-        // so the title retries next time instead of showing no metadata for 7 days.
-        val hits = runCatching { provider.searchMovie(q.query, q.year) }
-            .onFailure { Log.w(TAG, "resolveMovie search failed: ${it.message}") }
-            .getOrNull() ?: return null
-
         // An override is the user telling us the exact name → trust TMDB's top relevance hit directly
         // (no fuzzy threshold) so a hand-typed title isn't rejected over punctuation/formatting differences.
-        val best: Scored? = if (q.isOverride) hits.firstOrNull()?.let { Scored(it, 1.0) } else pickBest(q.query, q.year, hits)
+        val best: Scored? = if (q.isOverride) {
+            val hits = searchMovieHits(q.query, q.year) ?: return null
+            hits.firstOrNull()?.let { Scored(it, 1.0) }
+        } else {
+            findBestMovieMatch(q.query, q.year)
+        }
         if (best == null) {
             // Negative cache: remember "searched, no confident match" so we don't re-hammer on scroll.
+            // Only write this after every query variant was tried (or TMDB answered empty).
             dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_MOVIE, tmdbId = null, confidence = 0.0, updatedAt = now))
             return null
         }
@@ -93,13 +93,12 @@ class MetadataRepository(
         val q = resolveQuery(localKey, series.name, series.year)
         if (q.query.isBlank()) return null
 
-        // Same as resolveMovie: null = transport failure → no negative-cache, retry next open.
-        val hits = runCatching { provider.searchTv(q.query, q.year) }
-            .onFailure { Log.w(TAG, "resolveSeries search failed: ${it.message}") }
-            .getOrNull() ?: return null
-
-        // An override is the user telling us the exact name → trust TMDB's top relevance hit directly.
-        val best: Scored? = if (q.isOverride) hits.firstOrNull()?.let { Scored(it, 1.0) } else pickBest(q.query, q.year, hits)
+        val best: Scored? = if (q.isOverride) {
+            val hits = searchTvHits(q.query, q.year) ?: return null
+            hits.firstOrNull()?.let { Scored(it, 1.0) }
+        } else {
+            findBestTvMatch(q.query, q.year)
+        }
         if (best == null) {
             dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_TV, tmdbId = null, confidence = 0.0, updatedAt = now))
             return null
@@ -205,6 +204,34 @@ class MetadataRepository(
     suspend fun clearCacheForLanguageChange() {
         dao.clearCache()
         dao.clearNegativeMatches()
+    }
+
+    /**
+     * Related TMDB movies for the cinematic "Similar" rail. Returns empty when enrichment is off, the
+     * movie has no confident match, or TMDB has nothing useful. Transport failures also return empty so
+     * the UI simply hides the row.
+     */
+    suspend fun relatedMovies(movie: MovieEntity, limit: Int = 16): List<MetadataSearchResult> {
+        if (!settings.metadataConfig().enabled) return emptyList()
+        val match = dao.getMatch(movieLocalKey(movie))?.tmdbId
+            ?: resolveMovie(movie)?.tmdbId
+            ?: return emptyList()
+        val hits = runCatching { provider.relatedMovies(match) }
+            .onFailure { Log.w(TAG, "relatedMovies failed: ${it.message}") }
+            .getOrNull()
+            ?: return emptyList()
+        return hits.filter { it.tmdbId != match }.take(limit)
+    }
+
+    /**
+     * Reverse-map already-resolved local movies for a set of TMDB ids. Used so the similar rail can
+     * open playable catalog titles when the user has already browsed/matched them.
+     */
+    suspend fun localKeysForTmdbIds(tmdbIds: List<Int>): Map<Int, String> {
+        if (tmdbIds.isEmpty()) return emptyMap()
+        return dao.matchesForTmdbIds(tmdbIds, TYPE_MOVIE)
+            .mapNotNull { m -> m.tmdbId?.let { id -> id to m.localKey } }
+            .toMap()
     }
 
     /**
@@ -334,6 +361,60 @@ class MetadataRepository(
         return entity
     }
 
+    /**
+     * Try cleaned-title variants (+ optional year-less retry) until a confident TMDB movie hit lands.
+     * null = every attempt was a transport failure (caller must NOT negative-cache).
+     * empty-best = TMDB answered but nothing passed the threshold (caller MAY negative-cache).
+     */
+    private suspend fun findBestMovieMatch(query: String, year: Int?): Scored? {
+        var anyAnswer = false
+        var best: Scored? = null
+        val variants = TitleNormalizer.searchVariants(query)
+        // Year first (tighter), then year-less — some IPTV years are wrong/off-by-one.
+        val years = listOfNotNull(year, null).distinct()
+        for (variant in variants) {
+            for (y in years) {
+                val hits = searchMovieHits(variant, y) ?: continue
+                anyAnswer = true
+                val scored = pickBest(query, year ?: y, hits) ?: continue
+                if (best == null || scored.score > best.score) best = scored
+                if (scored.score >= EARLY_ACCEPT) return scored
+            }
+        }
+        // anyAnswer=false means every call failed transport → treat like null search (no negative cache)
+        if (!anyAnswer) return null
+        return best
+    }
+
+    private suspend fun findBestTvMatch(query: String, year: Int?): Scored? {
+        var anyAnswer = false
+        var best: Scored? = null
+        val variants = TitleNormalizer.searchVariants(query)
+        val years = listOfNotNull(year, null).distinct()
+        for (variant in variants) {
+            for (y in years) {
+                val hits = searchTvHits(variant, y) ?: continue
+                anyAnswer = true
+                val scored = pickBest(query, year ?: y, hits) ?: continue
+                if (best == null || scored.score > best.score) best = scored
+                if (scored.score >= EARLY_ACCEPT) return scored
+            }
+        }
+        if (!anyAnswer) return null
+        return best
+    }
+
+    /** null = transport failure; empty list = TMDB answered with no results. */
+    private suspend fun searchMovieHits(query: String, year: Int?): List<MetadataSearchResult>? =
+        runCatching { provider.searchMovie(query, year) }
+            .onFailure { Log.w(TAG, "resolveMovie search failed: ${it.message}") }
+            .getOrNull()
+
+    private suspend fun searchTvHits(query: String, year: Int?): List<MetadataSearchResult>? =
+        runCatching { provider.searchTv(query, year) }
+            .onFailure { Log.w(TAG, "resolveSeries search failed: ${it.message}") }
+            .getOrNull()
+
     /** Best confident match, or null (plan §12: "no art beats wrong art"). */
     private fun pickBest(query: String, year: Int?, hits: List<MetadataSearchResult>): Scored? {
         if (hits.isEmpty()) return null
@@ -352,43 +433,56 @@ class MetadataRepository(
      * when `&language=` is set, so a user on e.g. Greek metadata got Greek titles scored against Latin
      * provider names — zero overlap, every match rejected, and the negative cache then hid metadata AND
      * broke the OpenSubtitles tmdb_id lookup for 7 days. `original_title` is language-independent.
+     *
+     * Tokens are punctuation-stripped ("Avengers:" → "avengers") and franchise part-numbers are ignored
+     * for overlap ("Avengers 3 Infinity War" ≈ "Avengers: Infinity War").
      */
     private fun score(query: String, year: Int?, r: MetadataSearchResult): Double {
-        val q = query.lowercase().trim()
         var s = maxOf(
-            titleSimilarity(q, r.title),
-            r.originalTitle?.let { titleSimilarity(q, it) } ?: 0.0,
+            titleSimilarity(query, r.title),
+            r.originalTitle?.let { titleSimilarity(query, it) } ?: 0.0,
         )
         if (year != null && r.year != null) {
             val diff = kotlin.math.abs(year - r.year)
             s += when {
                 diff == 0 -> 0.15
-                diff == 1 -> 0.0
+                diff == 1 -> 0.05
                 else -> -0.35
             }
         }
         return s.coerceIn(0.0, 1.0)
     }
 
-    /** Similarity of an already-lowercased query against one candidate title. */
-    private fun titleSimilarity(q: String, candidate: String): Double {
-        val t = candidate.lowercase().trim()
-        if (t.isBlank()) return 0.0
-        return when {
-            q == t -> 1.0
-            t.contains(q) || q.contains(t) -> 0.75
-            else -> tokenOverlap(q, t)
-        }
+    /** Similarity of a cleaned provider query against one TMDB candidate title. */
+    private fun titleSimilarity(query: String, candidate: String): Double {
+        val qTokens = significantTokens(query)
+        val tTokens = significantTokens(candidate)
+        if (qTokens.isEmpty() || tTokens.isEmpty()) return 0.0
+        if (qTokens == tTokens) return 1.0
+
+        val qSet = qTokens.toSet()
+        val tSet = tTokens.toSet()
+        // One title fully covers the other (order-insensitive) — common when IPTV drops a subtitle
+        // or TMDB adds a franchise colon form.
+        if (qSet.containsAll(tSet) || tSet.containsAll(qSet)) return 0.88
+
+        val inter = qSet.intersect(tSet).size.toDouble()
+        if (inter == 0.0) return 0.0
+        val jaccard = inter / (qSet.size + tSet.size - inter)
+        // Soft boost when most of the shorter title is present (e.g. 3 of 4 tokens).
+        val coverage = inter / minOf(qSet.size, tSet.size).toDouble()
+        return maxOf(jaccard, coverage * 0.85)
     }
 
-    /** Jaccard overlap of word tokens — a cheap similarity for near-miss titles. */
-    private fun tokenOverlap(a: String, b: String): Double {
-        val sa = a.split(WORD_SPLIT).filter { it.isNotBlank() }.toSet()
-        val sb = b.split(WORD_SPLIT).filter { it.isNotBlank() }.toSet()
-        if (sa.isEmpty() || sb.isEmpty()) return 0.0
-        val inter = sa.intersect(sb).size.toDouble()
-        return inter / (sa.size + sb.size - inter)
-    }
+    /**
+     * Meaningful match tokens: punctuation stripped, tiny stop-ish words dropped, and bare 1–2 digit
+     * franchise numbers ignored so "Avengers 3 Infinity War" aligns with "Avengers: Infinity War".
+     */
+    private fun significantTokens(title: String): List<String> =
+        TitleNormalizer.matchTokens(title).filter { token ->
+            if (token.length <= 2 && token.all { it.isDigit() }) return@filter false
+            token !in MATCH_STOPWORDS
+        }
 
     companion object {
         private const val TAG = "MetadataRepository"
@@ -397,18 +491,23 @@ class MetadataRepository(
         private const val TYPE_EPISODE = "episode"
 
         /** Accept a match at/above this confidence; below it, prefer no metadata over a wrong one. */
-        private const val ACCEPT_THRESHOLD = 0.6
+        private const val ACCEPT_THRESHOLD = 0.58
+
+        /** High-confidence enough to stop trying further query variants. */
+        private const val EARLY_ACCEPT = 0.86
 
         /**
          * Bump when a matcher change makes previously cached misses wrong — existing installs then drop
-         * their negative rows once ([healNegativeMatchesOnce]). 1 = scoring against `original_title`.
+         * their negative rows once ([healNegativeMatchesOnce]).
+         * 1 = scoring against `original_title`.
+         * 2 = punctuation-aware tokens + part-number query variants.
          */
-        private const val MATCH_HEURISTICS_VERSION = 1
+        private const val MATCH_HEURISTICS_VERSION = 2
 
         private const val POSITIVE_TTL_MS = 60L * 24 * 3600 * 1000  // 60 days
         private const val NEGATIVE_TTL_MS = 7L * 24 * 3600 * 1000   // 7 days
 
-        private val WORD_SPLIT = Regex("""\s+""")
+        private val MATCH_STOPWORDS = setOf("the", "a", "an", "and", "or", "of", "la", "le", "el", "los", "las", "de", "da", "der", "die", "das")
 
         /** Stable, re-sync-proof local key (mirrors CustomizeKeys): sourceId + remoteId, or name fallback. */
         fun movieLocalKey(movie: MovieEntity): String = "$TYPE_MOVIE:${movie.sourceId}:${movie.remoteId ?: movie.name}"

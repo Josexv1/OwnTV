@@ -16,6 +16,10 @@ interface MetadataDao {
     @Query("SELECT * FROM metadata_match WHERE localKey = :localKey LIMIT 1")
     suspend fun getMatch(localKey: String): MetadataMatchEntity?
 
+    /** Reverse lookup: which local items already resolved to these TMDB ids (cinematic similar rail). */
+    @Query("SELECT * FROM metadata_match WHERE tmdbId IN (:tmdbIds) AND type = :type AND tmdbId IS NOT NULL")
+    suspend fun matchesForTmdbIds(tmdbIds: List<Int>, type: String): List<MetadataMatchEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertMatch(match: MetadataMatchEntity)
 

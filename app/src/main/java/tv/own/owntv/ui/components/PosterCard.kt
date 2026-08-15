@@ -48,6 +48,8 @@ fun PosterCard(
     completed: Boolean = false,
     isFavorite: Boolean = false,
     selected: Boolean = false,
+    /** When false, only the artwork is shown (cinematic similar rail — titles were getting clipped). */
+    showTitle: Boolean = true,
     onFocus: () -> Unit = {},
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
@@ -77,7 +79,12 @@ fun PosterCard(
                     .background(colors.surfaceContainerLowest),
             ) {
                 if (!posterUrl.isNullOrBlank()) {
-                    AsyncImage(model = posterUrl, contentDescription = null, contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    AsyncImage(
+                        model = posterUrl,
+                        contentDescription = title.takeIf { it.isNotBlank() },
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         OwnTVIcon(OwnTVIcon.MOVIES, tint = colors.onSurfaceVariant, modifier = Modifier.size(36.dp))
@@ -144,16 +151,18 @@ fun PosterCard(
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            color = colors.onSurface,
-            maxLines = 2,
-            minLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (showTitle) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                title,
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.onSurface,
+                maxLines = 2,
+                minLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }

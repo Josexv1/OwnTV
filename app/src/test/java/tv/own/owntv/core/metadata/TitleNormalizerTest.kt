@@ -19,6 +19,22 @@ class TitleNormalizerTest {
     fun stripsStackedPrefixesAndQualityMarkers() {
         assertEquals("Gangs of London", q("4K-OSN+ - Gangs of London"))
         assertEquals("The Batman", q("EN| 4K| The Batman WEB-DL x265"))
+        // Streaming-service short tags: "D+ - …", "A+ - …"
+        assertEquals("Avengers 3 Infinity War", q("D+ - Avengers 3 Infinity War (2018)"))
+        assertEquals(2018, y("D+ - Avengers 3 Infinity War (2018)"))
+    }
+
+    @Test
+    fun searchVariantsDropFranchisePartNumbers() {
+        val variants = TitleNormalizer.searchVariants("Avengers 3 Infinity War")
+        assertEquals(true, variants.contains("Avengers 3 Infinity War"))
+        assertEquals(true, variants.contains("Avengers Infinity War"))
+    }
+
+    @Test
+    fun matchTokensStripPunctuation() {
+        assertEquals(listOf("avengers", "infinity", "war"), TitleNormalizer.matchTokens("Avengers: Infinity War"))
+        assertEquals(listOf("avengers", "3", "infinity", "war"), TitleNormalizer.matchTokens("Avengers 3 Infinity War"))
     }
 
     @Test
