@@ -29,15 +29,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -63,6 +67,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -100,6 +105,7 @@ import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVIcon
+import tv.own.owntv.ui.components.OwnTVSpinner
 import tv.own.owntv.ui.components.PosterCard
 import tv.own.owntv.ui.components.ResumeDialog
 import tv.own.owntv.ui.components.SetTmdbNameDialog
@@ -158,6 +164,12 @@ fun MoviesScreen(
     var detailsMovie by remember { mutableStateOf<MovieEntity?>(null) }
     // Cinematic layout: opened movie detail page (series-style), null = browsing list.
     var openedMovie by remember { mutableStateOf<MovieEntity?>(null) }
+    // Genre discovery opened from a cinematic genre chip (TMDB genre name); null = closed.
+    var openedGenre by remember { mutableStateOf<String?>(null) }
+    // Cast discovery opened from a cinematic cast name; null = closed.
+    var openedCast by remember { mutableStateOf<String?>(null) }
+    // Long-press Similar → global multi-playlist search for this title; null = closed.
+    var globalSearchTitle by remember { mutableStateOf<String?>(null) }
     // "Set TMDB name" dialog target (Â§11.2 U5b); null = closed.
     var setTmdbNameMovie by remember { mutableStateOf<MovieEntity?>(null) }
     // In-app trailer playback (Â§7.3 U4); non-null = fullscreen player open with this YouTube key.
@@ -242,7 +254,18 @@ fun MoviesScreen(
             openedMovie = sel
         }
     }
-    BackHandler(enabled = openedMovie != null) { openedMovie = null }
+    // Back priority: genre/cast/global overlays first, then cinematic detail.
+    BackHandler(enabled = globalSearchTitle != null) { globalSearchTitle = null }
+    BackHandler(enabled = openedCast != null) { openedCast = null }
+    BackHandler(enabled = openedGenre != null) { openedGenre = null }
+    BackHandler(
+        enabled = openedMovie != null &&
+            openedGenre == null &&
+            openedCast == null &&
+            globalSearchTitle == null,
+    ) {
+        openedMovie = null
+    }
 
     // "Remember last item per category": ON â†’ each category keeps its own scroll position (per-category
     // grid + list states, so view-mode toggles also keep their offsets). OFF â†’ reset the shared grid/list
@@ -345,20 +368,28 @@ fun MoviesScreen(
             ?.positionMs
             ?.takeIf { it > 0 }
         val similarForOpened = similarMovies.takeIf { selectedMovie?.id == opened.id }.orEmpty()
+        var subtitleLangs by remember(opened.id) { mutableStateOf<List<String>>(emptyList()) }
+        LaunchedEffect(opened.id) {
+            subtitleLangs = vm.downloadedSubtitleLanguages(opened)
+        }
         MovieCinematicDetail(
             details = details,
             isFavorite = favoriteIds.contains(opened.id),
             resumePositionMs = resumeMs,
             trailerKey = openedMeta?.trailerKey,
+            subtitleLanguages = subtitleLangs,
             similarMovies = similarForOpened,
             downloadStrip = downloadStates[opened.id]?.let { tv.own.owntv.ui.components.downloadStripFor(listOf(it)) },
             onPlay = { playFromStart(opened) },
             onResume = resumeMs?.let { pos -> { resumeMovie(opened, pos) } },
             onPlayTrailer = { key -> trailerVideoKey = key },
+            onOpenGenre = { genre -> openedGenre = genre },
+            onOpenCast = { person -> openedCast = person },
             onOpenSimilar = { movie ->
                 openedMovie = movie
                 vm.onMovieFocused(movie)
             },
+            onSearchSimilarGlobal = { title -> globalSearchTitle = title },
             onToggleFavorite = { vm.toggleFavorite(opened) },
             onDownload = {
                 if (alreadyDownloaded) toast.show(alreadyDownloadedMessage) else vm.download(opened)
@@ -367,6 +398,57 @@ fun MoviesScreen(
                 .fillMaxSize()
                 .onFocusChanged { if (it.hasFocus) onChildFocused() },
         )
+        // Genre browse overlay (from chip) — physical Back closes it.
+        openedGenre?.let { genre ->
+            GenreMoviesOverlay(
+                genre = genre,
+                loadPage = { page, exclude -> vm.moviesForGenrePage(genre, page = page, excludeIds = exclude) },
+                favoriteIds = favoriteIds,
+                movieProgress = movieProgress,
+                onOpen = { movie ->
+                    openedGenre = null
+                    openedMovie = movie
+                    vm.onMovieFocused(movie)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onFocusChanged { if (it.hasFocus) onChildFocused() },
+            )
+        }
+        // Cast browse overlay (from underlined cast name).
+        openedCast?.let { person ->
+            CastMoviesOverlay(
+                personName = person,
+                loadPage = { page, exclude -> vm.moviesForCastPage(person, page = page, excludeIds = exclude) },
+                favoriteIds = favoriteIds,
+                movieProgress = movieProgress,
+                onOpen = { movie ->
+                    openedCast = null
+                    openedMovie = movie
+                    vm.onMovieFocused(movie)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onFocusChanged { if (it.hasFocus) onChildFocused() },
+            )
+        }
+        // Global multi-playlist search from long-press on a Similar card.
+        globalSearchTitle?.let { title ->
+            GlobalMovieSearchOverlay(
+                title = title,
+                load = { vm.globalSearchMovies(title) },
+                favoriteIds = favoriteIds,
+                movieProgress = movieProgress,
+                onOpen = { movie ->
+                    globalSearchTitle = null
+                    openedMovie = movie
+                    vm.onMovieFocused(movie)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onFocusChanged { if (it.hasFocus) onChildFocused() },
+            )
+        }
     } else {
     Row(modifier = Modifier.fillMaxSize().onFocusChanged { if (it.hasFocus) onChildFocused() }, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         CategoryRail(
@@ -864,12 +946,16 @@ private fun MovieCinematicDetail(
     isFavorite: Boolean,
     resumePositionMs: Long?,
     trailerKey: String?,
+    subtitleLanguages: List<String>,
     similarMovies: List<MovieViewModel.SimilarMovie>,
     downloadStrip: tv.own.owntv.ui.components.DownloadStripState?,
     onPlay: () -> Unit,
     onResume: (() -> Unit)?,
     onPlayTrailer: (String) -> Unit,
+    onOpenGenre: (String) -> Unit,
+    onOpenCast: (String) -> Unit,
     onOpenSimilar: (MovieEntity) -> Unit,
+    onSearchSimilarGlobal: (String) -> Unit,
     onToggleFavorite: () -> Unit,
     onDownload: () -> Unit,
     modifier: Modifier = Modifier,
@@ -878,7 +964,10 @@ private fun MovieCinematicDetail(
     val density = LocalDensity.current
     val playFocus = remember { FocusRequester() }
     // First similar poster — Down from any action button lands here (not the Nth poster under the Nth icon).
+    // Non-lazy row on purpose: LazyRow disposed off-screen item 0 and left this requester inactive
+    // after scrolling right (Up from card 8 then Down could no longer enter the rail).
     val firstSimilarFocus = remember { FocusRequester() }
+    val similarScroll = rememberScrollState()
     LaunchedEffect(details.title, resumePositionMs != null) {
         runCatching { playFocus.requestFocus() }
     }
@@ -912,8 +1001,9 @@ private fun MovieCinematicDetail(
         animationSpec = tween(durationMillis = 280),
         label = "heroDim",
     )
-    // Keep cast/plot readable when the rail is only peeking; collapse denser text once lifted.
-    val plotMaxLines = if (similarFocused) 3 else 5
+    // Keep plot short so action buttons never get squished by long overviews.
+    // Cast hides while the Similar rail is lifted (more vertical room for posters).
+    val plotMaxLines = if (similarFocused) 2 else 3
     val showCast = !similarFocused
 
     val rootModifier = modifier
@@ -937,7 +1027,6 @@ private fun MovieCinematicDetail(
         ),
     )
     val plotText = details.plot?.takeIf { it.isNotBlank() }
-    val castText = details.cast.take(8).joinToString(", ").takeIf { it.isNotBlank() }
     val primaryIsResume = onResume != null && resumePositionMs != null
 
     Box(modifier = rootModifier) {
@@ -975,15 +1064,20 @@ private fun MovieCinematicDetail(
                 },
             verticalArrangement = Arrangement.Center,
         ) {
+            // Match text-column height to the poster so plot can use weight() and actions stay pinned.
+            val posterWidth = 200.dp
+            val posterHeight = posterWidth * 3f / 2f
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(posterHeight),
                 horizontalArrangement = Arrangement.spacedBy(28.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
-                        .width(200.dp)
-                        .aspectRatio(2f / 3f)
+                        .width(posterWidth)
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(18.dp))
                         .background(colors.surfaceContainerLowest),
                     contentAlignment = Alignment.Center,
@@ -1006,8 +1100,11 @@ private fun MovieCinematicDetail(
                 }
 
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    // Same height as poster: plot/cast flex in the middle; action row stays at bottom.
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     // Always text — TMDB "logos" are often brand marks (the Avengers A), not titles.
                     Text(
@@ -1034,18 +1131,41 @@ private fun MovieCinematicDetail(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             details.genres.take(6).forEach { genre ->
-                                Text(
-                                    text = genre,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = Color.White.copy(alpha = 0.92f),
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(50))
-                                        .background(Color.White.copy(alpha = 0.14f))
-                                        .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50))
-                                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                                )
+                                // Clickable TMDB genre chip → local genre discovery.
+                                FocusableSurface(
+                                    onClick = { onOpenGenre(genre) },
+                                    shape = RoundedCornerShape(50),
+                                    focusedScale = 1.06f,
+                                    glowElevation = 8,
+                                    unfocusedContainerColor = Color.White.copy(alpha = 0.14f),
+                                    focusedContainerColor = Color.White.copy(alpha = 0.28f),
+                                    selectedContainerColor = Color.White.copy(alpha = 0.14f),
+                                    showFocusBorder = true,
+                                ) {
+                                    Text(
+                                        text = genre,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color.White.copy(alpha = 0.92f),
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    )
+                                }
                             }
                         }
+                    }
+                    // Downloaded OpenSubtitles only — not TMDB "original language" (that isn't the file).
+                    val subLine = formatLanguageLine(
+                        label = stringResource(R.string.content_subtitle_languages),
+                        languages = subtitleLanguages,
+                        maxVisible = 4,
+                    )
+                    if (subLine != null) {
+                        Text(
+                            text = subLine,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White.copy(alpha = 0.78f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                     if (resumePositionMs != null) {
                         Text(
@@ -1060,34 +1180,65 @@ private fun MovieCinematicDetail(
                     if (downloadStrip != null) {
                         tv.own.owntv.ui.components.DownloadStatusStrip(downloadStrip)
                     }
-                    if (plotText != null) {
-                        Text(
-                            text = plotText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.88f),
-                            maxLines = plotMaxLines,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 720.dp),
-                        )
-                    }
-                    if (showCast && castText != null) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // Flexible middle: long plots shrink/ellipsis here so actions below never compress.
+                    Column(
+                        modifier = Modifier
+                            .weight(1f, fill = true)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (plotText != null) {
                             Text(
-                                text = stringResource(R.string.content_media_cast),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = Color.White.copy(alpha = 0.70f),
-                            )
-                            Text(
-                                text = castText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.82f),
-                                maxLines = 2,
+                                text = plotText,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.88f),
+                                maxLines = plotMaxLines,
                                 overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.widthIn(max = 720.dp),
                             )
                         }
+                        if (showCast && details.cast.isNotEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = stringResource(R.string.content_media_cast),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Color.White.copy(alpha = 0.70f),
+                                )
+                                // Prime-style underlined cast names → TMDB person filmography ∩ local catalog.
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    details.cast.take(6).forEach { person ->
+                                        FocusableSurface(
+                                            onClick = { onOpenCast(person) },
+                                            shape = RoundedCornerShape(4.dp),
+                                            focusedScale = 1.04f,
+                                            glowElevation = 0,
+                                            unfocusedContainerColor = Color.Transparent,
+                                            focusedContainerColor = Color.White.copy(alpha = 0.12f),
+                                            selectedContainerColor = Color.Transparent,
+                                            showFocusBorder = false,
+                                        ) {
+                                            Text(
+                                                text = person,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Color.White.copy(alpha = 0.92f),
+                                                textDecoration = TextDecoration.Underline,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    Spacer(Modifier.height(10.dp))
-                    // Compact icon-only actions with a shared focus tooltip (Prime-style chrome).
+                    // Compact icon-only actions pinned under the flexible plot/cast block.
                     // Down from ANY action always enters the similar rail at the first poster —
                     // geometric focus would otherwise land on the Nth poster under the Nth icon.
                     var actionTooltip by remember { mutableStateOf<String?>(null) }
@@ -1202,14 +1353,14 @@ private fun MovieCinematicDetail(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.height(10.dp))
-                LazyRow(
+                // Keep all ≤12 posters composed so firstSimilarFocus never detaches off-screen.
+                Row(
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(similarScroll),
                 ) {
-                    itemsIndexed(
-                        items = playableSimilar,
-                        key = { _, (item, movie) -> "${item.tmdbId}-${movie.id}" },
-                    ) { index, pair ->
+                    playableSimilar.forEachIndexed { index, pair ->
                         val (item, movie) = pair
                         // Slightly smaller cards while peeking so the hero stays dominant.
                         val cardWidth = if (similarFocused) 148.dp else 118.dp
@@ -1226,6 +1377,8 @@ private fun MovieCinematicDetail(
                             showTitle = false,
                             modifier = cardFocus,
                             onClick = { onOpenSimilar(movie) },
+                            // Long-press: search every playlist/folder for other language/source copies.
+                            onLongClick = { onSearchSimilarGlobal(item.title) },
                         )
                     }
                 }
@@ -1426,10 +1579,18 @@ private fun buildMovieDetails(
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: movie.plot else movie.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
-    // Prefer the enriched TMDB title whenever we have one — IPTV names are usually noisy
-    // ("D+ - Avengers 3 Infinity War (2018)") while TMDB is the clean display title.
+    // Display title: cleaned provider name keeps localized catalog titles ("17 otra vez") instead of
+    // always forcing TMDB English ("17 Again"). normalize() strips "NF -", "4K", "(2009)" noise.
+    // TMDB title is the fallback when the provider name is empty/unusable, or when TMDB-only mode wins.
     val tmdbTitle = meta?.title?.takeIf { it.isNotBlank() && it != "?" }
-    val title = tmdbTitle ?: movie.name
+    val providerTitle = tv.own.owntv.core.metadata.TitleNormalizer.normalize(movie.name).query
+        .takeIf { it.isNotBlank() }
+        ?: movie.name.takeIf { it.isNotBlank() }
+    val title = when {
+        tmdbWins -> tmdbTitle ?: providerTitle ?: movie.name
+        !providerTitle.isNullOrBlank() -> providerTitle
+        else -> tmdbTitle ?: movie.name
+    }
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
         title = title,
         backdropUrl = backdrop,
@@ -1439,6 +1600,8 @@ private fun buildMovieDetails(
         genres = jsonList(meta?.genresJson),
         plot = plot,
         cast = jsonList(meta?.castJson),
+        // spokenLanguages intentionally omitted on cinematic detail — TMDB original dialogue
+        // languages are not the IPTV file's audio tracks and confused users.
     )
 }
 
@@ -1449,6 +1612,254 @@ private fun jsonList(json: String?): List<String> {
         val arr = org.json.JSONArray(json)
         (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { s -> s.isNotBlank() } }
     }.getOrDefault(emptyList())
+}
+
+/** "Audio: English, Spanish" or "Subtitles: English, Spanish (3 more)". Null when empty. */
+@Composable
+private fun formatLanguageLine(label: String, languages: List<String>, maxVisible: Int): String? {
+    if (languages.isEmpty()) return null
+    val visible = languages.take(maxVisible)
+    val joined = visible.joinToString(stringResource(R.string.content_genres_separator))
+    val more = languages.size - visible.size
+    val tail = if (more > 0) " " + stringResource(R.string.content_languages_more, more) else ""
+    return "$label: $joined$tail"
+}
+
+/**
+ * Full-screen overlay listing local movies for a TMDB genre (from cinematic chip).
+ * Progressive: first page ASAP, then more as the grid approaches the end.
+ */
+@Composable
+private fun GenreMoviesOverlay(
+    genre: String,
+    loadPage: suspend (page: Int, excludeIds: Set<Long>) -> MovieViewModel.DiscoveryPage,
+    favoriteIds: Set<Long>,
+    movieProgress: Map<Long, tv.own.owntv.core.database.entity.PlaybackProgressEntity>,
+    onOpen: (MovieEntity) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MovieGridOverlay(
+        title = stringResource(R.string.content_genre_movies_title, genre),
+        emptyText = stringResource(R.string.content_genre_movies_empty),
+        loadPage = loadPage,
+        favoriteIds = favoriteIds,
+        movieProgress = movieProgress,
+        onOpen = onOpen,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Full-screen overlay listing local movies for a cast member (TMDB person credits ∩ catalog).
+ * Progressive paging so large filmographies don't block first paint.
+ */
+@Composable
+private fun CastMoviesOverlay(
+    personName: String,
+    loadPage: suspend (page: Int, excludeIds: Set<Long>) -> MovieViewModel.DiscoveryPage,
+    favoriteIds: Set<Long>,
+    movieProgress: Map<Long, tv.own.owntv.core.database.entity.PlaybackProgressEntity>,
+    onOpen: (MovieEntity) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MovieGridOverlay(
+        title = stringResource(R.string.content_cast_movies_title, personName),
+        emptyText = stringResource(R.string.content_cast_movies_empty),
+        loadPage = loadPage,
+        favoriteIds = favoriteIds,
+        movieProgress = movieProgress,
+        onOpen = onOpen,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Global multi-playlist search results for a recommended title (Similar long-press).
+ * One-shot list (already bounded); no progressive TMDB paging needed.
+ */
+@Composable
+private fun GlobalMovieSearchOverlay(
+    title: String,
+    load: suspend () -> List<MovieEntity>,
+    favoriteIds: Set<Long>,
+    movieProgress: Map<Long, tv.own.owntv.core.database.entity.PlaybackProgressEntity>,
+    onOpen: (MovieEntity) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MovieGridOverlay(
+        title = stringResource(R.string.content_global_search_title, title),
+        emptyText = stringResource(R.string.content_global_search_empty),
+        loadPage = { page, _ ->
+            if (page > 1) MovieViewModel.DiscoveryPage(emptyList(), hasMore = false)
+            else {
+                val items = runCatching { load() }.getOrDefault(emptyList())
+                MovieViewModel.DiscoveryPage(items, hasMore = false)
+            }
+        },
+        favoriteIds = favoriteIds,
+        movieProgress = movieProgress,
+        onOpen = onOpen,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun MovieGridOverlay(
+    title: String,
+    emptyText: String,
+    loadPage: suspend (page: Int, excludeIds: Set<Long>) -> MovieViewModel.DiscoveryPage,
+    favoriteIds: Set<Long>,
+    movieProgress: Map<Long, tv.own.owntv.core.database.entity.PlaybackProgressEntity>,
+    onOpen: (MovieEntity) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = OwnTVTheme.colors
+    val gridState = rememberLazyGridState()
+    val firstFocus = remember { FocusRequester() }
+    var items by remember(title) { mutableStateOf<List<MovieEntity>>(emptyList()) }
+    var loadedPage by remember(title) { mutableIntStateOf(0) }
+    var hasMore by remember(title) { mutableStateOf(true) }
+    var loading by remember(title) { mutableStateOf(false) }
+    var initialDone by remember(title) { mutableStateOf(false) }
+    var loadGeneration by remember(title) { mutableIntStateOf(0) }
+
+    // Progressive load: page 1 on open, then more when nearing the grid end (or while still empty).
+    LaunchedEffect(title, loadGeneration) {
+        if (!hasMore || loading) return@LaunchedEffect
+        loading = true
+        // Keep pulling pages until we have something to show, or TMDB/local is exhausted.
+        var guard = 0
+        while (hasMore && guard < 8) {
+            guard++
+            val next = loadedPage + 1
+            val exclude = items.mapTo(HashSet()) { it.id }
+            val page = runCatching { loadPage(next, exclude) }
+                .getOrDefault(MovieViewModel.DiscoveryPage(emptyList(), hasMore = false))
+            loadedPage = next
+            if (page.movies.isNotEmpty()) {
+                val merged = LinkedHashMap<Long, MovieEntity>()
+                items.forEach { merged[it.id] = it }
+                page.movies.forEach { merged[it.id] = it }
+                items = merged.values.toList()
+            }
+            hasMore = page.hasMore
+            // Stop once we have a batch on screen; further pages come from scroll.
+            if (items.isNotEmpty()) break
+            if (!page.hasMore) break
+        }
+        loading = false
+        initialDone = true
+        if (items.isNotEmpty() && loadedPage > 0) {
+            runCatching { firstFocus.requestFocus() }
+        }
+    }
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val info = gridState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
+            hasMore && !loading && items.isNotEmpty() && last >= items.lastIndex - 4
+        }
+    }
+    LaunchedEffect(shouldLoadMore, title) {
+        if (shouldLoadMore && hasMore && !loading) {
+            loadGeneration += 1
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(Dimens.CornerLarge))
+            .background(colors.background)
+            .focusGroup()
+            .padding(horizontal = 28.dp, vertical = 22.dp),
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = colors.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(16.dp))
+            when {
+                !initialDone && items.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            OwnTVSpinner(sizeDp = 40)
+                            Text(
+                                text = stringResource(R.string.content_discovery_loading),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                initialDone && items.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = emptyText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.onSurfaceVariant,
+                        )
+                    }
+                }
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 140.dp),
+                        state = gridState,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        items(items, key = { it.id }) { movie ->
+                            val progress = movieProgress[movie.id]
+                            val isFirst = items.firstOrNull()?.id == movie.id
+                            PosterCard(
+                                posterUrl = movie.posterUrl,
+                                title = movie.name,
+                                rating = movie.rating,
+                                isFavorite = favoriteIds.contains(movie.id),
+                                progressFraction = progress
+                                    ?.takeIf { it.durationMs > 0 && it.positionMs > 0 }
+                                    ?.let { it.positionMs.toFloat() / it.durationMs.toFloat() },
+                                modifier = if (isFirst) Modifier.focusRequester(firstFocus) else Modifier,
+                                onClick = { onOpen(movie) },
+                            )
+                        }
+                        // Footer spinner while paging more local matches (genre / cast).
+                        if (loading && items.isNotEmpty()) {
+                            item(
+                                key = "discovery-loading-more",
+                                span = { GridItemSpan(maxLineSpan) },
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 18.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    OwnTVSpinner(sizeDp = 28)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = stringResource(R.string.content_discovery_loading_more),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colors.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** Compact one-line row used by the List view mode â€” fits many titles on screen at once (#10). */

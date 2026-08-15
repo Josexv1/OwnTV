@@ -124,8 +124,7 @@ fun HomeScreen(
     val rowFirstFocusRequesters = remember {
         HomeRow.entries.associateWith { FocusRequester() }
     }
-    // Nothing starts expanded: a hero card earns its wide (16:9) state only after 3s of continuous focus
-    // (see the dwell effect below). Moving focus — to another card or out of the row — collapses it again.
+    // Expanded hero tracks focus immediately (left/right or land-on). Leaving the row collapses it.
     var expandedHeroIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
     val orderedRows = state.config.visibleOrder
@@ -167,13 +166,11 @@ fun HomeScreen(
         expandedHeroIndex = -1
     }
 
-    // Dwell-to-expand: a card widens only after 3s of uninterrupted focus. Navigating away cancels the
-    // timer (this effect restarts), so quick D-pad sweeps never expand anything.
+    // Expand as soon as a hero card is focused (no dwell). Left/right swaps the expanded card instantly.
     LaunchedEffect(focusedHeroIndex) {
         val index = focusedHeroIndex
         if (index < 0) return@LaunchedEffect
-        kotlinx.coroutines.delay(3_000L)
-        if (focusedHeroIndex == index) expandedHeroIndex = index
+        if (expandedHeroIndex != index) expandedHeroIndex = index
     }
 
     LaunchedEffect(previewEnabled) {
@@ -283,7 +280,7 @@ fun HomeScreen(
                                 if (hasFocus) {
                                     if (expandedHeroIndex != index) {
                                         heroPreviewEngine.stop() // stop the previous hero's video before switching
-                                        expandedHeroIndex = -1 // collapse immediately; the dwell timer re-expands after 3s
+                                        expandedHeroIndex = index // widen immediately on focus / left-right move
                                     }
                                     focusedHeroIndex = index
                                     vm.onHeroUserNavigate(index)
@@ -381,7 +378,8 @@ fun HomeScreen(
         val interactionStamp = lastInteractionMs
 
         heroPreviewEngine.stop()
-        kotlinx.coroutines.delay(520L)
+        // Wait for the snappy width animation + a beat of settled focus before spinning up video.
+        kotlinx.coroutines.delay(220L)
         if (!isPreviewActive || interactionStamp != lastInteractionMs) return@LaunchedEffect
         if (focusedHeroIndex != scheduledIndex || expandedHeroIndex != scheduledIndex) return@LaunchedEffect
         if (scheduledHero != state.heroItems.getOrNull(state.activeHeroIndex)) return@LaunchedEffect
@@ -541,7 +539,8 @@ private fun HeroRowSection(
                     val targetWidth = if (isExpanded) expandedWidth else Dimens.HeroBaseWidth
                     val width by animateDpAsState(
                         targetValue = targetWidth,
-                        animationSpec = tween(durationMillis = if (isExpanded) 500 else 150),
+                        // Snappy expand/collapse so left/right focus feels immediate.
+                        animationSpec = tween(durationMillis = if (isExpanded) 160 else 110),
                         label = "heroCardWidth",
                     )
 

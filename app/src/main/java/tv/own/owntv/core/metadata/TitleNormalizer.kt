@@ -26,8 +26,10 @@ object TitleNormalizer {
     private val BRACKET_TAG = Regex("""[\[{(][^\[\]{}()]*[\]})]""")
 
     // Standalone quality / release markers anywhere in the title.
+    // Includes short provider quality tokens (4K/8K/HQ/LQ/QHD) common in:
+    // "NF - Enola Holmes 1 4K (2020)", "EN - Title HQ (2019)".
     private val QUALITY_MARKER = Regex(
-        "(?i)\\b(4k|uhd|fhd|hd|sd|hevc|h\\.?265|h\\.?264|x265|x264|hdr10?\\+?|dolby|atmos|" +
+        "(?i)\\b(4k|8k|uhd|qhd|fhd|hd|sd|hq|lq|hevc|h\\.?265|h\\.?264|x265|x264|hdr10?\\+?|dolby|atmos|" +
             "multi[- ]?sub|multisub|dual[- ]?audio|remux|web[- ]?dl|webrip|bluray|bdrip|dvdrip|hdrip|" +
             "imax|extended|uncut|remastered|vip|" +
             "vostfr|vost|vf|subbed|dubbed|dublado|legendado|castellano|truefrench|hdlight|" +
@@ -43,10 +45,12 @@ object TitleNormalizer {
             "(?:\\s*(?:e|ep|episode|x)\\s*\\d{1,4})?\\s*$"
     )
 
-    // Trailing UPPERCASE language tag providers append ("Movie Name FR", "Show LAT").
+    // Trailing UPPERCASE language/provider tag providers append ("Movie Name FR", "Show LAT", "Title NF").
     // Case-sensitive on purpose: a title-case word like "Fr"/"Sub" is never touched, and the risky
     // real-word codes (IT, US) are deliberately excluded.
-    private val TRAILING_LANG_TAG = Regex("""\s+(?:FR|EN|DE|ES|PT|NL|PL|TR|AR|RU|LAT|SUB|DUB|MULTI)$""")
+    private val TRAILING_LANG_TAG = Regex(
+        """\s+(?:FR|EN|DE|ES|PT|NL|PL|TR|AR|RU|LAT|SUB|DUB|MULTI|NF|DSNP|ATVP|AMZN|HULU|PCOK|MAX|DSNY)$""",
+    )
 
     // A 4-digit year, optionally in parens/brackets: (2021), [1999], 2015.
     private val YEAR = Regex("""[\[(]?\b(19\d{2}|20\d{2})\b[\])]?""")
@@ -75,6 +79,7 @@ object TitleNormalizer {
         do { prev = s; s = s.replace(PIPE_TAG, ""); s = stripDashPrefix(s) } while (s != prev)
 
         // 3. Remove bracketed tags, quality markers, flags, and any remaining year token.
+        // Year-number titles ("1917 (2019)", "2012") are restored below if this empties the query.
         s = s.replace(BRACKET_TAG, " ")
             .replace(QUALITY_MARKER, " ")
             .replace(YEAR, " ")
@@ -91,6 +96,18 @@ object TitleNormalizer {
             .replace(MULTI_SPACE, " ")
             .replace(EDGE_JUNK, "")
             .trim()
+
+        // 5. Year-as-title films: "ES - 1917 (2019)" strips to empty because both 1917 and 2019 match
+        //    YEAR. Prefer a non-release year token from the raw string as the query ("1917"); if the
+        //    whole title is only one year ("2012"), keep that digit string so TMDB can still search.
+        if (s.isBlank()) {
+            val yearsInRaw = YEAR.findAll(raw)
+                .mapNotNull { it.groupValues[1].toIntOrNull() }
+                .filter { it in 1900..2099 }
+                .toList()
+            val titleYear = yearsInRaw.firstOrNull { it != year } ?: year
+            if (titleYear != null) s = titleYear.toString()
+        }
 
         return Normalized(s, year)
     }
@@ -116,6 +133,13 @@ object TitleNormalizer {
         if (plain.isNotBlank()) out += plain
         val plainNoParts = withoutParts.replace(NON_WORD, " ").replace(MULTI_SPACE, " ").trim()
         if (plainNoParts.isNotBlank()) out += plainNoParts
+
+        // Trailing bare sequel numbers ("Enola Holmes 1", "John Wick 2") are often absent on TMDB
+        // for the first film and always worth trying without.
+        val withoutTrailingPart = primary.replace(Regex("""\s+\d{1,2}\s*$"""), "").trim()
+        if (withoutTrailingPart.length >= 2) out += withoutTrailingPart
+        val withoutPartsAndTrailing = withoutParts.replace(Regex("""\s+\d{1,2}\s*$"""), "").trim()
+        if (withoutPartsAndTrailing.length >= 2) out += withoutPartsAndTrailing
 
         return out.toList()
     }

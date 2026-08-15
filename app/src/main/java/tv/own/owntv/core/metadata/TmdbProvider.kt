@@ -50,13 +50,18 @@ class TmdbProvider(
         return "&include_image_language=" + (if (base != null) "$base,en,null" else "en,null")
     }
 
-    override suspend fun searchMovie(title: String, year: Int?): List<MetadataSearchResult>? =
-        search(MetadataType.MOVIE, title, year)
+    override suspend fun searchMovie(title: String, year: Int?, languageOverride: String?): List<MetadataSearchResult>? =
+        search(MetadataType.MOVIE, title, year, languageOverride)
 
-    override suspend fun searchTv(title: String, year: Int?): List<MetadataSearchResult>? =
-        search(MetadataType.TV, title, year)
+    override suspend fun searchTv(title: String, year: Int?, languageOverride: String?): List<MetadataSearchResult>? =
+        search(MetadataType.TV, title, year, languageOverride)
 
-    private suspend fun search(type: MetadataType, title: String, year: Int?): List<MetadataSearchResult>? {
+    private suspend fun search(
+        type: MetadataType,
+        title: String,
+        year: Int?,
+        languageOverride: String? = null,
+    ): List<MetadataSearchResult>? {
         val query = title.trim()
         if (query.isEmpty()) return emptyList()
         val ep = resolveEndpoint()
@@ -66,12 +71,14 @@ class TmdbProvider(
             type == MetadataType.TV -> "&first_air_date_year=$year"
             else -> "&year=$year"
         }
+        val lang = languageOverride?.trim()?.takeIf { it.isNotBlank() } ?: ep.language
+        val langParam = if (lang.isBlank()) "" else "&language=" + enc(lang)
         val url = buildString {
             append(ep.baseUrl).append(path)
             append("?query=").append(enc(query))
             append(yearParam)
             append("&include_adult=false")
-            append(ep.langParam())
+            append(langParam)
             ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
         }
         // Transport failure (network down, HTTP 429 rate limit, proxy/Worker error) → null, NOT empty:
@@ -162,6 +169,178 @@ class TmdbProvider(
         return out.values.toList()
     }
 
+    /**
+     * Resolve a cast name via `/search/person`, then pull `/person/{id}/movie_credits`.
+     * Prefer the best person match by popularity; credits keep TMDB cast-order (known-for first).
+     */
+    override suspend fun personMovieCredits(name: String): List<MetadataSearchResult>? {
+        val query = name.trim()
+        if (query.isEmpty()) return emptyList()
+        val personId = searchPersonId(query) ?: return null
+        if (personId <= 0) return emptyList()
+        val ep = resolveEndpoint()
+        val url = buildString {
+            append(ep.baseUrl).append("/3/person/").append(personId).append("/movie_credits")
+            append("?include_adult=false")
+            append(ep.langParam())
+            ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+        }
+        val json = runCatching { http.getText(url) }
+            .onFailure { Log.w(TAG, "TMDB person movie_credits failed id=$personId: ${it.message}") }
+            .getOrNull() ?: return null
+        return runCatching { parsePersonMovieCredits(json) }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Discover movies by TMDB genre display name. Resolves the name via `/genre/movie/list` (same
+     * language as other metadata calls), then pages `/discover/movie?with_genres=…`.
+     */
+    override suspend fun genreMovies(genreName: String, page: Int): List<MetadataSearchResult>? {
+        val name = genreName.trim()
+        if (name.isEmpty()) return emptyList()
+        val safePage = page.coerceAtLeast(1)
+        val genreId = movieGenreId(name) ?: return null
+        if (genreId <= 0) return emptyList()
+        val ep = resolveEndpoint()
+        val url = buildString {
+            append(ep.baseUrl).append("/3/discover/movie")
+            append("?with_genres=").append(genreId)
+            append("&include_adult=false&sort_by=popularity.desc")
+            append("&page=").append(safePage)
+            append(ep.langParam())
+            ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+        }
+        val json = runCatching { http.getText(url) }
+            .onFailure { Log.w(TAG, "TMDB genre discover failed genre=$name page=$safePage: ${it.message}") }
+            .getOrNull() ?: return null
+        return parseResults(MetadataType.MOVIE, json)
+    }
+
+    /** Resolve a genre display name to TMDB id; null on transport failure, 0 when unknown. */
+    private suspend fun movieGenreId(name: String): Int? {
+        val map = movieGenreIdsByName ?: loadMovieGenreIds()?.also { movieGenreIdsByName = it }
+            ?: return null
+        val key = name.trim().lowercase()
+        if (key.isEmpty()) return 0
+        map[key]?.let { return it }
+        // Loose contains for slightly different labels ("Sci-Fi" vs "Science Fiction").
+        return map.entries.firstOrNull { (k, _) ->
+            k == key || k.contains(key) || key.contains(k)
+        }?.value ?: 0
+    }
+
+    private suspend fun loadMovieGenreIds(): Map<String, Int>? {
+        val ep = resolveEndpoint()
+        val url = buildString {
+            append(ep.baseUrl).append("/3/genre/movie/list")
+            val params = buildList {
+                if (ep.language.isNotBlank()) add("language=" + enc(ep.language))
+                ep.apiKey?.takeIf { it.isNotBlank() }?.let { add("api_key=" + enc(it)) }
+            }
+            if (params.isNotEmpty()) append("?").append(params.joinToString("&"))
+        }
+        val json = runCatching { http.getText(url) }
+            .onFailure { Log.w(TAG, "TMDB genre list failed: ${it.message}") }
+            .getOrNull() ?: return null
+        return runCatching {
+            val arr = JSONObject(json).optJSONArray("genres") ?: return@runCatching emptyMap()
+            buildMap {
+                for (i in 0 until arr.length()) {
+                    val o = arr.optJSONObject(i) ?: continue
+                    val id = o.optInt("id", 0)
+                    val gName = o.optString("name").takeIf { it.isNotBlank() } ?: continue
+                    if (id > 0) put(gName.lowercase(), id)
+                }
+            }
+        }.getOrNull()
+    }
+
+    /** Best person id for [query]; null on transport failure, 0 when TMDB answered with no people. */
+    private suspend fun searchPersonId(query: String): Int? {
+        val ep = resolveEndpoint()
+        val url = buildString {
+            append(ep.baseUrl).append("/3/search/person")
+            append("?query=").append(enc(query))
+            append("&include_adult=false")
+            append(ep.langParam())
+            ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+        }
+        val json = runCatching { http.getText(url) }
+            .onFailure { Log.w(TAG, "TMDB person search failed: ${it.message}") }
+            .getOrNull() ?: return null
+        return runCatching {
+            val results = JSONObject(json).optJSONArray("results") ?: return@runCatching 0
+            if (results.length() == 0) return@runCatching 0
+            val q = query.lowercase()
+            var bestId = 0
+            var bestScore = Double.NEGATIVE_INFINITY
+            for (i in 0 until results.length()) {
+                val o = results.optJSONObject(i) ?: continue
+                val id = o.optInt("id", 0)
+                if (id <= 0) continue
+                val personName = o.optString("name").lowercase()
+                val popularity = o.optDouble("popularity", 0.0)
+                val nameScore = when {
+                    personName == q -> 1000.0
+                    personName.startsWith(q) || q.startsWith(personName) -> 500.0
+                    personName.contains(q) -> 250.0
+                    else -> 0.0
+                }
+                val score = nameScore + popularity
+                if (score > bestScore) {
+                    bestScore = score
+                    bestId = id
+                }
+            }
+            bestId
+        }.getOrNull()
+    }
+
+    /**
+     * Parse person `movie_credits` into search hits. Cast first (billing order), then crew fill
+     * (directing/producing roles) so prolific actors with dual credits still surface more titles.
+     */
+    private fun parsePersonMovieCredits(body: String): List<MetadataSearchResult> {
+        val root = JSONObject(body)
+        val out = LinkedHashMap<Int, Pair<MetadataSearchResult, Double>>()
+        fun absorb(arr: org.json.JSONArray?, asCast: Boolean) {
+            if (arr == null) return
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val id = o.optInt("id", 0)
+                if (id == 0) continue
+                val title = o.optString("title").ifBlank { o.optString("original_title") }.ifBlank { "?" }
+                val original = o.optString("original_title").takeIf { it.isNotBlank() && it != "null" }
+                val popularity = o.optDouble("popularity", 0.0)
+                // Cast order index is a strong signal; crew falls back to popularity only.
+                val rank = if (asCast) {
+                    val order = o.optInt("order", i)
+                    10_000.0 - order + popularity
+                } else {
+                    popularity
+                }
+                val hit = MetadataSearchResult(
+                    tmdbId = id,
+                    type = MetadataType.MOVIE,
+                    title = title,
+                    originalTitle = original,
+                    year = o.optString("release_date").take(4).toIntOrNull(),
+                    overview = o.optString("overview").takeIf { it.isNotBlank() },
+                    posterPath = o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" },
+                    popularity = popularity,
+                )
+                val prev = out[id]
+                if (prev == null || rank > prev.second) out[id] = hit to rank
+            }
+        }
+        absorb(root.optJSONArray("cast"), asCast = true)
+        absorb(root.optJSONArray("crew"), asCast = false)
+        return out.values
+            .sortedByDescending { it.second }
+            .map { it.first }
+            .take(PERSON_MOVIE_LIMIT)
+    }
+
     /** GET `/3/movie/{id}/{path}` list endpoints (`recommendations` / `similar`). Null on transport failure. */
     private suspend fun movieListEndpoint(tmdbId: Int, path: String): List<MetadataSearchResult>? {
         val ep = resolveEndpoint()
@@ -202,6 +381,7 @@ class TmdbProvider(
             cast = cast,
             trailerKey = parseTrailerKey(o),
             logoPath = parseLogoPath(o, preferredLang),
+            spokenLanguages = parseSpokenLanguages(o),
         )
     }
 
@@ -231,7 +411,22 @@ class TmdbProvider(
             cast = cast,
             trailerKey = parseTrailerKey(o),
             logoPath = parseLogoPath(o, preferredLang),
+            spokenLanguages = parseSpokenLanguages(o),
         )
+    }
+
+    /** TMDB `spoken_languages` → stable English display names (deduped, order preserved). */
+    private fun parseSpokenLanguages(details: JSONObject): List<String> {
+        val arr = details.optJSONArray("spoken_languages") ?: return emptyList()
+        val out = LinkedHashSet<String>()
+        for (i in 0 until arr.length()) {
+            val lang = arr.optJSONObject(i) ?: continue
+            val name = lang.optString("english_name").takeIf { it.isNotBlank() && it != "null" }
+                ?: lang.optString("name").takeIf { it.isNotBlank() && it != "null" }
+                ?: continue
+            out += name
+        }
+        return out.toList()
     }
 
     /**
@@ -316,6 +511,12 @@ class TmdbProvider(
     companion object {
         private const val TAG = "TmdbProvider"
         private const val CAST_LIMIT = 15
+        /** Cap person filmography pulled for local catalog intersection (cast chip browse). */
+        private const val PERSON_MOVIE_LIMIT = 400
+
+        /** In-memory genre name→id map for the current process (rebuilt if language tier changes rarely). */
+        @Volatile
+        private var movieGenreIdsByName: Map<String, Int>? = null
 
         /** Direct TMDB API base (Tier 2, user's own key). */
         const val TMDB_DIRECT_BASE = "https://api.themoviedb.org"

@@ -73,6 +73,20 @@ interface MovieDao {
     )
     suspend fun searchByName(sourceIds: List<Long>, query: String, limit: Int = 8): List<MovieEntity>
 
+    /** Resolve movies by stable localKey pieces: sourceId + remoteId (preferred) across active sources. */
+    @Query(
+        "SELECT * FROM movies WHERE sourceId IN (:sourceIds) AND remoteId IN (:remoteIds)",
+    )
+    suspend fun findByRemoteIdsInSources(sourceIds: List<Long>, remoteIds: List<String>): List<MovieEntity>
+
+    @Query(
+        "SELECT * FROM movies WHERE sourceId IN (:sourceIds) AND name IN (:names)",
+    )
+    suspend fun findByNamesInSources(sourceIds: List<Long>, names: List<String>): List<MovieEntity>
+
+    @Query("SELECT * FROM movies WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<MovieEntity>
+
     @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY sortOrder ASC, name ASC")
     fun pagingByCategory(categoryId: Long): PagingSource<Int, MovieEntity>
 

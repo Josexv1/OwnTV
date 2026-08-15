@@ -127,6 +127,11 @@ data class MovieDetails(
     val trailerKey: String?,
     /** Best title/logo image path from TMDB images; null when no usable logo exists. */
     val logoPath: String?,
+    /**
+     * Spoken/dialogue languages from TMDB (`spoken_languages[].english_name` preferred).
+     * Soft metadata only — not the real muxed audio/subtitle tracks of the IPTV stream.
+     */
+    val spokenLanguages: List<String> = emptyList(),
 )
 
 /** Per-episode TMDB details (`/tv/{id}/season/{n}/episode/{m}`). Its own still, plot, air date, rating. */
@@ -146,11 +151,17 @@ interface MetadataProvider {
      * **Empty list = TMDB answered "no results"** (callers may negative-cache);
      * **null = transport failure** (network down, rate-limited, proxy error) — callers must NOT
      * negative-cache, so the lookup retries on the next open instead of being wrong for 7 days.
+     *
+     * [languageOverride] forces TMDB's `language` for this call only (e.g. `es-ES`) so localized
+     * `title` fields can be scored against Spanish/French/… IPTV catalog names. Null = user setting.
      */
-    suspend fun searchMovie(title: String, year: Int? = null): List<MetadataSearchResult>?
+    suspend fun searchMovie(title: String, year: Int? = null, languageOverride: String? = null): List<MetadataSearchResult>?
 
-    /** Search TV shows by cleaned [title] (+ optional first-air [year]). Same null-vs-empty contract as [searchMovie]. */
-    suspend fun searchTv(title: String, year: Int? = null): List<MetadataSearchResult>?
+    /**
+     * Search TV shows by cleaned [title] (+ optional first-air [year]). Same null-vs-empty contract
+     * as [searchMovie], including optional [languageOverride].
+     */
+    suspend fun searchTv(title: String, year: Int? = null, languageOverride: String? = null): List<MetadataSearchResult>?
 
     /** Full details for a resolved movie id; null on network/parse failure. */
     suspend fun movieDetails(tmdbId: Int): MovieDetails?
@@ -166,4 +177,17 @@ interface MetadataProvider {
      * Same null-vs-empty contract as [searchMovie]: null = transport failure, empty = no related titles.
      */
     suspend fun relatedMovies(tmdbId: Int): List<MetadataSearchResult>?
+
+    /**
+     * Movie credits for a person looked up by display [name] (TMDB person search → movie_credits).
+     * Same null-vs-empty contract as [searchMovie]. Used by cinematic cast chips to filter the local catalog.
+     */
+    suspend fun personMovieCredits(name: String): List<MetadataSearchResult>?
+
+    /**
+     * Popular movies for a TMDB genre display name (e.g. "Horror", "Drama") via `/discover/movie`.
+     * [page] is 1-based. Same null-vs-empty contract as [searchMovie].
+     * Used by cinematic genre chips — callers still intersect with the local catalog.
+     */
+    suspend fun genreMovies(genreName: String, page: Int = 1): List<MetadataSearchResult>?
 }

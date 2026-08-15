@@ -401,6 +401,139 @@ class MovieViewModel(
     fun onMovieFocused(movie: MovieEntity) { _selectedMovie.value = movie }
 
     /**
+     * Progressive page of local movies for a TMDB genre chip.
+     * Uses TMDB `/discover` (not just the local enrichment cache) then intersects with the catalog.
+     * [excludeIds] skips titles already shown so "load more" can page cleanly.
+     */
+    suspend fun moviesForGenrePage(
+        genre: String,
+        page: Int,
+        pageSize: Int = 12,
+        excludeIds: Set<Long> = emptySet(),
+    ): DiscoveryPage {
+        val g = genre.trim()
+        if (g.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+        val sourceIds = ctx.value.sourceIds
+        if (sourceIds.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+
+        // Pull several TMDB discover pages if needed — most popular titles won't be in a given IPTV catalog.
+        val tmdbPagesToScan = 4
+        val startTmdbPage = ((page - 1) * tmdbPagesToScan) + 1
+        val hits = ArrayList<tv.own.owntv.core.metadata.MetadataSearchResult>(tmdbPagesToScan * 20)
+        var tmdbExhausted = false
+        for (p in startTmdbPage until (startTmdbPage + tmdbPagesToScan)) {
+            val batch = runCatching { metadata.genreMovies(g, page = p) }.getOrDefault(emptyList())
+            if (batch.isEmpty()) {
+                tmdbExhausted = true
+                break
+            }
+            hits += batch
+            if (batch.size < 15) {
+                // Last/near-empty TMDB page.
+                tmdbExhausted = true
+                break
+            }
+        }
+        if (hits.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+
+        val mapped = mapHitsToLocal(hits, sourceIds, excludeIds, limit = pageSize)
+        // More pages exist when TMDB still has discover results, or this page filled completely
+        // (later TMDB pages / later credits may still map into the local catalog).
+        return DiscoveryPage(
+            movies = mapped,
+            hasMore = !tmdbExhausted || mapped.size >= pageSize,
+        )
+    }
+
+    /**
+     * Progressive page of local movies for a cast name (TMDB filmography ∩ catalog).
+     * First call loads the full credit list once, then returns slices of local matches.
+     */
+    suspend fun moviesForCastPage(
+        personName: String,
+        page: Int,
+        pageSize: Int = 12,
+        excludeIds: Set<Long> = emptySet(),
+    ): DiscoveryPage {
+        val name = personName.trim()
+        if (name.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+        val sourceIds = ctx.value.sourceIds
+        if (sourceIds.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+
+        val hits = runCatching { metadata.personMovieCredits(name, limit = 400) }.getOrDefault(emptyList())
+        if (hits.isEmpty()) return DiscoveryPage(emptyList(), hasMore = false)
+
+        // Walk the full filmography and keep collecting local matches until this page is full.
+        // [excludeIds] holds prior pages so we continue from where the UI left off.
+        val mapped = mapHitsToLocal(hits, sourceIds, excludeIds, limit = pageSize)
+        // hasMore if we filled the page (there may still be later credits that match).
+        return DiscoveryPage(movies = mapped, hasMore = mapped.size >= pageSize)
+    }
+
+    /**
+     * Global multi-playlist title search (all active sources / folders). Used by long-press on a
+     * Similar card so the user can find every language/source copy of a recommended title.
+     */
+    suspend fun globalSearchMovies(query: String, limit: Int = 40): List<MovieEntity> {
+        val q = query.trim()
+        if (q.length < 2) return emptyList()
+        val sourceIds = ctx.value.sourceIds
+        if (sourceIds.isEmpty()) return emptyList()
+        return runCatching { movieDao.searchList(q, sourceIds, limit) }.getOrDefault(emptyList())
+    }
+
+    /** One progressive page of discovery results (genre / cast overlays). */
+    data class DiscoveryPage(
+        val movies: List<MovieEntity>,
+        val hasMore: Boolean,
+    )
+
+    /**
+     * Map TMDB hits onto playable local rows. Prefer already-resolved TMDB matches, then fuzzy title
+     * search. Uses [TitleNormalizer] so IPTV prefixes ("EN -", "4K|") don't kill matching.
+     */
+    private suspend fun mapHitsToLocal(
+        hits: List<tv.own.owntv.core.metadata.MetadataSearchResult>,
+        sourceIds: List<Long>,
+        excludeIds: Set<Long>,
+        limit: Int,
+    ): List<MovieEntity> {
+        if (hits.isEmpty() || limit <= 0) return emptyList()
+        val known = metadata.localKeysForTmdbIds(hits.map { it.tmdbId })
+        val out = ArrayList<MovieEntity>(limit)
+        val usedIds = HashSet<Long>(excludeIds)
+        for (hit in hits) {
+            if (out.size >= limit) break
+            val local = resolveLocalSimilar(hit, known[hit.tmdbId], sourceIds) ?: continue
+            if (!usedIds.add(local.id)) continue
+            out += local
+        }
+        return out
+    }
+
+    /** Downloaded OpenSubtitles language labels for the cinematic detail strip (may be empty). */
+    suspend fun downloadedSubtitleLanguages(movie: MovieEntity): List<String> {
+        val links = runCatching { subtitleController.downloadsForMovie(movie) }.getOrDefault(emptyList())
+        if (links.isEmpty()) return emptyList()
+        val out = LinkedHashSet<String>()
+        for (link in links) {
+            val label = link.languageName?.takeIf { it.isNotBlank() }
+                ?: link.language?.takeIf { it.isNotBlank() }
+                ?: continue
+            out += label
+        }
+        return out.toList()
+    }
+
+    private fun parseJsonStringList(json: String?): List<String> {
+        if (json.isNullOrBlank()) return emptyList()
+        return runCatching {
+            val arr = org.json.JSONArray(json)
+            (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { s -> s.isNotBlank() } }
+        }.getOrDefault(emptyList())
+    }
+
+    /**
      * Map TMDB related titles onto playable local catalog rows for the cinematic similar rail.
      * Preference order per hit:
      *  1. already-resolved local→TMDB match (fast, exact)
@@ -452,34 +585,66 @@ class MovieViewModel(
             }
         }
 
-        val query = hit.title.trim()
-        if (query.length < 2) return null
-        val candidates = movieDao.searchByName(sourceIds, query, limit = 8)
+        // Search with cleaned TMDB title variants. IPTV names are noisy ("EN - Frankenstein (2025)")
+        // so we also score against TitleNormalizer output of each candidate.
+        val queries = LinkedHashSet<String>()
+        hit.title.trim().takeIf { it.length >= 2 }?.let { queries += it }
+        hit.originalTitle?.trim()?.takeIf { it.length >= 2 }?.let { queries += it }
+        // Shorter core query helps when provider titles drop subtitles ("Frankenstein: …").
+        hit.title.substringBefore(':').trim().takeIf { it.length >= 2 }?.let { queries += it }
+        if (queries.isEmpty()) return null
+
+        val candidates = LinkedHashMap<Long, MovieEntity>()
+        for (q in queries) {
+            movieDao.searchByName(sourceIds, q, limit = 12).forEach { candidates[it.id] = it }
+            // Also try a compact token query without punctuation.
+            val compact = tv.own.owntv.core.metadata.TitleNormalizer.normalize(q).query
+            if (compact.length >= 2 && !compact.equals(q, ignoreCase = true)) {
+                movieDao.searchByName(sourceIds, compact, limit = 12).forEach { candidates[it.id] = it }
+            }
+        }
         if (candidates.isEmpty()) return null
-        val q = query.lowercase()
-        val qTokens = q.split(Regex("""\s+""")).filter { it.length > 1 }.toSet()
-        return candidates
+
+        val hitTitles = buildList {
+            add(hit.title.lowercase())
+            hit.originalTitle?.lowercase()?.let { add(it) }
+            add(tv.own.owntv.core.metadata.TitleNormalizer.normalize(hit.title).query.lowercase())
+        }.filter { it.length >= 2 }.distinct()
+        val hitTokens = hitTitles
+            .flatMap { it.split(Regex("""\s+""")) }
+            .map { it.trim() }
+            .filter { it.length > 1 }
+            .toSet()
+
+        return candidates.values
             .asSequence()
             .map { candidate ->
-                val name = candidate.name.lowercase()
+                val raw = candidate.name.lowercase()
+                val cleaned = tv.own.owntv.core.metadata.TitleNormalizer.normalize(candidate.name).query.lowercase()
                 val yearBonus = when {
                     hit.year == null || candidate.year == null -> 0
-                    hit.year == candidate.year -> 2
+                    hit.year == candidate.year -> 4
                     kotlin.math.abs(hit.year - candidate.year) == 1 -> 1
-                    else -> -2
+                    else -> -3
                 }
-                val score = when {
-                    name == q -> 100
-                    name.contains(q) || q.contains(name) -> 80
-                    else -> {
-                        val cTokens = name.split(Regex("""\s+""")).filter { it.length > 1 }.toSet()
-                        if (qTokens.isEmpty() || cTokens.isEmpty()) 0
-                        else ((qTokens.intersect(cTokens).size * 60) / qTokens.size)
+                val score = hitTitles.maxOf { q ->
+                    when {
+                        cleaned == q || raw == q -> 100
+                        cleaned.contains(q) || q.contains(cleaned) -> 85
+                        raw.contains(q) || q.contains(raw) -> 75
+                        else -> {
+                            val cTokens = cleaned.split(Regex("""\s+""")).filter { it.length > 1 }.toSet()
+                            if (hitTokens.isEmpty() || cTokens.isEmpty()) 0
+                            else {
+                                val inter = hitTokens.intersect(cTokens).size
+                                ((inter * 70) / hitTokens.size).coerceAtMost(70)
+                            }
+                        }
                     }
                 } + yearBonus
                 candidate to score
             }
-            .filter { it.second >= 55 }
+            .filter { it.second >= 58 }
             .maxByOrNull { it.second }
             ?.first
     }

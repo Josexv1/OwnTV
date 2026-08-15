@@ -22,6 +22,12 @@ class TitleNormalizerTest {
         // Streaming-service short tags: "D+ - …", "A+ - …"
         assertEquals("Avengers 3 Infinity War", q("D+ - Avengers 3 Infinity War (2018)"))
         assertEquals(2018, y("D+ - Avengers 3 Infinity War (2018)"))
+        // Common IPTV pattern: "[lang] - [title] [quality] (year)"
+        assertEquals("Enola Holmes 1", q("NF - Enola Holmes 1 4K (2020)"))
+        assertEquals(2020, y("NF - Enola Holmes 1 4K (2020)"))
+        assertEquals("The Batman", q("EN - The Batman 8K (2022)"))
+        assertEquals("Something", q("AR - Something HQ (2019)"))
+        assertEquals("Other Title", q("ES - Other Title LQ (2018)"))
     }
 
     @Test
@@ -29,6 +35,10 @@ class TitleNormalizerTest {
         val variants = TitleNormalizer.searchVariants("Avengers 3 Infinity War")
         assertEquals(true, variants.contains("Avengers 3 Infinity War"))
         assertEquals(true, variants.contains("Avengers Infinity War"))
+        // Trailing sequel numbers: first film is often just "Enola Holmes" on TMDB.
+        val enola = TitleNormalizer.searchVariants("Enola Holmes 1")
+        assertEquals(true, enola.contains("Enola Holmes 1"))
+        assertEquals(true, enola.contains("Enola Holmes"))
     }
 
     @Test
@@ -70,6 +80,18 @@ class TitleNormalizerTest {
         assertEquals("Sub Rosa", q("Sub Rosa"))
         // A pure year title keeps its year but never empties the query.
         assertEquals(2012, y("2012"))
+        assertEquals("2012", q("2012"))
+    }
+
+    @Test
+    fun preservesYearNumberMovieTitles() {
+        // IPTV: language prefix + year-number film + release year in parens.
+        val n = TitleNormalizer.normalize("ES - 1917 (2019)")
+        assertEquals("1917", n.query)
+        assertEquals(2019, n.year)
+        assertEquals("1917", q("1917 (2019)"))
+        assertEquals(2019, y("1917 (2019)"))
+        assertEquals("1917", q("EN| 1917 4K (2019)"))
     }
 
     @Test

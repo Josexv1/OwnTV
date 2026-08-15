@@ -68,6 +68,11 @@ data class MediaDetailsUi(
     val genres: List<String> = emptyList(),
     val plot: String? = null,
     val cast: List<String> = emptyList(),
+    /**
+     * TMDB spoken/dialogue languages (soft metadata). Not guaranteed stream audio tracks.
+     * Cinematic detail may pair this with locally downloaded subtitle languages.
+     */
+    val spokenLanguages: List<String> = emptyList(),
 )
 
 /**

@@ -31,6 +31,19 @@ interface MetadataDao {
     @Query("SELECT * FROM metadata_cache WHERE key = :key LIMIT 1")
     suspend fun getCache(key: String): MetadataCacheEntity?
 
+    /**
+     * Local movie keys already matched to a TMDB movie that lists [genre] in genresJson.
+     * Used by cinematic genre discovery — only enriched + matched titles appear.
+     */
+    @Query(
+        "SELECT m.localKey FROM metadata_match m " +
+            "INNER JOIN metadata_cache c ON c.key = 'movie:' || m.tmdbId " +
+            "WHERE m.type = 'movie' AND m.tmdbId IS NOT NULL " +
+            "AND c.type = 'movie' AND c.genresJson LIKE '%' || :genre || '%' " +
+            "LIMIT :limit",
+    )
+    suspend fun movieLocalKeysForGenre(genre: String, limit: Int = 400): List<String>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCache(entity: MetadataCacheEntity)
 

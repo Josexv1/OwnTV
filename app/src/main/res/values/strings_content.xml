@@ -160,6 +160,30 @@
     <string name="content_action_remove_favourite">Remove from favorites</string>
     <!-- Translators: Focus tooltip for the cinematic Download action. -->
     <string name="content_action_download_movie">Download movie</string>
+    <!-- Translators: Label for TMDB original spoken/dialogue languages on cinematic movie detail. Not the real muxed audio tracks of the IPTV file. -->
+    <string name="content_audio_languages">Original language</string>
+    <!-- Translators: Label before the list of available subtitle languages on cinematic movie detail. -->
+    <string name="content_subtitle_languages">Subtitles</string>
+    <!-- Translators: Shown after the first few subtitle languages when more remain, e.g. "English, Spanish (3 more)". -->
+    <string name="content_languages_more">(<xliff:g id="count">%1$d</xliff:g> more)</string>
+    <!-- Translators: Title of the genre browse page opened from a cinematic genre chip. %1$s is the genre name. -->
+    <string name="content_genre_movies_title"><xliff:g id="genre">%1$s</xliff:g> movies</string>
+    <!-- Translators: Empty state when no local catalog titles match a TMDB genre yet. -->
+    <string name="content_genre_movies_empty">No matching movies in your library yet. Open more titles to enrich metadata.</string>
+    <!-- Translators: Title of the cast browse page opened from a cinematic cast name. %1$s is the person name. -->
+    <string name="content_cast_movies_title">Movies with <xliff:g id="name">%1$s</xliff:g></string>
+    <!-- Translators: Empty state when no local catalog titles match a cast member's TMDB filmography. -->
+    <string name="content_cast_movies_empty">No matching movies in your library for this cast member yet.</string>
+    <!-- Translators: Loading label while genre/cast discovery is matching TMDB results to the local catalog. -->
+    <string name="content_discovery_loading">Finding movies in your library…</string>
+    <!-- Translators: Loading label shown at the bottom while more genre/cast results are being loaded. -->
+    <string name="content_discovery_loading_more">Loading more…</string>
+    <!-- Translators: Title of the global multi-playlist search sheet opened by long-pressing a similar movie. %1$s is the title. -->
+    <string name="content_global_search_title">All copies of “<xliff:g id="title">%1$s</xliff:g>”</string>
+    <!-- Translators: Empty state when global multi-playlist search finds no titles. -->
+    <string name="content_global_search_empty">No copies found across your playlists.</string>
+    <!-- Translators: Back label on the cinematic genre browse / global search overlays. -->
+    <string name="content_genre_back">Back</string>
     <!-- Translators: Empty-state hint on the Live TV screen when no channel is focused. -->
     <string name="content_focus_channel">Focus a channel to see it here.</string>
     <!-- Translators: Instructional text on the Live TV channel card. The dot is a separator. -->
