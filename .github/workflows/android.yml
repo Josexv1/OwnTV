@@ -6,8 +6,11 @@ name: Android CI
 #           PR branches still don't produce APKs (the restriction added in ac33c65 is unchanged);
 #           they only get the test/lint verdict.
 on:
+  # Deliberately NOT on push to main. Tests, lint and the release build all run locally in this
+  # fork, so a runner per commit only duplicates a verdict already in hand and delays it by ~16
+  # minutes. What a runner is actually needed for is cutting a release: a clean checkout, the
+  # signing secrets, and both ABI flavors. Add `branches: [ main ]` back if that ever changes.
   push:
-    branches: [ main ]
     tags: [ "v*" ]
   pull_request:
     branches: [ main ]
