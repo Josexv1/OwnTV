@@ -1214,7 +1214,7 @@ private fun MovieCinematicDetail(
                                 ) {
                                     details.cast.take(6).forEach { person ->
                                         FocusableSurface(
-                                            onClick = { onOpenCast(person) },
+                                            onClick = { onOpenCast(person.name) },
                                             shape = RoundedCornerShape(4.dp),
                                             focusedScale = 1.04f,
                                             glowElevation = 0,
@@ -1224,7 +1224,7 @@ private fun MovieCinematicDetail(
                                             showFocusBorder = false,
                                         ) {
                                             Text(
-                                                text = person,
+                                                text = person.name,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = Color.White.copy(alpha = 0.92f),
                                                 textDecoration = TextDecoration.Underline,
@@ -1527,7 +1527,7 @@ private fun MovieDetailsPane(
             Spacer(Modifier.height(12.dp))
             Text(plot, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 6, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp))
         }
-        val cast = jsonList(meta?.castJson)
+        val cast = tv.own.owntv.core.metadata.MetadataCast.names(meta?.castJson)
         if (cast.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.content_media_cast), style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
@@ -1599,7 +1599,7 @@ private fun buildMovieDetails(
         metaLine = metaLine(movie, meta, tmdbWins),
         genres = jsonList(meta?.genresJson),
         plot = plot,
-        cast = jsonList(meta?.castJson),
+        cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
         // spokenLanguages intentionally omitted on cinematic detail — TMDB original dialogue
         // languages are not the IPTV file's audio tracks and confused users.
     )
