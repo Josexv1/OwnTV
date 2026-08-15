@@ -161,7 +161,6 @@
     <!-- Translators: Focus tooltip for the cinematic Download action. -->
     <string name="content_action_download_movie">Download movie</string>
     <!-- Translators: Label for TMDB original spoken/dialogue languages on cinematic movie detail. Not the real muxed audio tracks of the IPTV file. -->
-    <string name="content_audio_languages">Original language</string>
     <!-- Translators: Label before the list of available subtitle languages on cinematic movie detail. -->
     <string name="content_subtitle_languages">Subtitles</string>
     <!-- Translators: Shown after the first few subtitle languages when more remain, e.g. "English, Spanish (3 more)". -->

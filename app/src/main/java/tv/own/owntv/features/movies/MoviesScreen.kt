@@ -1600,8 +1600,6 @@ private fun buildMovieDetails(
         genres = jsonList(meta?.genresJson),
         plot = plot,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
-        // spokenLanguages intentionally omitted on cinematic detail — TMDB original dialogue
-        // languages are not the IPTV file's audio tracks and confused users.
     )
 }
 

@@ -33,12 +33,6 @@ data class MetadataCacheEntity(
     val castJson: String?,    // JSON array of top cast names
     val trailerKey: String?,  // YouTube video key for the in-app trailer player (plan §7.3); null = no trailer
     val logoPath: String?,    // TMDB title/logo path for cinematic Home hero treatment; null = text title fallback
-    /**
-     * JSON array of spoken-language display names from TMDB (`spoken_languages`), e.g.
-     * `["English","Spanish"]`. These are **production/dialogue languages**, not guaranteed stream
-     * audio tracks or subtitle files — shown as soft metadata on cinematic detail.
-     */
-    val spokenLanguagesJson: String? = null,
     val updatedAt: Long,      // for TTL / manual refresh
 )
 

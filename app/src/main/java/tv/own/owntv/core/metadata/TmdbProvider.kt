@@ -433,7 +433,6 @@ class TmdbProvider(
             cast = cast,
             trailerKey = parseTrailerKey(o),
             logoPath = parseLogoPath(o, preferredLang),
-            spokenLanguages = parseSpokenLanguages(o),
         )
     }
 
@@ -460,22 +459,7 @@ class TmdbProvider(
             cast = cast,
             trailerKey = parseTrailerKey(o),
             logoPath = parseLogoPath(o, preferredLang),
-            spokenLanguages = parseSpokenLanguages(o),
         )
-    }
-
-    /** TMDB `spoken_languages` → stable English display names (deduped, order preserved). */
-    private fun parseSpokenLanguages(details: JSONObject): List<String> {
-        val arr = details.optJSONArray("spoken_languages") ?: return emptyList()
-        val out = LinkedHashSet<String>()
-        for (i in 0 until arr.length()) {
-            val lang = arr.optJSONObject(i) ?: continue
-            val name = lang.optString("english_name").takeIf { it.isNotBlank() && it != "null" }
-                ?: lang.optString("name").takeIf { it.isNotBlank() && it != "null" }
-                ?: continue
-            out += name
-        }
-        return out.toList()
     }
 
     /**

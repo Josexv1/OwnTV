@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 32,
-    "identityHash": "6dec59c8a32f94e924c00c3764489288",
+    "version": 31,
+    "identityHash": "58dfc4e33a2951a57b17a668d84d670c",
     "entities": [
       {
         "tableName": "profiles",
@@ -2308,7 +2308,7 @@
       },
       {
         "tableName": "metadata_cache",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `tmdbId` INTEGER NOT NULL, `imdbId` TEXT, `type` TEXT NOT NULL, `title` TEXT NOT NULL, `year` INTEGER, `overview` TEXT, `posterPath` TEXT, `backdropPath` TEXT, `rating` REAL, `genresJson` TEXT, `castJson` TEXT, `trailerKey` TEXT, `logoPath` TEXT, `spokenLanguagesJson` TEXT, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`key`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `tmdbId` INTEGER NOT NULL, `imdbId` TEXT, `type` TEXT NOT NULL, `title` TEXT NOT NULL, `year` INTEGER, `overview` TEXT, `posterPath` TEXT, `backdropPath` TEXT, `rating` REAL, `genresJson` TEXT, `castJson` TEXT, `trailerKey` TEXT, `logoPath` TEXT, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`key`))",
         "fields": [
           {
             "fieldPath": "key",
@@ -2382,11 +2382,6 @@
           {
             "fieldPath": "logoPath",
             "columnName": "logoPath",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "spokenLanguagesJson",
-            "columnName": "spokenLanguagesJson",
             "affinity": "TEXT"
           },
           {
@@ -3231,7 +3226,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6dec59c8a32f94e924c00c3764489288')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '58dfc4e33a2951a57b17a668d84d670c')"
     ]
   }
 }

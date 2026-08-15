@@ -162,7 +162,6 @@ class MetadataRepository(
                 castJson = details.cast.takeIf { it.isNotEmpty() }?.let { MetadataCast.serialize(it) },
                 trailerKey = details.trailerKey,
                 logoPath = details.logoPath,
-                spokenLanguagesJson = details.spokenLanguages.takeIf { it.isNotEmpty() }?.let { JSONArray(it).toString() },
                 updatedAt = now,
             )
             fallback != null -> MetadataCacheEntity(
@@ -170,7 +169,7 @@ class MetadataRepository(
                 title = fallback.title, year = fallback.year, overview = fallback.overview,
                 posterPath = fallback.posterPath, backdropPath = null, rating = null,
                 genresJson = null, castJson = null, trailerKey = null, logoPath = null,
-                spokenLanguagesJson = null, updatedAt = now,
+                updatedAt = now,
             )
             else -> return dao.getCache(tvCacheKey(tmdbId, lang))
         }
@@ -486,7 +485,6 @@ class MetadataRepository(
                 castJson = details.cast.takeIf { it.isNotEmpty() }?.let { MetadataCast.serialize(it) },
                 trailerKey = details.trailerKey,
                 logoPath = details.logoPath,
-                spokenLanguagesJson = details.spokenLanguages.takeIf { it.isNotEmpty() }?.let { JSONArray(it).toString() },
                 updatedAt = now,
             )
             fallback != null -> MetadataCacheEntity(
@@ -494,7 +492,7 @@ class MetadataRepository(
                 title = fallback.title, year = fallback.year, overview = fallback.overview,
                 posterPath = fallback.posterPath, backdropPath = null, rating = null,
                 genresJson = null, castJson = null, trailerKey = null, logoPath = null,
-                spokenLanguagesJson = null, updatedAt = now,
+                updatedAt = now,
             )
             else -> return dao.getCache(cacheKey(tmdbId, lang)) // nothing to write; return existing if any
         }

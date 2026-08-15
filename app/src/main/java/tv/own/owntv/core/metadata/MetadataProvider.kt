@@ -181,11 +181,6 @@ data class MovieDetails(
     val trailerKey: String?,
     /** Best title/logo image path from TMDB images; null when no usable logo exists. */
     val logoPath: String?,
-    /**
-     * Spoken/dialogue languages from TMDB (`spoken_languages[].english_name` preferred).
-     * Soft metadata only — not the real muxed audio/subtitle tracks of the IPTV stream.
-     */
-    val spokenLanguages: List<String> = emptyList(),
 )
 
 /** Per-episode TMDB details (`/tv/{id}/season/{n}/episode/{m}`). Its own still, plot, air date, rating. */
