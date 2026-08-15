@@ -141,6 +141,27 @@ object TitleNormalizer {
         val withoutPartsAndTrailing = withoutParts.replace(Regex("""\s+\d{1,2}\s*$"""), "").trim()
         if (withoutPartsAndTrailing.length >= 2) out += withoutPartsAndTrailing
 
+        // Some panels append the category label to the item name — "EN - Brave (2012) PIXAR" sits in
+        // a "PIXAR MOVIES" category — and the tag survives normalization because it looks like an
+        // ordinary trailing word. TMDB matches on the title only, so it returns nothing at all:
+        // "Brave PIXAR" scores 0 results where "Brave" returns hundreds, which silently blanks the
+        // metadata for every title in such a category.
+        //
+        // Only ever an extra variant tried after the full query, and only when the tag is ALL-CAPS
+        // and something is left over. Both guards matter: lower-case trailing words belong to the
+        // title far more often than not, and requiring a remainder keeps a genuinely all-caps
+        // one-word title ("UP", "WALL-E") from being stripped to nothing.
+        out += buildList {
+            for (candidate in listOf(primary, plain)) {
+                val words = candidate.split(Regex("""\s+""")).filter { it.isNotBlank() }
+                if (words.size < 2) continue
+                val last = words.last()
+                if (last.length < 2 || last != last.uppercase() || last.any { it.isDigit() }) continue
+                val remainder = words.dropLast(1).joinToString(" ")
+                if (remainder.length >= 2) add(remainder)
+            }
+        }
+
         return out.toList()
     }
 

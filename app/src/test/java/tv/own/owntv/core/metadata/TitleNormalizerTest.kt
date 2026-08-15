@@ -42,6 +42,21 @@ class TitleNormalizerTest {
     }
 
     @Test
+    fun searchVariantsDropTrailingProviderTag() {
+        // "EN - Brave (2012) PIXAR" normalizes to "Brave PIXAR", which TMDB answers with zero
+        // results while "Brave" returns hundreds — the whole category resolved to no metadata.
+        val brave = TitleNormalizer.searchVariants("Brave PIXAR")
+        assertEquals(true, brave.contains("Brave PIXAR"))
+        assertEquals(true, brave.contains("Brave"))
+
+        // A lower-case trailing word is ordinary title text and must survive.
+        assertEquals(false, TitleNormalizer.searchVariants("Saving Grace").contains("Saving"))
+
+        // An all-caps title with nothing left over must not be stripped away.
+        assertEquals(listOf("UP"), TitleNormalizer.searchVariants("UP"))
+    }
+
+    @Test
     fun matchTokensStripPunctuation() {
         assertEquals(listOf("avengers", "infinity", "war"), TitleNormalizer.matchTokens("Avengers: Infinity War"))
         assertEquals(listOf("avengers", "3", "infinity", "war"), TitleNormalizer.matchTokens("Avengers 3 Infinity War"))
