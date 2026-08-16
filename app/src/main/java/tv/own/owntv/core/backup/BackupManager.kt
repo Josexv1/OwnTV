@@ -66,17 +66,12 @@ class BackupManager(
      * path in it was device-local and its contents were readable to anyone) — restore still accepts
      * old `.json` files, and always will.
      *
-     * [backupPassword] decides how secret fields travel, not whether they travel. With a non-blank
-     * passphrase they are encrypted field-by-field (AES-GCM), a root `crypto` block records the KDF
-     * params, **and the whole container is sealed with the same passphrase** so nothing inside —
-     * URLs, usernames, history, the file list — is readable without it. With none, the container is
-     * a plain ZIP and the secrets are written in the clear, so the backup still restores a working
-     * setup; the caller is expected to have said plainly that the file is readable by anyone.
-     *
-     * It used to omit them instead, which read as the safer default and was not one: the same
-     * credentials already leave in this file inside the `epgSources` URLs
-     * (`xmltv.php?username=…&password=…`), so nothing was protected, and the restored playlists
-     * simply could not authenticate. The passphrase is the control that actually protects the file.
+     * Secret fields (source passwords, proxy password) are NEVER written as plaintext. When
+     * [backupPassword] is a non-blank passphrase, they are encrypted field-by-field (AES-GCM), a
+     * root `crypto` block records the KDF params, **and the whole container is sealed with the same
+     * passphrase** so nothing inside — URLs, usernames, history, the file list — is readable without
+     * it. When it is null/blank, secrets are simply omitted and the container is a plain ZIP; the
+     * caller is expected to have warned the user that passwords must be re-entered after restore.
      */
     suspend fun export(
         folder: File,
@@ -148,14 +143,13 @@ class BackupManager(
                 }
                 if (Section.SETTINGS in sections) {
                     val s = settings.exportSettings() // non-secret keys, incl. proxy host/port/user/enabled
-                    // Proxy password rides here (key not in the settings whitelist, so importSettings
-                    // ignores it). Same policy as the source secrets: sealed with a passphrase,
-                    // plaintext without one. The `_enc` suffix is now a misnomer kept for
-                    // compatibility — the reader is `unseal`, which takes either shape.
-                    settings.currentProxyPassword().takeIf { it.isNotEmpty() }
-                        ?.let { s.put("proxy_pass_enc", seal?.invoke(it) ?: it) }
-                    settings.currentTmdbApiKey().takeIf { it.isNotEmpty() }
-                        ?.let { s.put("tmdb_key_enc", seal?.invoke(it) ?: it) }
+                    // Proxy password rides here as an encrypted object (key not in the settings whitelist,
+                    // so importSettings ignores it); omitted entirely when there is no passphrase.
+                    val proxyPass = settings.currentProxyPassword()
+                    if (seal != null && proxyPass.isNotEmpty()) s.put("proxy_pass_enc", seal(proxyPass))
+                    // The user's own TMDB API key: same secret policy — encrypted with a passphrase, else omitted.
+                    val tmdbKey = settings.currentTmdbApiKey()
+                    if (seal != null && tmdbKey.isNotEmpty()) s.put("tmdb_key_enc", seal(tmdbKey))
                     put("settings", s)
                     // Per-item "compatibility mode" engine pins (Live + VOD). Keyed by stream URL, so no
                     // id remapping needed on restore. Optional block — older readers just ignore it.
@@ -164,17 +158,18 @@ class BackupManager(
                         put("vodMpvUrls", JSONArray(vodEngineStore.exportMpvUrls().toList()))
                         put("vodExoUrls", JSONArray(vodEngineStore.exportExoUrls().toList()))
                     })
-                    // Per-profile OpenSubtitles login (username + password/token). Sealed with the
-                    // backup passphrase when there is one, plaintext when there is not — same rule as
-                    // every other secret here. Ticked profiles only.
-                    put("openSubtitles", JSONArray().apply {
-                        profiles.forEach { p ->
-                            openSubAuth.exportJson(p.id)?.let { blob ->
-                                val plain = blob.toString()
-                                put(JSONObject().put("p", p.id).put("session", seal?.invoke(plain) ?: plain))
+                    // Per-profile OpenSubtitles login (username + password/token). A secret: the whole
+                    // session blob is encrypted with the backup passphrase, so it rides ONLY when one is
+                    // set — omitted otherwise, exactly like the source/proxy/TMDB secrets. Ticked profiles only.
+                    if (seal != null) {
+                        put("openSubtitles", JSONArray().apply {
+                            profiles.forEach { p ->
+                                openSubAuth.exportJson(p.id)?.let { blob ->
+                                    put(JSONObject().put("p", p.id).put("session", seal(blob.toString())))
+                                }
                             }
-                        }
-                    })
+                        })
+                    }
                 }
             }
             // The wallpaper's bytes, not its path. `settings.bg_image_path` still rides in the settings
@@ -689,35 +684,23 @@ class BackupManager(
         pinHash = o.optStringOrNull("pinHash"), createdAt = o.optLong("createdAt", System.currentTimeMillis()),
     )
 
-    /**
-     * Writes one secret field: sealed when a passphrase is in play, plaintext otherwise, `null` when
-     * there is nothing to write. [readBackup]'s `unseal` already accepts both shapes, so a plaintext
-     * value restores on any build that can read the container.
-     */
-    private fun JSONObject.putSecret(key: String, value: String?, seal: ((String) -> JSONObject)?) {
-        val v = value?.takeIf { it.isNotEmpty() }
-        put(key, if (v == null) JSONObject.NULL else seal?.invoke(v) ?: v)
-    }
-
     private fun sourceJson(s: SourceEntity, seal: ((String) -> JSONObject)?) = JSONObject().apply {
         put("id", s.id); put("name", s.name); put("type", s.type.name); put("url", s.url)
         put("username", s.username ?: JSONObject.NULL)
-        /**
-         * Secrets: encrypted objects when a passphrase was given, plaintext when it was not.
-         *
-         * Dropping them without a passphrase looked safer and was not. The same credentials
-         * already leave in this very file inside the EPG URLs — `xmltv.php?username=…&password=…`
-         * is stored verbatim in `epgSources` — so omitting them here protected nothing and only
-         * produced restores whose playlists could not authenticate. A user who picks "export
-         * unencrypted" is asking for a readable copy of their setup, not a redacted one; the
-         * choice that actually protects the file is the passphrase, and that one still does.
-         */
-        putSecret("password", s.password, seal)
-        putSecret("mac", s.mac, seal)
-        putSecret("stalkerSerialNumber", s.stalkerSerialNumber, seal)
-        putSecret("stalkerDeviceId", s.stalkerDeviceId, seal)
-        putSecret("stalkerDeviceId2", s.stalkerDeviceId2, seal)
-        putSecret("stalkerSignature", s.stalkerSignature, seal)
+        // Password: encrypted object when a passphrase was given, otherwise omitted (never plaintext).
+        val pw = s.password?.takeIf { it.isNotEmpty() }
+        put("password", if (pw != null && seal != null) seal(pw) else JSONObject.NULL)
+        // Stalker MAC: same secret policy as the password — encrypted with a passphrase, else omitted.
+        val macVal = s.mac?.takeIf { it.isNotEmpty() }
+        put("mac", if (macVal != null && seal != null) seal(macVal) else JSONObject.NULL)
+        val serialNumber = s.stalkerSerialNumber?.takeIf { it.isNotEmpty() }
+        put("stalkerSerialNumber", if (serialNumber != null && seal != null) seal(serialNumber) else JSONObject.NULL)
+        val deviceId = s.stalkerDeviceId?.takeIf { it.isNotEmpty() }
+        put("stalkerDeviceId", if (deviceId != null && seal != null) seal(deviceId) else JSONObject.NULL)
+        val deviceId2 = s.stalkerDeviceId2?.takeIf { it.isNotEmpty() }
+        put("stalkerDeviceId2", if (deviceId2 != null && seal != null) seal(deviceId2) else JSONObject.NULL)
+        val signature = s.stalkerSignature?.takeIf { it.isNotEmpty() }
+        put("stalkerSignature", if (signature != null && seal != null) seal(signature) else JSONObject.NULL)
         put("userAgent", s.userAgent ?: JSONObject.NULL); put("epgUrl", s.epgUrl ?: JSONObject.NULL)
         put("syncLive", s.syncLive); put("syncMovies", s.syncMovies); put("syncSeries", s.syncSeries)
         put("createdAt", s.createdAt); put("lastSyncAt", s.lastSyncAt ?: JSONObject.NULL)
