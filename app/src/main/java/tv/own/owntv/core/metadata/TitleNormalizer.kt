@@ -106,32 +106,40 @@ object TitleNormalizer {
      *  - the star's name — "12 monkeys BRAD PITT", "21 Jump Street ICE CUBE".
      * Measured against the API, "Brave PIXAR" returns 0 results where "Brave" returns 553.
      *
-     * Three guards, each earned from a 194,728-title catalog:
+     * The run is taken **whole**, however long it is. An earlier version capped it at three words and
+     * that was a mistake: a cap does not decline to strip, it strips *part* of the cast list and
+     * leaves the rest welded to the title. Over the reference catalog 1,178 names carry a longer run,
+     * and truncating them produced "A Bronx Tale DE" from "A Bronx Tale ... DE NIRO, CHAZZ
+     * PALMINTERI", "21 Grams SEAN PENN" and "Novecento DE" — each of them worse than not stripping at
+     * all. Taking the run whole touches exactly the same 9,604 names and gets those three right.
+     *
+     * Two guards, both earned from that catalog:
      *  - **the head must contain a lower-case letter.** This is the one that matters. 12,177 titles
      *    in that catalog are written entirely in capitals, and without this guard
      *    "A WALK IN THE DARK" is stripped down to "A".
-     *  - **at most [MAX_TRAILING_CAPS] words**, so a long capitalised phrase is left alone.
      *  - **no digits, no roman numerals, nothing from the format vocabulary**, so "Rocky II",
      *    "Transporter 2" and a bare "4K" are never mistaken for a name.
      *
-     * Even guarded this over-reaches sometimes — "AK vs AK" loses its last word — which is why the
-     * result is only ever used as a *search retry*, never as the title shown. A wrong strip costs
-     * one failed lookup; a right one rescues a title that had no metadata at all.
+     * A run is *not* allowed to cross a "&" or a comma to reach more capitals. That would rescue
+     * "01-Road To Singapore BOB HOPE & BING CROSBY", but it also cuts "Simmer: THE JOB - ES GIBT NUR
+     * EINE REGEL" down to "Simmer:", eating the real title. One clear regression is not worth one
+     * clear win.
+     *
+     * Even guarded this over-reaches sometimes — "AK vs AK" loses its last word — so on its own the
+     * result is only ever a *search retry*, never the title shown. A wrong strip costs one failed
+     * lookup; a right one rescues a title that had no metadata at all. [displayTitle] does show it,
+     * but only with TMDB's match corroborating the removal.
      */
     fun withoutTrailingTag(query: String): String? {
         val words = query.trim().split(WHITESPACE).filter { it.isNotBlank() }
         if (words.size < 2) return null
         val run = words.reversed()
             .takeWhile { w -> w.trimEnd(',').let { it.length >= 2 && it == it.uppercase() && it.none(Char::isDigit) && !ROMAN_NUMERAL.matches(it) } }
-            .take(MAX_TRAILING_CAPS)
-        if (run.isEmpty()) return null
+        if (run.isEmpty() || run.size >= words.size) return null
         val head = words.dropLast(run.size).joinToString(" ").trimEnd(' ', ',', '-')
         if (head.length < 2 || head.none { it.isLowerCase() }) return null
         return head
     }
-
-    /** Longest run of trailing capitals treated as a tag rather than title text. */
-    private const val MAX_TRAILING_CAPS = 3
 
     private val ROMAN_NUMERAL = Regex("""[IVXLCDM]+""")
 
@@ -178,6 +186,15 @@ object TitleNormalizer {
 
     /** Lower-cased and stripped of edge punctuation, so "K." and "K" compare equal. */
     private fun String.foldForCompare(): String = trim { !it.isLetterOrDigit() }.lowercase()
+
+    /**
+     * Whether a [qualityTags] entry is the kind of marker a box treats as a badge rather than as small
+     * print. Only the premium resolutions qualify: "4K" on a cover is a logo, "WEB-DL" is a footnote,
+     * and "HD" is on so much of the catalog that badging it would badge everything.
+     */
+    fun isHeadlineTag(tag: String): Boolean = tag in HEADLINE_TAGS
+
+    private val HEADLINE_TAGS = setOf("8K", "4K", "UHD")
 
     /**
      * Quality and source markers pulled out of the provider's name, in display order.

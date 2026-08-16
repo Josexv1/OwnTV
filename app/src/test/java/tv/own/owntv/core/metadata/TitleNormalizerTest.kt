@@ -84,6 +84,21 @@ class TitleNormalizerTest {
     }
 
     @Test
+    fun withoutTrailingTagTakesTheWholeCastListNotJustPartOfIt() {
+        // A cap on the run length does not decline to strip, it strips part of the cast list and
+        // welds the rest to the title: at three words these came out as "A Bronx Tale DE",
+        // "21 Grams SEAN PENN" and "Novecento DE".
+        assertEquals("A Bronx Tale", TitleNormalizer.withoutTrailingTag("A Bronx Tale DE NIRO, CHAZZ PALMINTERI"))
+        assertEquals("21 Grams", TitleNormalizer.withoutTrailingTag("21 Grams SEAN PENN, BENICIO DEL TORO"))
+        assertEquals("Novecento", TitleNormalizer.withoutTrailingTag("Novecento DE NIRO, BERNARDO BERTOLUCCI"))
+
+        // Taking the run whole must not weaken the all-caps guard: there is no head left to keep.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("A WALK IN THE DARK"))
+        // Nor may a run swallow the entire name.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("THE THREE STOOGES COLLECTION"))
+    }
+
+    @Test
     fun displayTitleDropsAStarNameTheTmdbMatchDisproves() {
         // The case this exists for. Note TMDB files the film as "Twelve Monkeys" while the catalog
         // writes "12 Monkeys": comparing the kept half would reject it, so only the removed words
@@ -95,6 +110,11 @@ class TitleNormalizerTest {
         assertEquals(
             "21 Jump Street",
             TitleNormalizer.displayTitle("EN - 21 Jump Street (2012) ICE CUBE", "21 Jump Street"),
+        )
+        // A full cast list goes the same way — no part of it may survive as "A Bronx Tale DE".
+        assertEquals(
+            "A Bronx Tale",
+            TitleNormalizer.displayTitle("EN - A Bronx Tale 4K (1993) DE NIRO, CHAZZ PALMINTERI", "A Bronx Tale"),
         )
 
         // A trailing capital that really is part of the title appears in TMDB's title too, so it stays.
