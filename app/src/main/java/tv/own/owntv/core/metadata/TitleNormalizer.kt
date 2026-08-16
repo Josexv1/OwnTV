@@ -13,6 +13,8 @@ object TitleNormalizer {
 
     // Leading provider/language tag ending in a pipe or colon, e.g. "EN|", "4K|", "AR:", "VIP:".
     // Applied repeatedly to peel stacked tags ("EN| 4K| Movie" → "Movie").
+    private val WHITESPACE = Regex("""\s+""")
+
     private val PIPE_TAG = Regex("""^\s*[A-Z0-9+]{1,8}\s*[|:]\s*""")
 
     // Leading provider/quality prefix that ends at a " - " separator, e.g. "4K-OSN+ - Title",
@@ -95,6 +97,27 @@ object TitleNormalizer {
      * contains a digit or '+' (e.g. "4K-OSN+", "1080P VIP") or is a single token (e.g. "OSN", "EN") — so a
      * genuine upper-case multi-word title like "MAD MAX - Fury Road" is preserved.
      */
+    /**
+     * [query] without a trailing ALL-CAPS word, or null when there is nothing safe to strip.
+     *
+     * Some panels append the category label to the item name — "EN - Brave (2012) PIXAR" sits in a
+     * "PIXAR MOVIES" category — and the tag survives [normalize] because it looks like an ordinary
+     * trailing word. TMDB matches on the title alone, so such a query returns nothing at all.
+     *
+     * Two guards, both load-bearing. The tag must be ALL-CAPS, because a lower-case trailing word
+     * belongs to the title far more often than not ("Saving Grace" must not become "Saving"). And
+     * something must be left over, which is what stops a genuinely all-caps one-word title — "UP",
+     * "WALL-E" — from being stripped to nothing. A digit disqualifies it too, so a trailing year or
+     * part number is left to the handling that already exists for those.
+     */
+    fun withoutTrailingTag(query: String): String? {
+        val words = query.trim().split(WHITESPACE).filter { it.isNotBlank() }
+        if (words.size < 2) return null
+        val last = words.last()
+        if (last.length < 2 || last != last.uppercase() || last.any { it.isDigit() }) return null
+        return words.dropLast(1).joinToString(" ").takeIf { it.length >= 2 }
+    }
+
     private fun stripDashPrefix(s: String): String {
         val m = DASH_PREFIX.find(s) ?: return s
         val prefix = m.groupValues[1].trim()

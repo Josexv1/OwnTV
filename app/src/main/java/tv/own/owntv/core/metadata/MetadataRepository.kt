@@ -84,7 +84,7 @@ class MetadataRepository(
         // gives 0 results where "Brave" gives 553. Every title in such a category ends up with no
         // metadata, and the negative cache then suppresses it for a week.
         if (best == null && !q.isOverride) {
-            untaggedQuery(q.query)?.let { retry ->
+            TitleNormalizer.withoutTrailingTag(q.query)?.let { retry ->
                 runCatching { provider.searchMovie(retry, q.year) }
                     .onFailure { Log.w(TAG, "resolveMovie tag-stripped retry failed: ${it.message}") }
                     .getOrNull()
@@ -454,29 +454,27 @@ class MetadataRepository(
     }
 
     /** Best confident match, or null (plan §12: "no art beats wrong art"). */
-    /**
-     * [query] without a trailing ALL-CAPS word, or null when there is nothing safe to strip.
-     *
-     * Two guards, both load-bearing. The tag must be ALL-CAPS, because a lower-case trailing word
-     * belongs to the title far more often than not ("Saving Grace" must not become "Saving"). And
-     * something must be left over, which is what stops a genuinely all-caps one-word title — "UP",
-     * "WALL-E" — from being stripped to nothing. Digits disqualify it too, so a trailing year or
-     * part number is left to the existing handling.
-     */
-    private fun untaggedQuery(query: String): String? {
-        val words = query.trim().split(Regex("""\s+""")).filter { it.isNotBlank() }
-        if (words.size < 2) return null
-        val last = words.last()
-        if (last.length < 2 || last != last.uppercase() || last.any { it.isDigit() }) return null
-        return words.dropLast(1).joinToString(" ").takeIf { it.length >= 2 }
-    }
-
     private fun pickBest(query: String, year: Int?, hits: List<MetadataSearchResult>): Scored? {
         if (hits.isEmpty()) return null
-        return hits.asSequence()
+        hits.asSequence()
             .map { Scored(it, score(query, year, it)) }
             .filter { it.score >= ACCEPT_THRESHOLD }
             .maxByOrNull { it.score }
+            ?.let { return it }
+
+        // Nothing cleared the threshold on token overlap. Before giving up, accept TMDB's own top
+        // hit when the year agrees exactly.
+        //
+        // Catalogs localize display names — "Dos canguros muy maduros" is TMDB's "Old Dogs", "17 otra
+        // vez" is "17 Again" — and neither `title` nor `original_title` shares a token with the
+        // provider's name, so [score] returns ~0 and the title is rejected however good the match is.
+        // But TMDB's search already resolved the translation: it ranked this row first *for that exact
+        // query*. Relevance plus an exact year is weak evidence on its own and strong evidence
+        // together, which is why both are required and why the score is set below anything token
+        // overlap can produce — a real overlap match must always win over this.
+        val top = hits.first()
+        if (year != null && top.year == year) return Scored(top, TOP_HIT_YEAR_MATCH_SCORE)
+        return null
     }
 
     private data class Scored(val result: MetadataSearchResult, val score: Double)
@@ -501,6 +499,15 @@ class MetadataRepository(
 
         /** Accept a match at/above this confidence; below it, prefer no metadata over a wrong one. */
         private const val ACCEPT_THRESHOLD = 0.6
+
+        /**
+         * Confidence given to TMDB's #1 hit when token overlap fails but the year agrees exactly.
+         *
+         * Deliberately below [ACCEPT_THRESHOLD]: this is a last resort recorded as the weaker
+         * evidence it is, so it never outranks a genuine overlap match and is visible as such in
+         * `metadata_match.confidence`.
+         */
+        private const val TOP_HIT_YEAR_MATCH_SCORE = 0.55
 
         /**
          * Bump when a matcher change makes previously cached misses wrong — existing installs then drop

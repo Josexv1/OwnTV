@@ -60,4 +60,22 @@ class TitleNormalizerTest {
     fun seasonTailNeverEmptiesTheQuery() {
         assertEquals("S01E01", q("S01E01"))
     }
+
+    @Test
+    fun withoutTrailingTagStripsProviderCategoryLabels() {
+        // "EN - Brave (2012) PIXAR" normalizes to "Brave PIXAR", which TMDB answers with zero
+        // results while "Brave" returns hundreds — the whole category resolved to no metadata.
+        assertEquals("Brave", TitleNormalizer.withoutTrailingTag("Brave PIXAR"))
+        assertEquals("The Crime", TitleNormalizer.withoutTrailingTag("The Crime NF"))
+
+        // A lower-case trailing word is ordinary title text and must survive.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("Saving Grace"))
+
+        // An all-caps title with nothing left over must not be stripped away.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("UP"))
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("WALL-E"))
+
+        // Digits mean a year or part number, which existing handling already covers.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("Rocky IV2"))
+    }
 }
