@@ -512,8 +512,17 @@ class MetadataRepository(
         /**
          * Bump when a matcher change makes previously cached misses wrong — existing installs then drop
          * their negative rows once ([healNegativeMatchesOnce]). 1 = scoring against `original_title`.
+         *
+         * Jumps 1 → 7 rather than 1 → 2 on purpose. The counter lives in the device's DataStore, and
+         * the branch this one replaces shipped generations up to 6; every device that ran those builds
+         * has 6 stored, so a 2 here reads as "older than what I already healed" and the drop silently
+         * never happens. Measured on the emulator: `metadata_match_heal_version` = 6. Whatever the next
+         * change is, it has to be 8 — the number is a device-side high-water mark, not a changelog.
+         *
+         * 7 = the search retries without a trailing star name, so every title the old matcher gave up
+         * on ("12 monkeys BRAD PITT") holds a miss that is now wrong.
          */
-        private const val MATCH_HEURISTICS_VERSION = 1
+        private const val MATCH_HEURISTICS_VERSION = 7
 
         /**
          * Focus debounce for on-demand metadata resolves, shared by the movie / series / episode panes.
