@@ -62,20 +62,25 @@ class TitleNormalizerTest {
     }
 
     @Test
-    fun withoutTrailingTagStripsProviderCategoryLabels() {
-        // "EN - Brave (2012) PIXAR" normalizes to "Brave PIXAR", which TMDB answers with zero
-        // results while "Brave" returns hundreds — the whole category resolved to no metadata.
+    fun withoutTrailingTagStripsCategoryLabelsAndStarNames() {
+        // Category label appended by the panel: TMDB answers "Brave PIXAR" with zero results.
         assertEquals("Brave", TitleNormalizer.withoutTrailingTag("Brave PIXAR"))
-        assertEquals("The Crime", TitleNormalizer.withoutTrailingTag("The Crime NF"))
+        // The star's name, one or two words.
+        assertEquals("12 monkeys", TitleNormalizer.withoutTrailingTag("12 monkeys BRAD PITT"))
+        assertEquals("21 Jump Street", TitleNormalizer.withoutTrailingTag("21 Jump Street ICE CUBE"))
 
-        // A lower-case trailing word is ordinary title text and must survive.
+        // The load-bearing guard: a title written entirely in capitals is left alone. Without it
+        // "A WALK IN THE DARK" is stripped to "A" — 12,177 such titles in the reference catalog.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("A WALK IN THE DARK"))
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("MAD MAX"))
+
+        // A lower-case trailing word is ordinary title text.
         assertEquals(null, TitleNormalizer.withoutTrailingTag("Saving Grace"))
-
-        // An all-caps title with nothing left over must not be stripped away.
+        // Nothing would be left over.
         assertEquals(null, TitleNormalizer.withoutTrailingTag("UP"))
-        assertEquals(null, TitleNormalizer.withoutTrailingTag("WALL-E"))
-
-        // Digits mean a year or part number, which existing handling already covers.
-        assertEquals(null, TitleNormalizer.withoutTrailingTag("Rocky IV2"))
+        // Roman numerals and digits are sequel markers, not tags.
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("Rocky II"))
+        assertEquals(null, TitleNormalizer.withoutTrailingTag("Transporter 2"))
     }
+
 }

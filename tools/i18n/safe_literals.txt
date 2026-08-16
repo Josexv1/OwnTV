@@ -1594,6 +1594,7 @@
 3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	UHD
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-?DL|WEBRIP
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-DL
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[IVXLCDM]+
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[(]?\\b(19\\d{2}|20\\d{2})\\b[\\])]?
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[{(][^\\[\\]{}()]*[\\]})]
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[🇦-🇿]

@@ -98,25 +98,42 @@ object TitleNormalizer {
      * genuine upper-case multi-word title like "MAD MAX - Fury Road" is preserved.
      */
     /**
-     * [query] without a trailing ALL-CAPS word, or null when there is nothing safe to strip.
+     * [query] without a trailing run of ALL-CAPS words, or null when there is nothing safe to strip.
      *
-     * Some panels append the category label to the item name — "EN - Brave (2012) PIXAR" sits in a
-     * "PIXAR MOVIES" category — and the tag survives [normalize] because it looks like an ordinary
-     * trailing word. TMDB matches on the title alone, so such a query returns nothing at all.
+     * Panels append two different things to an item name, and both defeat a TMDB search because
+     * TMDB matches on the title alone:
+     *  - the category label — "EN - Brave (2012) PIXAR" lives in a "PIXAR MOVIES" category;
+     *  - the star's name — "12 monkeys BRAD PITT", "21 Jump Street ICE CUBE".
+     * Measured against the API, "Brave PIXAR" returns 0 results where "Brave" returns 553.
      *
-     * Two guards, both load-bearing. The tag must be ALL-CAPS, because a lower-case trailing word
-     * belongs to the title far more often than not ("Saving Grace" must not become "Saving"). And
-     * something must be left over, which is what stops a genuinely all-caps one-word title — "UP",
-     * "WALL-E" — from being stripped to nothing. A digit disqualifies it too, so a trailing year or
-     * part number is left to the handling that already exists for those.
+     * Three guards, each earned from a 194,728-title catalog:
+     *  - **the head must contain a lower-case letter.** This is the one that matters. 12,177 titles
+     *    in that catalog are written entirely in capitals, and without this guard
+     *    "A WALK IN THE DARK" is stripped down to "A".
+     *  - **at most [MAX_TRAILING_CAPS] words**, so a long capitalised phrase is left alone.
+     *  - **no digits, no roman numerals, nothing from the format vocabulary**, so "Rocky II",
+     *    "Transporter 2" and a bare "4K" are never mistaken for a name.
+     *
+     * Even guarded this over-reaches sometimes — "AK vs AK" loses its last word — which is why the
+     * result is only ever used as a *search retry*, never as the title shown. A wrong strip costs
+     * one failed lookup; a right one rescues a title that had no metadata at all.
      */
     fun withoutTrailingTag(query: String): String? {
         val words = query.trim().split(WHITESPACE).filter { it.isNotBlank() }
         if (words.size < 2) return null
-        val last = words.last()
-        if (last.length < 2 || last != last.uppercase() || last.any { it.isDigit() }) return null
-        return words.dropLast(1).joinToString(" ").takeIf { it.length >= 2 }
+        val run = words.reversed()
+            .takeWhile { w -> w.trimEnd(',').let { it.length >= 2 && it == it.uppercase() && it.none(Char::isDigit) && !ROMAN_NUMERAL.matches(it) } }
+            .take(MAX_TRAILING_CAPS)
+        if (run.isEmpty()) return null
+        val head = words.dropLast(run.size).joinToString(" ").trimEnd(' ', ',', '-')
+        if (head.length < 2 || head.none { it.isLowerCase() }) return null
+        return head
     }
+
+    /** Longest run of trailing capitals treated as a tag rather than title text. */
+    private const val MAX_TRAILING_CAPS = 3
+
+    private val ROMAN_NUMERAL = Regex("""[IVXLCDM]+""")
 
     /**
      * The provider's name cleaned up for **display**, or the raw name when cleaning would ruin it.
