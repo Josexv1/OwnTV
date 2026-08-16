@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +37,9 @@ import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import tv.own.owntv.R
 import tv.own.owntv.features.shell.components.MediaDetailsUi
+import androidx.compose.foundation.focusGroup
 import tv.own.owntv.ui.components.FocusableSurface
+import tv.own.owntv.ui.components.trapAllFocusExit
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.OwnTVIcon as OwnTVIconGraphic
 import tv.own.owntv.ui.theme.OwnTVTheme
@@ -73,10 +76,25 @@ fun MovieCinematicDetail(
 ) {
     val colors = OwnTVTheme.colors
     val primaryAction = remember { FocusRequester() }
-    LaunchedEffect(details.title) { runCatching { primaryAction.requestFocus() } }
+    // One frame before grabbing focus: the browse grid behind is still settling its own focus when
+    // this composes, and a request made in the same frame is overwritten by it — the page opened
+    // with nothing focused, so the D-pad drove the invisible grid instead of the buttons.
+    LaunchedEffect(details.title) {
+        withFrameNanos { }
+        runCatching { primaryAction.requestFocus() }
+    }
     BackHandler { onExit() }
 
-    Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+    // trapAllFocusExit + focusGroup are what make this a modal rather than a picture laid over the
+    // grid. Without them focus escapes to the still-composed browse behind: the action buttons
+    // never take focus, and moving the D-pad drives the hidden list.
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colors.background)
+            .trapAllFocusExit()
+            .focusGroup(),
+    ) {
         details.backdropUrl?.let { url ->
             AsyncImage(
                 model = url,
