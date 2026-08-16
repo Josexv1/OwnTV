@@ -135,6 +135,10 @@ fun MoviesScreen(
     val selectedMovieMeta by vm.selectedMovieMeta.collectAsStateWithLifecycle()
     val metadataMode by vm.metadataMode.collectAsStateWithLifecycle()
     val moviesLayout by vm.moviesLayout.collectAsStateWithLifecycle()
+    // Cinematic has no preview pane: the detail page IS the preview, so the pane would be a second
+    // copy of the same information taking a third of the screen. Dropping it gives the list the
+    // full width, which is the other half of what the mode is for.
+    val cinematic = moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     var contextMovie by remember { mutableStateOf<MovieEntity?>(null) }
     // The movie the "Move to category…" flow is moving (issue #87), with the origin captured at
@@ -181,6 +185,13 @@ fun MoviesScreen(
     var resumePrompt by remember { mutableStateOf<Pair<MovieEntity, Long>?>(null) }
     val startMovie: (MovieEntity) -> Unit = { m ->
         scope.launch {
+            // In cinematic, OK opens the page and Play lives on it. Playing straight from the grid
+            // would make the page unreachable without a long-press, which is not a discoverable way
+            // to reach the main screen of a mode the user turned on deliberately.
+            if (cinematic) {
+                detailsMovie = m
+                return@launch
+            }
             val pos = vm.savedPositionMs(m)
             when {
                 resumeMode == SettingsRepository.ResumeMode.ASK && pos >= 10_000 -> resumePrompt = m to pos
@@ -313,7 +324,7 @@ fun MoviesScreen(
             .padding(BrowseContainerPadding)
             .onFocusChanged { if (it.hasFocus) onChildFocused() },
     ) {
-    val previewVisible = panelShares?.preview != 0
+    val previewVisible = !cinematic && panelShares?.preview != 0
     val innerGapTotal = browsePanelGapTotal(previewVisible)
     val panels = panelShares?.let { computePanelWidths(it, maxWidth, innerGapTotal) }
     Row(
@@ -353,7 +364,12 @@ fun MoviesScreen(
 
         Column(
             modifier = Modifier
-                .then(if (panels != null) Modifier.width(panels.list) else Modifier.weight(1.8f))
+                // With the preview pane gone, the saved panel widths would leave its share of the
+                // screen simply empty, so the list takes the remainder instead of its stored width.
+                .then(
+                    if (cinematic || panels == null) Modifier.weight(1f)
+                    else Modifier.width(panels.list),
+                )
                 .fillMaxSize()
                 .onFocusChanged { gridPaneFocused = it.hasFocus }
                 // CH+- key paging for this movies list/grid. currentTargetIndex falls back to the
