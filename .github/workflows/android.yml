@@ -212,9 +212,9 @@ jobs:
           fi
 
       # Gate the artifact on "will this actually install and launch on a Google TV Streamer 4K?".
-      # That device is MediaTek MT8696 (4x Cortex-A55, 64-bit) running Google TV 14 / Android 14
-      # (API 34), so every assertion below is checked against API 34 + arm64-v8a. A failure here
-      # means the APK would be refused by the installer or hidden by the launcher — the exact
+      # Every threshold below was read off a real one over adb, not taken from the spec sheet:
+      # Android 14 / API 34, and a 32-bit-ONLY userspace (see the ABI check). A failure here means
+      # the APK would be refused by the installer or hidden by the launcher — the exact
       # "the app isn't compatible with your TV" class of bug — so it must fail the job, not warn.
       - name: Verify Google TV Streamer 4K compatibility
         run: |
@@ -233,10 +233,18 @@ jobs:
 
           fail() { echo "::error::Streamer 4K gate: $1"; exit 1; }
 
-          # 1. ABI. The Streamer is arm64 (MT8696). A missing arm64-v8a slice is the single most
-          #    common cause of an APK that installs everywhere else and not here.
+          # 1. ABI. Read off a real Google TV Streamer 4K over adb, not from the spec sheet:
+          #      ro.product.cpu.abilist   = armeabi-v7a,armeabi
+          #      ro.product.cpu.abilist64 = (empty)
+          #      primaryCpuAbi            = armeabi-v7a
+          #    The SoC is 64-bit but the userspace is 32-bit ONLY, so armeabi-v7a is the slice this
+          #    device actually loads and an arm64-only APK is refused outright — which is exactly
+          #    what SmartTube #4620 reported. arm64-v8a is still required here because other modern
+          #    Android TV hardware is 64-bit userspace and the same `standard` APK serves both.
+          echo "$BADGING" | grep -q "native-code:.*'armeabi-v7a'" \
+            || fail "no armeabi-v7a native slice — the Streamer 4K is 32-bit userspace and cannot run this APK"
           echo "$BADGING" | grep -q "native-code:.*'arm64-v8a'" \
-            || fail "no arm64-v8a native slice — the Streamer 4K cannot run this APK"
+            || fail "no arm64-v8a native slice — 64-bit Android TV hardware cannot run this APK"
 
           # 2. minSdk must be <= 34 (Android 14), targetSdk >= 23 (Android rejects lower outright).
           MIN=$(echo "$BADGING" | sed -n "s/^minSdkVersion:'\([0-9]*\)'.*/\1/p")
@@ -266,7 +274,7 @@ jobs:
           echo "$VERIFY" | grep -qE "\(APK Signature Scheme v[23]\).*true" \
             || fail "APK is not signed with signature scheme v2/v3 — Android 14 would refuse it"
 
-          echo "✅ Google TV Streamer 4K gate passed (arm64-v8a, minSdk $MIN, targetSdk $TGT, leanback launcher, v2+ signed)"
+          echo "✅ Google TV Streamer 4K gate passed (armeabi-v7a + arm64-v8a, minSdk $MIN, targetSdk $TGT, leanback launcher, v2+ signed)"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v7
