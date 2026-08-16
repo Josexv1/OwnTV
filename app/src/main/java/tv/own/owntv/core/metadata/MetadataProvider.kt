@@ -193,13 +193,9 @@ data class EpisodeDetails(
 )
 
 /**
- * Which "more like this" list a page came from.
- *
- * TMDB exposes two and they are not interchangeable. `recommendations` is derived from what people
- * actually watched together and reads far better, but it thins out fast and is empty for obscure
- * titles; `similar` is keyword/genre derived, weaker, and almost always has something. The rail walks
- * the good list first and only falls through to the weaker one when the good one runs out — which is
- * what lets it keep scrolling instead of stopping after twenty posters.
+ * Which "more like this" list a page came from. TMDB's `recommendations` reads far better but thins
+ * out fast; `similar` is weaker and almost always has something. The rail walks the good list first
+ * and falls through to the weaker one when it runs out, which is what keeps it scrolling.
  */
 enum class SimilarSource { RECOMMENDATIONS, SIMILAR }
 

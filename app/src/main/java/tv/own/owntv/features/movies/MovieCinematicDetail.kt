@@ -100,8 +100,8 @@ fun MovieCinematicDetail(
     var railFocused by remember { mutableStateOf(false) }
     val hasRail = similar.items.isNotEmpty()
 
-    // The rail's height is the whole layout mechanism: the hero is padded by exactly this much, so
-    // growing it lifts the hero's centred column instead of letting the two overlap and clip.
+    // The hero is padded by exactly this height, so growing the rail lifts the hero rather than
+    // overlapping it.
     val railHeight by animateDpAsState(
         targetValue = when {
             !hasRail -> 0.dp
@@ -114,13 +114,9 @@ fun MovieCinematicDetail(
         targetValue = if (railFocused) RAIL_POSTER_WIDTH_FOCUSED else RAIL_POSTER_WIDTH_PEEK,
         label = "similarRailPoster",
     )
-    // Not in the same frame: the browse grid behind is still settling its own focus when this
-    // composes, and a request made then is overwritten by it — the page opened with nothing focused,
-    // so the D-pad drove the invisible grid instead of the buttons.
-    //
-    // Repeated over a few frames because this also runs when a rail poster swaps the page to another
-    // film. Focus is then inside the rail and the buttons are mid-recomposition, so a single request
-    // lands on nothing and focus stays on the poster of a film that is no longer being shown.
+    // Not in the same frame: the browse grid behind is still settling its own focus and would
+    // overwrite the request, leaving the D-pad driving the invisible grid. Repeated over a few frames
+    // because a rail poster can swap the page mid-recomposition, where one request lands on nothing.
     LaunchedEffect(details.title) {
         railFocused = false
         repeat(FOCUS_CLAIM_FRAMES) {
@@ -174,9 +170,8 @@ fun MovieCinematicDetail(
                     model = url,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    // Sized from the height it is actually given, not from a fixed 240x360. A 1080p
-                    // TV is 540dp tall, so once the rail takes its share a fixed poster is taller
-                    // than the row that holds it and gets its bottom cut off.
+                    // Sized from the height it is given, not a fixed 240x360: a 1080p TV is 540dp
+                    // tall, so once the rail takes its share a fixed poster loses its bottom edge.
                     modifier = Modifier
                         .heightIn(max = POSTER_MAX_HEIGHT)
                         .fillMaxHeight()
@@ -234,11 +229,9 @@ fun MovieCinematicDetail(
                         plot,
                         style = MaterialTheme.typography.bodyLarge,
                         color = colors.onSurface.copy(alpha = 0.92f),
-                        // The plot is the one elastic element: it takes whatever vertical room is
-                        // left and ellipsises. Everything here used to be fixed, so when the rail
-                        // claimed its share the column overflowed and Compose took the space out of
-                        // the last child — the action row flattened into slivers. Giving the squeeze
-                        // somewhere to go is what keeps the buttons round at any rail height.
+                        // The one elastic element. With everything fixed, the rail's share overflowed
+                        // the column and Compose took it out of the last child — the round action
+                        // buttons flattened into slivers.
                         modifier = Modifier.weight(1f, fill = false),
                         maxLines = if (railFocused) PLOT_MAX_LINES_RAIL_UP else PLOT_MAX_LINES,
                         overflow = TextOverflow.Ellipsis,
@@ -265,10 +258,7 @@ fun MovieCinematicDetail(
 
                 Spacer(Modifier.height(24.dp))
                 Row(
-                    // Down from *any* action enters the rail, not just the one above a poster. The
-                    // target is the rail's focus group rather than a specific item, which is what
-                    // survives the row being scrolled: a requester pinned to item 0 goes dead as
-                    // soon as LazyRow disposes it.
+                    // Down from *any* action enters the rail, at its first poster.
                     modifier = Modifier
                         .focusGroup()
                         .then(if (hasRail) Modifier.focusProperties { down = railEntry } else Modifier),
@@ -322,12 +312,10 @@ fun MovieCinematicDetail(
  * LazyRow, not the fixed row this replaced: the list pages in from TMDB as it is scrolled, so its
  * length is not known when it is composed.
  *
- * That makes entry focus awkward, and the two obvious answers are both wrong. Pointing the actions'
- * `down` at the row's focus group lets the framework choose geometrically, so pressing down from
- * Download lands on whichever poster sits under that column — the tenth, in practice. Pinning
- * [entry] to item 0 gives the right answer but goes dead the moment LazyRow disposes item 0. So the
- * row rewinds to the start whenever focus leaves it: item 0 is then always composed while unfocused,
- * [entry] always resolves, and every entry is on the first poster, as the design calls for.
+ * Both obvious answers to entry focus are wrong: aiming `down` at the row's focus group lets the
+ * framework pick geometrically (the tenth poster, from the Download button), and pinning [entry] to
+ * item 0 dies the moment LazyRow disposes it. So the row rewinds whenever focus leaves it — item 0 is
+ * then always composed while unfocused, and every entry lands on the first poster.
  */
 @Composable
 private fun SimilarRail(
@@ -358,8 +346,7 @@ private fun SimilarRail(
             }
             .focusGroup()
             .background(
-                // The rail reads as rising over the hero rather than sitting beside it: its own scrim
-                // deepens toward the bottom and fades out at the top edge into the artwork.
+                // Reads as rising over the hero: the scrim deepens downward and fades into the artwork.
                 Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f))),
             ),
         contentAlignment = Alignment.BottomStart,
@@ -395,9 +382,8 @@ private fun SimilarRail(
 /**
  * A quality marker beside the rating.
  *
- * The premium resolutions get the treatment a disc case gives them — black on yellow, bold — because
- * that is the one marker a viewer scans for. Everything else stays a quiet grey chip; badging
- * "WEB-DL" with the same weight would make the loud one stop meaning anything.
+ * Premium resolutions get the treatment a disc case gives them: black on yellow, bold. Everything
+ * else stays a quiet grey chip — badging "WEB-DL" as loudly would make the loud one meaningless.
  */
 @Composable
 private fun QualityChip(tag: String) {
@@ -455,12 +441,7 @@ private const val CAST_SEPARATOR = "   "
 /** Standard 2:3 poster. */
 private const val POSTER_ASPECT = 1.5f
 
-/**
- * Rail heights: the poster it holds at each size, plus its padding.
- *
- * Kept modest on purpose. A 1080p TV reports 540dp of height, so these are a quarter and a third of
- * the whole screen — a rail that felt right in dp on a phone-sized canvas would swallow the hero here.
- */
+/** Rail heights. Modest on purpose: a 1080p TV is only 540dp tall, so these are already a third of it. */
 private val RAIL_HEIGHT_PEEK = 138.dp
 private val RAIL_HEIGHT_FOCUSED = 196.dp
 private val RAIL_POSTER_WIDTH_PEEK = 76.dp

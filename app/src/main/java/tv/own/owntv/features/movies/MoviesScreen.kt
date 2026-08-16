@@ -439,10 +439,8 @@ fun MoviesScreen(
                 .trapVerticalFocusExit()
                 .focusGroup()
         ) {
-            // Just the category, once. This used to be a "Movies / |EN| ADVENTURE MOVIES" heading
-            // with "|EN| ADVENTURE MOVIES (1619 movies)" repeated underneath it — the same name
-            // twice, plus a section word the sidebar already highlights, on the screen with the
-            // least room to spare.
+            // Just the category, once: this was "Movies / |EN| ADVENTURE MOVIES" over a near-identical
+            // subtitle, repeating both the name and what the sidebar already highlights.
             Text(
                 selectedLabel,
                 style = MaterialTheme.typography.headlineLarge,
@@ -704,26 +702,18 @@ fun MoviesScreen(
         val details = buildMovieDetails(m, cache, metadataMode.tmdbWins)
         if (moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC) {
             val resumeMs = selectedProgress?.takeIf { selectedMovie?.id == m.id }?.positionMs?.takeIf { it > 0 }
-            // Only ever pointed at a real id, never at null. `cache` is null both before the lookup
-            // resolves and for a frame or two whenever selectedMovieMeta re-emits, and clearing on
-            // that made the rail vanish mid-browse — which then silently put the D-pad back on the
-            // action row, where the next OK was Download and the page closed. The rail is emptied
-            // when the page itself goes away, below.
+            // Never pointed at null: `cache` blanks for a frame whenever selectedMovieMeta re-emits,
+            // and clearing on that made the rail vanish mid-browse. Emptied on dispose instead.
             LaunchedEffect(m.id, cache?.tmdbId) {
                 cache?.tmdbId?.takeIf { it > 0 }?.let { vm.openSimilarRail(it) }
             }
             DisposableEffect(Unit) { onDispose { vm.openSimilarRail(null) } }
-            // The page steps out of the composition while the trailer plays instead of sitting
-            // behind it. Left composed it keeps the focus — the trailer's own controls never get it,
-            // so the D-pad drives the hidden page and you can see it moving behind the video, with
-            // no way to reach the player. `detailsMovie` is untouched, so exiting the trailer brings
-            // the page straight back, and coming back through a fresh composition is also what
-            // re-claims focus for Play.
+            // Out of the composition while the trailer plays, not merely behind it: left composed it
+            // keeps the focus, so the trailer's controls never get it and the D-pad drives the hidden
+            // page. `detailsMovie` stays set, so exiting comes straight back here with Play focused.
             if (trailerVideoKey == null) {
-                // Keyed by the film, so picking one from the rail builds a fresh page rather than
-                // recomposing this one. Without it the rail keeps focus across the swap — it is still
-                // the same node — and the new film opens with the D-pad inside the previous film's
-                // suggestions. A remount runs the same first-open path that already puts focus on Play.
+                // Keyed by the film: without a remount the rail is the same node and keeps focus
+                // across the swap, opening the new film with the D-pad in the old film's suggestions.
                 key(m.id) {
                     MovieCinematicDetail(
                         details = details,
@@ -755,9 +745,8 @@ fun MoviesScreen(
                             detailsMovie = null
                             if (downloadStates[m.id] != null) toast.show(alreadyDownloadedMessage) else vm.download(m)
                         },
-                        // Note what this does NOT do: clear detailsMovie. Closing the page to show a
-                        // trailer is why "Salir" used to land in the grid, two steps from where the
-                        // viewer was. The page is only hidden, above.
+                        // Note what this does NOT do: clear detailsMovie. That is why "Salir" used to
+                        // land in the grid instead of back here.
                         onPlayTrailer = { videoKey -> trailerVideoKey = videoKey },
                         onExit = { detailsMovie = null },
                     )

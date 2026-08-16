@@ -63,10 +63,8 @@ import tv.own.owntv.ui.theme.OwnTVTheme
  * currentSecond/duration callbacks. Focus stays entirely in the Compose overlay; the WebView is
  * treated as a pure video surface, which sidesteps the classic "iframe steals D-pad focus" problem.
  *
- * The transport used to be a key handler on a single Exit button: Left/Right seeked and there was no
- * way to pause at all. Buttons instead, because on a 10-foot screen a control you cannot see is a
- * control that does not exist — and Left/Right can then do the obvious thing and move between them.
- * The remote's own media keys still work as a shortcut.
+ * Buttons rather than a hidden key handler: on a 10-foot screen a control you cannot see is a
+ * control that does not exist. Left/Right move between them; the remote's media keys still work.
  *
  * Graceful fallback (required by the plan): if the WebView is missing/ancient or the video errors,
  * we hand off to an external "Open in YouTube" intent and exit — the button always does *something*.
@@ -83,8 +81,7 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
     var player by remember { mutableStateOf<YouTubePlayer?>(null) }
 
     val playPauseFocus = remember { FocusRequester() }
-    // A frame late, or the request runs before the transport row is attached and focus settles on
-    // the last control instead — which puts Exit under the first OK press.
+    // A frame late, or the row is not attached yet and focus settles on Exit — under the first OK.
     LaunchedEffect(Unit) {
         withFrameNanos { }
         runCatching { playPauseFocus.requestFocus() }
@@ -154,8 +151,7 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
             }
 
             override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                // Track the player's own state rather than a local guess: a buffering stall or a
-                // seek both pass through here, and the button must not claim "paused" for either.
+                // The player's own state, not a local guess: a buffering stall must not read as paused.
                 when (state) {
                     PlayerConstants.PlayerState.PLAYING -> playing = true
                     PlayerConstants.PlayerState.PAUSED -> playing = false
@@ -169,9 +165,7 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
         onDispose { player = null; runCatching { playerView.release() } }
     }
 
-    // The remote's dedicated transport keys, as a shortcut past the buttons. Left/Right are
-    // deliberately absent now: they move between the controls, which is what a viewer expects of a
-    // row of buttons and what makes the row usable at all.
+    // Shortcut past the buttons. Left/Right are deliberately absent: they move between the controls.
     val onTransportKey: (androidx.compose.ui.input.key.KeyEvent) -> Boolean = onKey@{ e ->
         if (e.type != KeyEventType.KeyDown || player == null) return@onKey false
         when (e.key) {
@@ -215,8 +209,8 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                // "-5 s" / "+5 s" rather than ⏪ ⏩: the arrows say "seek", the labels say how far,
-                // and how far is the only thing a viewer is actually deciding when they press one.
+                // "-5 s" rather than ⏪: the arrow says "seek", the label says how far — which is the
+                // only thing being decided.
                 SeekButton(
                     pluralStringResource(R.plurals.player_trailer_seek_back, SEEK_STEP_SECONDS, SEEK_STEP_SECONDS),
                 ) { seekBy(-SEEK_STEP_SECONDS.toFloat()) }

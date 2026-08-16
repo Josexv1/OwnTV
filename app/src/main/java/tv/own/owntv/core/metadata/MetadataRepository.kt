@@ -43,10 +43,8 @@ class MetadataRepository(
      * One page of "more like this" for an already-resolved movie, or null when enrichment is off or
      * the call fails.
      *
-     * Deliberately not cached in Room. Every other TMDB read here backs a screen that is opened over
-     * and over for the same title, which is what makes a cache table worth its migration; this one
-     * backs a rail that is browsed once and left, and TMDB's own responses are already edge-cached by
-     * the Worker. The rail keeps its pages in memory for as long as it is open.
+     * Not cached in Room: unlike the reads that back a detail screen opened again and again, this
+     * one backs a rail that is browsed once and left. Its pages live in memory while it is open.
      */
     suspend fun similarMovies(tmdbId: Int, source: SimilarSource, page: Int): SimilarPage? {
         if (!settings.metadataConfig().enabled) return null
@@ -527,11 +525,9 @@ class MetadataRepository(
          * Bump when a matcher change makes previously cached misses wrong — existing installs then drop
          * their negative rows once ([healNegativeMatchesOnce]). 1 = scoring against `original_title`.
          *
-         * Jumps 1 → 7 rather than 1 → 2 on purpose. The counter lives in the device's DataStore, and
-         * the branch this one replaces shipped generations up to 6; every device that ran those builds
-         * has 6 stored, so a 2 here reads as "older than what I already healed" and the drop silently
-         * never happens. Measured on the emulator: `metadata_match_heal_version` = 6. Whatever the next
-         * change is, it has to be 8 — the number is a device-side high-water mark, not a changelog.
+         * Jumps to 7, not 2: the counter lives in the device's DataStore and the branch this replaces
+         * shipped generations up to 6, so anything lower reads as already-healed and the drop silently
+         * never runs. It is a device-side high-water mark, not a changelog — the next one is 8.
          *
          * 7 = the search retries without a trailing star name, so every title the old matcher gave up
          * on ("12 monkeys BRAD PITT") holds a miss that is now wrong.

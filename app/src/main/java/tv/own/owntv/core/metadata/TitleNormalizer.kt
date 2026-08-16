@@ -93,42 +93,20 @@ object TitleNormalizer {
     }
 
     /**
-     * Strip one leading "PROVIDER - " prefix when it looks provider-ish. Only strips if the matched prefix
-     * contains a digit or '+' (e.g. "4K-OSN+", "1080P VIP") or is a single token (e.g. "OSN", "EN") — so a
-     * genuine upper-case multi-word title like "MAD MAX - Fury Road" is preserved.
-     */
-    /**
      * [query] without a trailing run of ALL-CAPS words, or null when there is nothing safe to strip.
      *
-     * Panels append two different things to an item name, and both defeat a TMDB search because
-     * TMDB matches on the title alone:
-     *  - the category label — "EN - Brave (2012) PIXAR" lives in a "PIXAR MOVIES" category;
-     *  - the star's name — "12 monkeys BRAD PITT", "21 Jump Street ICE CUBE".
-     * Measured against the API, "Brave PIXAR" returns 0 results where "Brave" returns 553.
+     * Panels append a category label ("EN - Brave (2012) PIXAR") or the star's name ("12 monkeys
+     * BRAD PITT"), and TMDB matches on the title alone, so both return nothing.
      *
-     * The run is taken **whole**, however long it is. An earlier version capped it at three words and
-     * that was a mistake: a cap does not decline to strip, it strips *part* of the cast list and
-     * leaves the rest welded to the title. Over the reference catalog 1,178 names carry a longer run,
-     * and truncating them produced "A Bronx Tale DE" from "A Bronx Tale ... DE NIRO, CHAZZ
-     * PALMINTERI", "21 Grams SEAN PENN" and "Novecento DE" — each of them worse than not stripping at
-     * all. Taking the run whole touches exactly the same 9,604 names and gets those three right.
+     * Numbers below are from a 194,728-title reference catalog. The run is taken whole rather than
+     * capped: a cap strips *part* of a cast list and welds the rest to the title, which turned
+     * "A Bronx Tale ... DE NIRO, CHAZZ PALMINTERI" into "A Bronx Tale DE". The load-bearing guard is
+     * that the head must contain a lower-case letter — 12,177 titles are written entirely in capitals
+     * and would otherwise be gutted ("A WALK IN THE DARK" → "A"). Runs may not cross "&" or a comma
+     * to reach more capitals: that rescues one case and eats the real title in another.
      *
-     * Two guards, both earned from that catalog:
-     *  - **the head must contain a lower-case letter.** This is the one that matters. 12,177 titles
-     *    in that catalog are written entirely in capitals, and without this guard
-     *    "A WALK IN THE DARK" is stripped down to "A".
-     *  - **no digits, no roman numerals, nothing from the format vocabulary**, so "Rocky II",
-     *    "Transporter 2" and a bare "4K" are never mistaken for a name.
-     *
-     * A run is *not* allowed to cross a "&" or a comma to reach more capitals. That would rescue
-     * "01-Road To Singapore BOB HOPE & BING CROSBY", but it also cuts "Simmer: THE JOB - ES GIBT NUR
-     * EINE REGEL" down to "Simmer:", eating the real title. One clear regression is not worth one
-     * clear win.
-     *
-     * Even guarded this over-reaches sometimes — "AK vs AK" loses its last word — so on its own the
-     * result is only ever a *search retry*, never the title shown. A wrong strip costs one failed
-     * lookup; a right one rescues a title that had no metadata at all. [displayTitle] does show it,
-     * but only with TMDB's match corroborating the removal.
+     * Still over-reaches sometimes ("AK vs AK" loses a word), so on its own this only ever feeds a
+     * search retry. [displayTitle] shows it too, but only with TMDB's match corroborating it.
      */
     fun withoutTrailingTag(query: String): String? {
         val words = query.trim().split(WHITESPACE).filter { it.isNotBlank() }
@@ -146,14 +124,10 @@ object TitleNormalizer {
     /**
      * The provider's name cleaned up for **display**, or the raw name when cleaning would ruin it.
      *
-     * [normalize] exists to build a TMDB query, where over-trimming costs nothing — a shorter query
-     * still finds the film. Shown to a user it has to be held to a higher bar, so this wraps it in a
-     * guard: if what comes back is empty, or no longer starts with a letter or digit, the original
-     * is shown instead.
-     *
-     * Measured over a 194,728-title catalog: cleaning changes 98.9% of names and the guard catches
-     * the 0.23% it would otherwise mangle — "SD/CAM - Disclosure Day (2026) (CAM)" came out as
-     * "/CAM - Disclosure Day" before the guard existed.
+     * [normalize] builds a TMDB query, where over-trimming is free. On screen it is not, hence the
+     * guard: cleaning changes 98.9% of the reference catalog's names and mangles 0.23% of them
+     * ("SD/CAM - Disclosure Day (2026) (CAM)" came out as "/CAM - Disclosure Day"), so a result that
+     * is empty or no longer starts with a letter or digit falls back to the original.
      */
     fun displayTitle(raw: String): String {
         val cleaned = normalize(raw).query
@@ -162,18 +136,13 @@ object TitleNormalizer {
     }
 
     /**
-     * [displayTitle] for a name whose TMDB match is known, which is what lets the trailing star name
-     * go: "EN - 12 Monkeys 4K (1995) BRAD PITT" is shown as "12 Monkeys".
+     * [displayTitle] for a name whose TMDB match is known, which is what lets a trailing star name go:
+     * "EN - 12 Monkeys 4K (1995) BRAD PITT" is shown as "12 Monkeys".
      *
-     * [withoutTrailingTag] alone is too blunt for display — it also cuts "AK vs AK" down to "AK vs".
-     * TMDB's own title settles it, but not by equality: a catalog and TMDB routinely spell the same
-     * film differently ("12 Monkeys" is filed on TMDB as "Twelve Monkeys"), so comparing the kept
-     * half would reject the very case this exists for. The words being *removed* are the reliable
-     * signal instead — drop them only when TMDB's title uses none of them. "BRAD"/"PITT" appear
-     * nowhere in "Twelve Monkeys", so they go; the "AK" in "AK vs AK" and the "K." in "Dossier K."
-     * do appear, so those names are left exactly as the provider wrote them.
-     *
-     * With no match ([tmdbTitle] null) there is no evidence, and the provider's name stands.
+     * The test is on the words being *removed*, not on the half kept: a catalog and TMDB routinely
+     * spell a film differently (TMDB files this one as "Twelve Monkeys"), so an equality check would
+     * reject the very case this exists for. "BRAD"/"PITT" appear nowhere in TMDB's title, so they go;
+     * the "AK" in "AK vs AK" does, so that name is left alone. No match means no evidence.
      */
     fun displayTitle(raw: String, tmdbTitle: String?): String {
         val cleaned = displayTitle(raw)
@@ -188,9 +157,8 @@ object TitleNormalizer {
     private fun String.foldForCompare(): String = trim { !it.isLetterOrDigit() }.lowercase()
 
     /**
-     * Whether a [qualityTags] entry is the kind of marker a box treats as a badge rather than as small
-     * print. Only the premium resolutions qualify: "4K" on a cover is a logo, "WEB-DL" is a footnote,
-     * and "HD" is on so much of the catalog that badging it would badge everything.
+     * Whether a [qualityTags] entry reads as a badge rather than small print. Only premium
+     * resolutions: "HD" is on so much of the catalog that badging it would badge everything.
      */
     fun isHeadlineTag(tag: String): Boolean = tag in HEADLINE_TAGS
 
@@ -199,14 +167,11 @@ object TitleNormalizer {
     /**
      * Quality and source markers pulled out of the provider's name, in display order.
      *
-     * Panels encode these in the title because there is nowhere else to put them
-     * ("4K - A Big Bold Beautiful Journey (2025)"), and [normalize] then throws them away. They are
-     * real information about the file, so this returns them for the UI to show as chips beside the
-     * rating: the title reads clean AND nothing is lost.
+     * Panels encode these in the title ("4K - A Big Bold Beautiful Journey (2025)") and [normalize]
+     * throws them away, so this hands them back for the UI to show as chips beside the rating: the
+     * title reads clean and nothing is lost. 5.9% of the reference catalog carries at least one.
      *
-     * Only the top of the resolution ladder survives — a name carrying both "4K" and "HD" shows 4K
-     * alone — because listing every rung says nothing a viewer can act on. 5.9% of that same catalog
-     * carries at least one marker, 4K being most of them.
+     * Only the top of the resolution ladder survives — a name with both "4K" and "HD" shows 4K alone.
      */
     fun qualityTags(raw: String): List<String> {
         val upper = raw.uppercase()
@@ -234,6 +199,11 @@ object TitleNormalizer {
         "Multi-sub" to "MULTI[- ]?SUBS?|MULTISUB", "Multi-audio" to "MULTI[- ]?AUDIO|DUAL[- ]?AUDIO",
     ).map { (tag, pattern) -> tag to Regex("(?<![A-Z0-9])(?:" + pattern + ")(?![A-Z0-9])") }
 
+    /**
+     * Strip one leading "PROVIDER - " prefix when it looks provider-ish. Only strips if the matched prefix
+     * contains a digit or '+' (e.g. "4K-OSN+", "1080P VIP") or is a single token (e.g. "OSN", "EN") — so a
+     * genuine upper-case multi-word title like "MAD MAX - Fury Road" is preserved.
+     */
     private fun stripDashPrefix(s: String): String {
         val m = DASH_PREFIX.find(s) ?: return s
         val prefix = m.groupValues[1].trim()
