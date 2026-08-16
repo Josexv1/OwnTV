@@ -276,6 +276,7 @@ fun SettingsScreen(
     val updateCheckOnStart by settingsVm.updateCheckOnStart.collectAsStateWithLifecycle()
     val channelNumbers by settingsVm.directTune.collectAsStateWithLifecycle()
     val catchupTz by settingsVm.catchupTimezone.collectAsStateWithLifecycle()
+    val moviesLayout by settingsVm.moviesLayout.collectAsStateWithLifecycle()
     val catchupOffset by settingsVm.catchupOffsetMinutes.collectAsStateWithLifecycle()
     val epgOffset by settingsVm.epgOffsetMinutes.collectAsStateWithLifecycle()
     val catchupChannels by settingsVm.catchupChannelCount.collectAsStateWithLifecycle()
@@ -477,6 +478,24 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_epg_sources), desc = stringResource(R.string.settings_epg_sources_nav_description),
             onClick = { open(SettingsTab.EPG) }, showChevron = true,
             modifier = Modifier.focusRequester(rowFocus.getValue(SettingsTab.EPG)),
+        )
+        // Two values, so the row toggles rather than opening a picker — a dialog to choose between
+        // exactly two presentations is more ceremony than the choice deserves.
+        SettingsRow(
+            tone = TileTone.SECONDARY, icon = OwnTVIcon.MOVIES,
+            title = stringResource(R.string.settings_movies_layout),
+            desc = stringResource(R.string.settings_movies_layout_description),
+            chip = when (moviesLayout) {
+                SettingsRepository.MoviesLayout.CLASSIC -> stringResource(R.string.settings_movies_layout_classic)
+                SettingsRepository.MoviesLayout.CINEMATIC -> stringResource(R.string.settings_movies_layout_cinematic)
+            },
+            chipTone = if (moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = {
+                settingsVm.setMoviesLayout(
+                    if (moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC) SettingsRepository.MoviesLayout.CLASSIC
+                    else SettingsRepository.MoviesLayout.CINEMATIC,
+                )
+            },
         )
         SettingsRow(
             tone = TileTone.SECONDARY, icon = OwnTVIcon.EPG,

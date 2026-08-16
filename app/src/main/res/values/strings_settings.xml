@@ -335,6 +335,14 @@
     <string name="settings_profiles_description">Manage viewers, kids mode &amp; PIN locks</string>
     <!-- Translators: Settings navigation group label for Content settings. -->
     <string name="settings_content_group">Content</string>
+    <!-- Translators: Settings row choosing how the Movies section presents itself. -->
+    <string name="settings_movies_layout">Movies layout</string>
+    <!-- Translators: Description of the Movies layout setting. -->
+    <string name="settings_movies_layout_description">Classic three-panel browse, or a full-screen detail page for each movie</string>
+    <!-- Translators: Value of the Movies layout setting — the original three-panel browse. -->
+    <string name="settings_movies_layout_classic">Classic panels</string>
+    <!-- Translators: Value of the Movies layout setting — the full-bleed detail page. -->
+    <string name="settings_movies_layout_cinematic">Cinematic</string>
     <!-- Translators: Settings navigation label for Playlists management. -->
     <string name="settings_playlists">Playlists</string>
     <!-- Translators: Description of the Playlists settings. 'M3U' and 'Xtream' are protocol names. -->

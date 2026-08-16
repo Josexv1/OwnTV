@@ -134,6 +134,7 @@ fun MoviesScreen(
     val selectedMovie by vm.selectedMovie.collectAsStateWithLifecycle()
     val selectedMovieMeta by vm.selectedMovieMeta.collectAsStateWithLifecycle()
     val metadataMode by vm.metadataMode.collectAsStateWithLifecycle()
+    val moviesLayout by vm.moviesLayout.collectAsStateWithLifecycle()
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     var contextMovie by remember { mutableStateOf<MovieEntity?>(null) }
     // The movie the "Move to category…" flow is moving (issue #87), with the origin captured at
@@ -669,13 +670,35 @@ fun MoviesScreen(
         }
     }
 
-    // Windowed TMDB details popup (§11.1) — read-only, Back exits.
+    // The details view, in whichever presentation the user chose. Both are fed the same
+    // buildMovieDetails() payload, so the two modes can never show different information.
     detailsMovie?.let { m ->
         val cache = selectedMovieMeta?.takeIf { it.movieId == m.id }?.cache
-        MediaDetailsScreen(
-            details = buildMovieDetails(m, cache, metadataMode.tmdbWins),
-            onExit = { detailsMovie = null },
-        )
+        val details = buildMovieDetails(m, cache, metadataMode.tmdbWins)
+        if (moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC) {
+            val resumeMs = selectedProgress?.takeIf { selectedMovie?.id == m.id }?.positionMs?.takeIf { it > 0 }
+            MovieCinematicDetail(
+                details = details,
+                resumeLabel = resumeMs?.let {
+                    stringResource(R.string.content_resume_at, tv.own.owntv.ui.components.formatTimestamp(it))
+                },
+                isFavorite = favoriteIds.contains(m.id),
+                canDownload = downloadStates[m.id] == null,
+                trailerKey = if (metadataMode.enrich) cache?.trailerKey else null,
+                onPlay = { detailsMovie = null; vm.play(m, 0); goFullscreen() },
+                onResume = { detailsMovie = null; vm.play(m, resumeMs ?: 0); goFullscreen() },
+                onToggleFavorite = { vm.toggleFavorite(m) },
+                onDownload = {
+                    detailsMovie = null
+                    if (downloadStates[m.id] != null) toast.show(alreadyDownloadedMessage) else vm.download(m)
+                },
+                onPlayTrailer = { key -> detailsMovie = null; trailerVideoKey = key },
+                onExit = { detailsMovie = null },
+            )
+        } else {
+            // Windowed TMDB details popup (§11.1) — read-only, Back exits.
+            MediaDetailsScreen(details = details, onExit = { detailsMovie = null })
+        }
     }
 
     // "Set TMDB name" override dialog (§11.2 U5b). Prefill once per target (saved override, else cleaned title).

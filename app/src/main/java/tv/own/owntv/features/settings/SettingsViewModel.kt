@@ -319,6 +319,12 @@ class SettingsViewModel(
     val catchupTimezone: StateFlow<SettingsRepository.CatchupTimezone> = settings.catchupTimezone
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.CatchupTimezone.DEVICE)
 
+    /** Classic three-panel Movies browse, or the full-bleed cinematic detail page. */
+    val moviesLayout: StateFlow<SettingsRepository.MoviesLayout> = settings.moviesLayout
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.MoviesLayout.CLASSIC)
+
+    fun setMoviesLayout(mode: SettingsRepository.MoviesLayout) = viewModelScope.launch { settings.setMoviesLayout(mode) }
+
     val catchupOffsetMinutes: StateFlow<Int> = settings.catchupOffsetMinutes
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 

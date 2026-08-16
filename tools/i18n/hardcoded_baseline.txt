@@ -253,6 +253,7 @@
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	dns_host
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	dns_port
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	live_latency_reset_416
+1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	movies_layout_mode
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	sub_bg_opacity
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	sub_color
 1	app/src/main/java/tv/own/owntv/features/settings/data/SettingsRepository.kt	sub_position

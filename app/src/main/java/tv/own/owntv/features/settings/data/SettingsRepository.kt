@@ -214,6 +214,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val SORT_MOVIES = stringPreferencesKey("sort_movies")
         val SORT_SERIES = stringPreferencesKey("sort_series")
         val RESUME_MODE = stringPreferencesKey("resume_mode")
+        val MOVIES_LAYOUT = stringPreferencesKey("movies_layout_mode")
         val UPDATE_CHECK_ON_START = booleanPreferencesKey("update_check_on_start")
         val CATCHUP_TZ = stringPreferencesKey("catchup_timezone")
         val CATCHUP_PLAYER = stringPreferencesKey("catchup_player")
@@ -655,6 +656,25 @@ class SettingsRepository(private val context: Context, private val localeStore: 
 
     suspend fun setResumeMode(mode: ResumeMode) {
         context.dataStore.edit { it[Keys.RESUME_MODE] = mode.name }
+    }
+
+    // --- How Movies presents itself ---
+
+    /**
+     * [CLASSIC] is the three-panel browse (categories | list | preview) this app has always had.
+     * [CINEMATIC] swaps the preview pane for a full-bleed detail page.
+     *
+     * A presentation choice, not a feature flag: both modes show the same content and the same
+     * actions, so switching is safe at any time and nothing is lost either way.
+     */
+    enum class MoviesLayout { CLASSIC, CINEMATIC }
+
+    val moviesLayout: Flow<MoviesLayout> = prefsFlow { prefs ->
+        prefs[Keys.MOVIES_LAYOUT]?.let { runCatching { MoviesLayout.valueOf(it) }.getOrNull() } ?: MoviesLayout.CLASSIC
+    }
+
+    suspend fun setMoviesLayout(mode: MoviesLayout) {
+        context.dataStore.edit { it[Keys.MOVIES_LAYOUT] = mode.name }
     }
 
     // --- Nav menu customization (v4.3.0) ---

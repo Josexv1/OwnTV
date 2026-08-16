@@ -280,6 +280,10 @@ class MovieViewModel(
     val metadataMode: StateFlow<tv.own.owntv.core.metadata.MetadataMode> = settings.metadataMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.metadata.MetadataMode.PROVIDER_PLUS_TMDB)
 
+    /** Classic three-panel browse, or the full-bleed cinematic detail page. */
+    val moviesLayout: StateFlow<SettingsRepository.MoviesLayout> = settings.moviesLayout
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.MoviesLayout.CLASSIC)
+
     // Observable so the player HUD's favorite toggle can reflect/act on the movie being played.
     private val _playingMovie = MutableStateFlow<MovieEntity?>(null)
     val playingMovie: StateFlow<MovieEntity?> = _playingMovie.asStateFlow()
