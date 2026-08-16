@@ -1565,9 +1565,35 @@
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleMatchScorer.kt	\\s+
 11	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?:\\s*(?:e|ep|episode|x)\\s*\\d{1,4})?\\s*$
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?<![A-Z0-9])(?:
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?i)[\\s\\-–—:._]*(?:(?:season|saison|temporada|staffel)\\s*\\d{1,2}|s\\d{1,2})
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?i)\\b(4k|uhd|fhd|hd|sd|hevc|h\\.?265|h\\.?264|x265|x264|hdr10?\\+?|dolby|atmos|
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	)(?![A-Z0-9])
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	10bit|8bit|60fps|50fps|aac|e?ac3|dts|ddp?|[257]\\.1|hdtc|hdcam|camrip)\\b
+2	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	3D
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	4K
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	8K
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	BLU-?RAY|BDRIP|REMUX
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Blu-ray
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	CAM
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	DOLBY\\s*VISION
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Dolby Vision
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	FHD
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	HD
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	HDR
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	HDR10\\+?|HDR
+2	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	HQ
+2	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	IMAX
+2	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	LQ
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	MULTI[- ]?AUDIO|DUAL[- ]?AUDIO
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	MULTI[- ]?SUBS?|MULTISUB
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Multi-audio
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Multi-sub
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	SD
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	SD/CAM|HD/CAM|HDCAM|CAMRIP|CAM|TS
+3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	UHD
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-?DL|WEBRIP
+1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-DL
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[(]?\\b(19\\d{2}|20\\d{2})\\b[\\])]?
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[{(][^\\[\\]{}()]*[\\]})]
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[🇦-🇿]

@@ -985,8 +985,14 @@ private fun buildMovieDetails(
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: movie.plot else movie.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
+    // Display title: TMDB's when a match resolved, otherwise the provider's name cleaned for
+    // display (guarded — see TitleNormalizer.displayTitle). The cleaned provider name wins in
+    // provider-first mode so localized titles a viewer recognises survive ("17 otra vez").
+    val cleanedName = tv.own.owntv.core.metadata.TitleNormalizer.displayTitle(movie.name)
+    val tmdbTitle = meta?.title?.takeIf { it.isNotBlank() }
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
-        title = movie.name,
+        title = if (tmdbWins) tmdbTitle ?: cleanedName else cleanedName,
+        qualityTags = tv.own.owntv.core.metadata.TitleNormalizer.qualityTags(movie.name),
         backdropUrl = backdrop,
         posterUrl = poster,
         metaLine = metaLine(movie, meta, tmdbWins),

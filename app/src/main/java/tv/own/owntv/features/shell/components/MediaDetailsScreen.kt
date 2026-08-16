@@ -69,6 +69,11 @@ data class MediaDetailsUi(
     val genres: List<String> = emptyList(),
     val plot: String? = null,
     val cast: List<tv.own.owntv.core.metadata.CastMember> = emptyList(),
+    /**
+     * Quality/source markers the provider encoded in the item name ("4K", "CAM", "Multi-sub").
+     * Shown as chips beside the rating: the title reads clean and the information is not lost.
+     */
+    val qualityTags: List<String> = emptyList(),
 )
 
 /**

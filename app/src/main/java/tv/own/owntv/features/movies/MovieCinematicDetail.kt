@@ -142,9 +142,26 @@ fun MovieCinematicDetail(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (details.metaLine.isNotBlank()) {
+                if (details.metaLine.isNotBlank() || details.qualityTags.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    Text(details.metaLine, style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        if (details.metaLine.isNotBlank()) {
+                            Text(details.metaLine, style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+                        }
+                        // Quality/source markers lifted out of the provider's name. They sit with the
+                        // rating rather than in the title, which is what lets the title read clean
+                        // without throwing the information away.
+                        details.qualityTags.forEach { tag ->
+                            Box(
+                                Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White.copy(alpha = 0.18f))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                            ) {
+                                Text(tag, style = MaterialTheme.typography.labelSmall, color = colors.onSurface)
+                            }
+                        }
+                    }
                 }
                 if (details.genres.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
