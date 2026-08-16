@@ -27,11 +27,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -124,6 +126,7 @@ fun MoviesScreen(
     val alreadyDownloadedMessage = stringResource(R.string.content_already_downloaded)
     val refetchingTmdbMessage = stringResource(R.string.content_refetching_tmdb)
     val researchingTmdbMessage = stringResource(R.string.content_researching_tmdb)
+    val notInLibraryMessage = stringResource(R.string.content_not_in_library)
     val railItems by vm.railItems.collectAsStateWithLifecycle()
     val selectedKey by vm.selectedKey.collectAsStateWithLifecycle()
     val count by vm.count.collectAsStateWithLifecycle()
@@ -135,6 +138,7 @@ fun MoviesScreen(
     val selectedMovieMeta by vm.selectedMovieMeta.collectAsStateWithLifecycle()
     val metadataMode by vm.metadataMode.collectAsStateWithLifecycle()
     val moviesLayout by vm.moviesLayout.collectAsStateWithLifecycle()
+    val similarRail by vm.similarRail.collectAsStateWithLifecycle()
     // Cinematic has no preview pane: the detail page IS the preview, so the pane would be a second
     // copy of the same information taking a third of the screen. Dropping it gives the list the
     // full width, which is the other half of what the mode is for.
@@ -693,6 +697,20 @@ fun MoviesScreen(
         val details = buildMovieDetails(m, cache, metadataMode.tmdbWins)
         if (moviesLayout == SettingsRepository.MoviesLayout.CINEMATIC) {
             val resumeMs = selectedProgress?.takeIf { selectedMovie?.id == m.id }?.positionMs?.takeIf { it > 0 }
+            // Only ever pointed at a real id, never at null. `cache` is null both before the lookup
+            // resolves and for a frame or two whenever selectedMovieMeta re-emits, and clearing on
+            // that made the rail vanish mid-browse — which then silently put the D-pad back on the
+            // action row, where the next OK was Download and the page closed. The rail is emptied
+            // when the page itself goes away, below.
+            LaunchedEffect(m.id, cache?.tmdbId) {
+                cache?.tmdbId?.takeIf { it > 0 }?.let { vm.openSimilarRail(it) }
+            }
+            DisposableEffect(Unit) { onDispose { vm.openSimilarRail(null) } }
+            // Keyed by the film, so picking one from the rail builds a fresh page rather than
+            // recomposing this one. Without it the rail keeps focus across the swap — it is still
+            // the same node — and the new film opens with the D-pad inside the previous film's
+            // suggestions. A remount runs the same first-open path that already puts focus on Play.
+            key(m.id) {
             MovieCinematicDetail(
                 details = details,
                 resumeLabel = resumeMs?.let {
@@ -701,6 +719,21 @@ fun MoviesScreen(
                 isFavorite = favoriteIds.contains(m.id),
                 canDownload = downloadStates[m.id] == null,
                 trailerKey = if (metadataMode.enrich) cache?.trailerKey else null,
+                similar = similarRail,
+                onNeedMoreSimilar = { vm.loadMoreSimilar() },
+                onSimilarClick = { item ->
+                    scope.launch {
+                        val found = vm.findInLibrary(item.title)
+                        if (found != null) {
+                            // Re-point the page at the picked film. onMovieFocused keeps the metadata
+                            // pane, resume position and favourite state in step with what is shown.
+                            vm.onMovieFocused(found)
+                            detailsMovie = found
+                        } else {
+                            toast.show(notInLibraryMessage)
+                        }
+                    }
+                },
                 onPlay = { detailsMovie = null; vm.play(m, 0); goFullscreen() },
                 onResume = { detailsMovie = null; vm.play(m, resumeMs ?: 0); goFullscreen() },
                 onToggleFavorite = { vm.toggleFavorite(m) },
@@ -708,9 +741,10 @@ fun MoviesScreen(
                     detailsMovie = null
                     if (downloadStates[m.id] != null) toast.show(alreadyDownloadedMessage) else vm.download(m)
                 },
-                onPlayTrailer = { key -> detailsMovie = null; trailerVideoKey = key },
+                onPlayTrailer = { videoKey -> detailsMovie = null; trailerVideoKey = videoKey },
                 onExit = { detailsMovie = null },
             )
+            }
         } else {
             // Windowed TMDB details popup (§11.1) — read-only, Back exits.
             MediaDetailsScreen(details = details, onExit = { detailsMovie = null })

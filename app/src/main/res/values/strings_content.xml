@@ -193,6 +193,8 @@
     <string name="content_reorder_series">Reorder series</string>
     <!-- Translators: Notification when a download already exists. Directs to the Downloads menu. -->
     <string name="content_already_downloaded">Already downloaded \u2014 check the Downloads menu.</string>
+    <!-- Translators: Shown when a suggested title is not carried by any of the user's playlists. -->
+    <string name="content_not_in_library">Not in your playlists.</string>
     <!-- Translators: Loading status shown while re-fetching TMDB metadata. "TMDB" is a brand name. -->
     <string name="content_refetching_tmdb">Refetching TMDB details\u2026</string>
     <!-- Translators: Loading status shown while re-searching TMDB for a title. -->

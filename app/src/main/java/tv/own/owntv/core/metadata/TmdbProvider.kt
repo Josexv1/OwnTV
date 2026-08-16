@@ -144,6 +144,30 @@ class TmdbProvider(
         return parseResults(type, json)
     }
 
+    override suspend fun similarMovies(tmdbId: Int, source: SimilarSource, page: Int): SimilarPage? {
+        if (tmdbId <= 0 || page <= 0) return null
+        val ep = resolveEndpoint()
+        val path = when (source) {
+            SimilarSource.RECOMMENDATIONS -> "recommendations"
+            SimilarSource.SIMILAR -> "similar"
+        }
+        val url = buildString {
+            append(ep.baseUrl).append("/3/movie/").append(tmdbId).append('/').append(path)
+            append("?page=").append(page)
+            append(ep.langParam())
+            ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+        }
+        val json = fetch(ep, url, "$path id=$tmdbId page=$page") ?: return null
+        return runCatching {
+            val root = JSONObject(json)
+            SimilarPage(
+                page = root.optInt("page", page),
+                totalPages = root.optInt("total_pages", 1),
+                results = parseResults(MetadataType.MOVIE, json),
+            )
+        }.onFailure { Log.w(TAG, "TMDB $path parse failed id=$tmdbId page=$page: ${it.message}") }.getOrNull()
+    }
+
     override suspend fun movieDetails(tmdbId: Int): MovieDetails? {
         if (tmdbId <= 0) return null
         val ep = resolveEndpoint()

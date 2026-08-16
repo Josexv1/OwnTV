@@ -14,6 +14,7 @@ import androidx.paging.filter
 import androidx.paging.map
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.customize.CustomizationStore
@@ -401,6 +403,114 @@ class MovieViewModel(
     fun select(key: LiveKey) { _selected.value = key }
     fun setSearchQuery(query: String) { _search.value = query }
     fun onMovieFocused(movie: MovieEntity) { _selectedMovie.value = movie }
+
+    // ---- "More like this" rail on the cinematic detail page (phase 2) ----
+
+    /** One poster in the rail. Title is carried for the library lookup on click, never rendered. */
+    data class SimilarItem(val tmdbId: Int, val title: String, val posterUrl: String)
+
+    /** [exhausted] means both TMDB lists are spent — the rail stops asking rather than looping. */
+    data class SimilarRail(
+        val forTmdbId: Int? = null,
+        val items: List<SimilarItem> = emptyList(),
+        val loading: Boolean = false,
+        val exhausted: Boolean = false,
+    )
+
+    private val _similarRail = MutableStateFlow(SimilarRail())
+    val similarRail: StateFlow<SimilarRail> = _similarRail.asStateFlow()
+
+    private var similarJob: Job? = null
+    private var similarSource = tv.own.owntv.core.metadata.SimilarSource.RECOMMENDATIONS
+    private var similarPage = 0
+    private var similarTotalPages = 1
+    private val similarSeen = HashSet<Int>()
+
+    /** Point the rail at a resolved TMDB id (null clears it) and load the first page. */
+    fun openSimilarRail(tmdbId: Int?) {
+        if (_similarRail.value.forTmdbId == tmdbId) return
+        similarJob?.cancel()
+        similarSource = tv.own.owntv.core.metadata.SimilarSource.RECOMMENDATIONS
+        similarPage = 0
+        similarTotalPages = 1
+        similarSeen.clear()
+        // The film being looked at is its own most "similar" result on TMDB often enough to matter.
+        tmdbId?.let { similarSeen.add(it) }
+        _similarRail.value = SimilarRail(forTmdbId = tmdbId)
+        if (tmdbId != null) loadMoreSimilar()
+    }
+
+    /**
+     * Append the next page. Safe to call repeatedly from a scroll listener: it no-ops while a load is
+     * in flight and once both lists are spent.
+     */
+    fun loadMoreSimilar() {
+        val id = _similarRail.value.forTmdbId ?: return
+        if (_similarRail.value.loading || _similarRail.value.exhausted) return
+        _similarRail.update { it.copy(loading = true) }
+        similarJob = viewModelScope.launch {
+            var attempts = 0
+            // Keep going until this call actually adds a poster. A page can contribute nothing —
+            // every row already shown, or every row without artwork — and returning empty-handed
+            // would stall the rail at exactly the point the user is scrolling toward.
+            while (attempts++ < MAX_SIMILAR_FETCHES) {
+                if (similarPage >= similarTotalPages) {
+                    if (similarSource == tv.own.owntv.core.metadata.SimilarSource.RECOMMENDATIONS) {
+                        similarSource = tv.own.owntv.core.metadata.SimilarSource.SIMILAR
+                        similarPage = 0
+                        similarTotalPages = 1
+                    } else {
+                        _similarRail.update { it.copy(loading = false, exhausted = true) }
+                        return@launch
+                    }
+                }
+                val page = runCatching { metadata.similarMovies(id, similarSource, similarPage + 1) }.getOrNull()
+                if (page == null) {
+                    // Transport failure or enrichment off. Leave `exhausted` false so a later scroll
+                    // retries instead of the rail going permanently dead on one dropped request.
+                    _similarRail.update { it.copy(loading = false) }
+                    return@launch
+                }
+                similarPage = page.page
+                similarTotalPages = page.totalPages
+                // Posters only, so a result with no artwork is not a row this rail can render.
+                val fresh = page.results
+                    .filter { similarSeen.add(it.tmdbId) }
+                    .mapNotNull { r ->
+                        tv.own.owntv.core.metadata.MetadataImages.poster(r.posterPath)
+                            ?.let { SimilarItem(tmdbId = r.tmdbId, title = r.title, posterUrl = it) }
+                    }
+                if (fresh.isNotEmpty()) {
+                    _similarRail.update { it.copy(items = it.items + fresh, loading = false) }
+                    return@launch
+                }
+            }
+            _similarRail.update { it.copy(loading = false) }
+        }
+    }
+
+    /**
+     * The library row for a rail poster, or null when no playlist carries that film.
+     *
+     * FTS with prefix terms, not the substring LIKE: the latter scans all ~170k rows and this runs on
+     * a D-pad click. Candidates are then re-checked against the cleaned catalog name, because an FTS
+     * prefix match on "Alien" also returns "Aliens" and "Alien vs Predator".
+     */
+    suspend fun findInLibrary(title: String): MovieEntity? {
+        val terms = title.split(Regex("""\s+"""))
+            .map { token -> token.filter(Char::isLetterOrDigit) }
+            .filter { it.isNotBlank() }
+        if (terms.isEmpty()) return null
+        val ftsQuery = terms.joinToString(" ") { "$it*" }
+        val c = ctx.value
+        if (c.sourceIds.isEmpty()) return null
+        val rows = runCatching { movieDao.searchListFts(ftsQuery, c.sourceIds, LIBRARY_LOOKUP_LIMIT) }
+            .getOrDefault(emptyList())
+        val wanted = title.trim().lowercase()
+        return rows.firstOrNull {
+            tv.own.owntv.core.metadata.TitleNormalizer.displayTitle(it.name).trim().lowercase() == wanted
+        } ?: rows.firstOrNull()
+    }
 
     /**
      * Manual "Refetch TMDB details" (plan §11.2 U5a): clear this movie's cached match/details (incl. a 7-day
@@ -854,6 +964,13 @@ class MovieViewModel(
 
     private companion object {
         const val TAG = "OwnTVHome"
+
+        /** Pages one call to the rail may walk before giving up, so a run of all-duplicate pages ends. */
+        const val MAX_SIMILAR_FETCHES = 4
+
+        /** Rows an FTS lookup may return before the exact-title re-check picks one. */
+        const val LIBRARY_LOOKUP_LIMIT = 25
+
         val defaultRail = listOf(
             LiveRailItem(LiveKey.Favorites, icon = OwnTVIcon.FAVORITE),
             LiveRailItem(LiveKey.History, icon = OwnTVIcon.HISTORY),

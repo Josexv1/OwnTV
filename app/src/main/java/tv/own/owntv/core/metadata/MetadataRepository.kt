@@ -39,6 +39,20 @@ class MetadataRepository(
      * Resolve TMDB metadata for a movie. Returns the cached row (fresh or freshly fetched), or null when
      * enrichment is off, no confident match exists, or the network failed. Cheap on repeat calls.
      */
+    /**
+     * One page of "more like this" for an already-resolved movie, or null when enrichment is off or
+     * the call fails.
+     *
+     * Deliberately not cached in Room. Every other TMDB read here backs a screen that is opened over
+     * and over for the same title, which is what makes a cache table worth its migration; this one
+     * backs a rail that is browsed once and left, and TMDB's own responses are already edge-cached by
+     * the Worker. The rail keeps its pages in memory for as long as it is open.
+     */
+    suspend fun similarMovies(tmdbId: Int, source: SimilarSource, page: Int): SimilarPage? {
+        if (!settings.metadataConfig().enabled) return null
+        return provider.similarMovies(tmdbId, source, page)
+    }
+
     suspend fun resolveMovie(movie: MovieEntity): MetadataCacheEntity? {
         if (!settings.metadataConfig().enabled) return null
         healNegativeMatchesOnce()

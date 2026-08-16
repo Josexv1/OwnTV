@@ -192,8 +192,33 @@ data class EpisodeDetails(
     val rating: Double?,
 )
 
+/**
+ * Which "more like this" list a page came from.
+ *
+ * TMDB exposes two and they are not interchangeable. `recommendations` is derived from what people
+ * actually watched together and reads far better, but it thins out fast and is empty for obscure
+ * titles; `similar` is keyword/genre derived, weaker, and almost always has something. The rail walks
+ * the good list first and only falls through to the weaker one when the good one runs out — which is
+ * what lets it keep scrolling instead of stopping after twenty posters.
+ */
+enum class SimilarSource { RECOMMENDATIONS, SIMILAR }
+
+/** One page of a "more like this" list (20 rows on TMDB). */
+data class SimilarPage(
+    val page: Int,
+    val totalPages: Int,
+    val results: List<MetadataSearchResult>,
+)
+
 /** Enrichment source abstraction. Only [TmdbProvider] exists today; fanart.tv could be added later. */
 interface MetadataProvider {
+
+    /**
+     * One page of [source] for a resolved movie id. Pages are one-based.
+     * Same null-vs-empty contract as [searchMovie]: null is a transport failure, an empty
+     * [SimilarPage.results] is TMDB saying it has nothing.
+     */
+    suspend fun similarMovies(tmdbId: Int, source: SimilarSource, page: Int): SimilarPage?
 
     /**
      * One page of the current daily Trending feed for [type] (MOVIE or TV), or null when

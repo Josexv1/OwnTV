@@ -1571,8 +1571,8 @@
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	)(?![A-Z0-9])
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	10bit|8bit|60fps|50fps|aac|e?ac3|dts|ddp?|[257]\\.1|hdtc|hdcam|camrip)\\b
 2	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	3D
-3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	4K
-3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	8K
+4	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	4K
+4	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	8K
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	BLU-?RAY|BDRIP|REMUX
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Blu-ray
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	CAM
@@ -1591,7 +1591,7 @@
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	Multi-sub
 3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	SD
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	SD/CAM|HD/CAM|HDCAM|CAMRIP|CAM|TS
-3	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	UHD
+4	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	UHD
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-?DL|WEBRIP
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	WEB-DL
 1	regex	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[IVXLCDM]+
@@ -1609,15 +1609,16 @@
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	vostfr|vost|vf|subbed|dubbed|dublado|legendado|castellano|truefrench|hdlight|
 3	empty	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	$base,en,null
+1	log	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	$path id=$tmdbId page=$page
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&
-4	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&api_key=
+5	uri	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&api_key=
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&first_air_date_year=$year
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_adult=false
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_image_language=
 2	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&language=
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&year=$year
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	.svg
-1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/3/movie/
+2	uri	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/3/movie/
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/3/search/movie
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/3/search/tv
 1	url	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/3/trending/
@@ -1627,8 +1628,9 @@
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	/season/
 4	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	?
 2	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	?append_to_response=credits,external_ids,videos,images
-1	url	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	?page=
+2	uri	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	?page=
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	?query=
+1	log	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	TMDB $path parse failed id=$tmdbId page=$page: ${it.message}
 1	log	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	TMDB Trending parse failed type=$type page=$page
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	Teaser
 1	log	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	TmdbProvider
@@ -1664,13 +1666,17 @@
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	original_name
 1	technical	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	original_title
 4	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	overview
+1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	page
 1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	popularity
 3	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	poster_path
+1	uri	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	recommendations
 2	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	release_date
 2	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	results
+1	uri	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	similar
 1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	site
 1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	still_path
 2	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	title
+1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	total_pages
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	tv
 1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	type
 1	json	app/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	videos
@@ -2884,11 +2890,15 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tuneByNumber: zap rebuild failed
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	user chose compatibility mode
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieCinematicDetail.kt	\0
-2	empty	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieCinematicDetail.kt	similarRailHeight
+1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieCinematicDetail.kt	similarRailPoster
+3	empty	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	\0
+1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	$it*
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	${StorageAccess.sanitize(movie.name)}.${movie.containerExt ?: StorageAccess.extOf(movie.streamUrl)}
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	MOVIE
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	Movies
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	OwnTVHome
+1	regex	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	\\s+
 2	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	external play history record failed movieId=${movie.id} profile=$pid
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	play history record failed movieId=${movie.id} profile=$pid
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	play movieId=${movie.id} -> external player
