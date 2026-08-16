@@ -181,7 +181,12 @@ fun MoviesScreen(
 
     val selectedIndex = railItems.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0)
     val selectedItem = railItems.getOrNull(selectedIndex)
-    val selectedLabel = selectedItem?.displayLabel(R.string.content_category_all_movies) ?: stringResource(R.string.content_category_all_movies)
+    // Cleaned once, here, rather than at each place it is shown: the heading and the search
+    // placeholder are the same name and must not be able to drift into showing it two ways.
+    val selectedLabel = categoryHeading(
+        selectedItem?.displayLabel(R.string.content_category_all_movies)
+            ?: stringResource(R.string.content_category_all_movies),
+    )
 
     // Resume flow: AUTO continues silently, ASK prompts (≥10s saved), NEVER starts from zero.
     val scope = rememberCoroutineScope()
@@ -439,7 +444,7 @@ fun MoviesScreen(
             // twice, plus a section word the sidebar already highlights, on the screen with the
             // least room to spare.
             Text(
-                categoryHeading(selectedLabel),
+                selectedLabel,
                 style = MaterialTheme.typography.headlineLarge,
                 color = OwnTVTheme.colors.onSurface,
                 maxLines = 1,
