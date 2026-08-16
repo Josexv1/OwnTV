@@ -988,8 +988,11 @@ private fun buildMovieDetails(
     // Display title: TMDB's when a match resolved, otherwise the provider's name cleaned for
     // display (guarded — see TitleNormalizer.displayTitle). The cleaned provider name wins in
     // provider-first mode so localized titles a viewer recognises survive ("17 otra vez").
-    val cleanedName = tv.own.owntv.core.metadata.TitleNormalizer.displayTitle(movie.name)
     val tmdbTitle = meta?.title?.takeIf { it.isNotBlank() }
+    // Provider-first mode keeps the provider's own name so localized titles a viewer recognises
+    // survive ("17 otra vez"), minus a trailing star name the match itself disproves — see
+    // TitleNormalizer.displayTitle(raw, tmdbTitle).
+    val cleanedName = tv.own.owntv.core.metadata.TitleNormalizer.displayTitle(movie.name, tmdbTitle)
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
         title = if (tmdbWins) tmdbTitle ?: cleanedName else cleanedName,
         qualityTags = tv.own.owntv.core.metadata.TitleNormalizer.qualityTags(movie.name),

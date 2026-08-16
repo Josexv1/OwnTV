@@ -154,6 +154,32 @@ object TitleNormalizer {
     }
 
     /**
+     * [displayTitle] for a name whose TMDB match is known, which is what lets the trailing star name
+     * go: "EN - 12 Monkeys 4K (1995) BRAD PITT" is shown as "12 Monkeys".
+     *
+     * [withoutTrailingTag] alone is too blunt for display — it also cuts "AK vs AK" down to "AK vs".
+     * TMDB's own title settles it, but not by equality: a catalog and TMDB routinely spell the same
+     * film differently ("12 Monkeys" is filed on TMDB as "Twelve Monkeys"), so comparing the kept
+     * half would reject the very case this exists for. The words being *removed* are the reliable
+     * signal instead — drop them only when TMDB's title uses none of them. "BRAD"/"PITT" appear
+     * nowhere in "Twelve Monkeys", so they go; the "AK" in "AK vs AK" and the "K." in "Dossier K."
+     * do appear, so those names are left exactly as the provider wrote them.
+     *
+     * With no match ([tmdbTitle] null) there is no evidence, and the provider's name stands.
+     */
+    fun displayTitle(raw: String, tmdbTitle: String?): String {
+        val cleaned = displayTitle(raw)
+        if (tmdbTitle.isNullOrBlank()) return cleaned
+        val head = withoutTrailingTag(cleaned) ?: return cleaned
+        val tmdbWords = tmdbTitle.split(WHITESPACE).mapTo(mutableSetOf()) { it.foldForCompare() }
+        val dropped = cleaned.removePrefix(head).split(WHITESPACE).filter { it.isNotBlank() }
+        return if (dropped.any { it.foldForCompare() in tmdbWords }) cleaned else head
+    }
+
+    /** Lower-cased and stripped of edge punctuation, so "K." and "K" compare equal. */
+    private fun String.foldForCompare(): String = trim { !it.isLetterOrDigit() }.lowercase()
+
+    /**
      * Quality and source markers pulled out of the provider's name, in display order.
      *
      * Panels encode these in the title because there is nowhere else to put them

@@ -83,4 +83,31 @@ class TitleNormalizerTest {
         assertEquals(null, TitleNormalizer.withoutTrailingTag("Transporter 2"))
     }
 
+    @Test
+    fun displayTitleDropsAStarNameTheTmdbMatchDisproves() {
+        // The case this exists for. Note TMDB files the film as "Twelve Monkeys" while the catalog
+        // writes "12 Monkeys": comparing the kept half would reject it, so only the removed words
+        // are tested — neither "BRAD" nor "PITT" appears in TMDB's title.
+        assertEquals(
+            "12 Monkeys",
+            TitleNormalizer.displayTitle("EN - 12 Monkeys 4K (1995) BRAD PITT", "Twelve Monkeys"),
+        )
+        assertEquals(
+            "21 Jump Street",
+            TitleNormalizer.displayTitle("EN - 21 Jump Street (2012) ICE CUBE", "21 Jump Street"),
+        )
+
+        // A trailing capital that really is part of the title appears in TMDB's title too, so it stays.
+        assertEquals("AK vs AK", TitleNormalizer.displayTitle("AK vs AK", "AK vs AK"))
+        // A single letter never reads as a star name, so the length guard keeps it before TMDB is
+        // consulted at all. (The trailing period is dropped by normalize(), as it always has been.)
+        assertEquals("Dossier K", TitleNormalizer.displayTitle("Dossier K.", "Dossier K."))
+
+        // No match, no evidence: the provider's name stands, star name and all.
+        assertEquals("12 Monkeys BRAD PITT", TitleNormalizer.displayTitle("EN - 12 Monkeys 4K (1995) BRAD PITT", null))
+
+        // A localized name TMDB spells differently is not a star name — nothing to remove, nothing lost.
+        assertEquals("17 otra vez", TitleNormalizer.displayTitle("ES - 17 otra vez (2009)", "17 Again"))
+    }
+
 }
