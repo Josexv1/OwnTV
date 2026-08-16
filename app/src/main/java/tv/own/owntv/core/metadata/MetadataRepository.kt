@@ -75,7 +75,23 @@ class MetadataRepository(
 
         // An override is the user telling us the exact name → trust TMDB's top relevance hit directly
         // (no fuzzy threshold) so a hand-typed title isn't rejected over punctuation/formatting differences.
-        val best: Scored? = if (q.isOverride) hits.firstOrNull()?.let { Scored(it, 1.0) } else pickBest(q.query, q.year, hits)
+        var best: Scored? = if (q.isOverride) hits.firstOrNull()?.let { Scored(it, 1.0) } else pickBest(q.query, q.year, hits)
+
+        // Retry once without a trailing ALL-CAPS provider tag. Some panels append the category label
+        // to the item name — "EN - Brave (2012) PIXAR" sits in a "PIXAR MOVIES" category — and the tag
+        // survives normalization because it looks like an ordinary trailing word. TMDB matches on the
+        // title alone, so the query returns nothing at all: measured against the API, "Brave PIXAR"
+        // gives 0 results where "Brave" gives 553. Every title in such a category ends up with no
+        // metadata, and the negative cache then suppresses it for a week.
+        if (best == null && !q.isOverride) {
+            untaggedQuery(q.query)?.let { retry ->
+                runCatching { provider.searchMovie(retry, q.year) }
+                    .onFailure { Log.w(TAG, "resolveMovie tag-stripped retry failed: ${it.message}") }
+                    .getOrNull()
+                    ?.let { best = pickBest(retry, q.year, it) }
+            }
+        }
+
         if (best == null) {
             // Negative cache: remember "searched, no confident match" so we don't re-hammer on scroll.
             dao.upsertMatch(MetadataMatchEntity(localKey, TYPE_MOVIE, tmdbId = null, confidence = 0.0, updatedAt = now))
@@ -438,6 +454,23 @@ class MetadataRepository(
     }
 
     /** Best confident match, or null (plan §12: "no art beats wrong art"). */
+    /**
+     * [query] without a trailing ALL-CAPS word, or null when there is nothing safe to strip.
+     *
+     * Two guards, both load-bearing. The tag must be ALL-CAPS, because a lower-case trailing word
+     * belongs to the title far more often than not ("Saving Grace" must not become "Saving"). And
+     * something must be left over, which is what stops a genuinely all-caps one-word title — "UP",
+     * "WALL-E" — from being stripped to nothing. Digits disqualify it too, so a trailing year or
+     * part number is left to the existing handling.
+     */
+    private fun untaggedQuery(query: String): String? {
+        val words = query.trim().split(Regex("""\s+""")).filter { it.isNotBlank() }
+        if (words.size < 2) return null
+        val last = words.last()
+        if (last.length < 2 || last != last.uppercase() || last.any { it.isDigit() }) return null
+        return words.dropLast(1).joinToString(" ").takeIf { it.length >= 2 }
+    }
+
     private fun pickBest(query: String, year: Int?, hits: List<MetadataSearchResult>): Scored? {
         if (hits.isEmpty()) return null
         return hits.asSequence()

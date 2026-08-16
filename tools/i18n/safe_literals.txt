@@ -1546,16 +1546,19 @@
 5	empty	app/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	\0
 1	locale	app/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	$lang-${l.country}
 1	locale	app/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	auto
+4	technical	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:$tmdbId
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:${movie.sourceId}:${movie.remoteId ?: movie.name}
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$tmdbId
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$tvId:s${season}e$episode
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:${series.sourceId}:${series.remoteId ?: series.name}
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	MetadataRepository
+1	regex	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	\\s+
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	episode
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	movie
 1	log	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	negative-match heal failed: ${it.message}
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	resolveMovie search failed: ${it.message}
+1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	resolveMovie tag-stripped retry failed: ${it.message}
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	resolveSeries search failed: ${it.message}
 1	protocol	app/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	tv
 1	preference-key	app/src/main/java/tv/own/owntv/core/metadata/OwnTVClientId.kt	client_id
