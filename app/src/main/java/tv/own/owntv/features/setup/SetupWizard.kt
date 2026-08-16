@@ -583,7 +583,7 @@ private fun ImportProgressScreen(
                 state.restoredItems?.let { items ->
                     Text(pluralStringResource(R.plurals.setup_restored_items, items, items), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 560.dp))
                 }
-                state.passwordsOmitted.takeIf { it }?.let {
+                state.fileUnencrypted.takeIf { it }?.let {
                     Text(stringResource(R.string.setup_passwords_omitted), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
                 }
                 state.skippedSources.takeIf { it > 0 }?.let { skipped ->

@@ -165,7 +165,7 @@ fun BackupScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             }
             is BackupViewModel.State.Done -> when (s.kind) {
                 DoneKind.EXPORTED -> Text(
-                    if (s.passwordsOmitted) {
+                    if (s.fileUnencrypted) {
                         stringResource(R.string.settings_backup_saved_to_without_passwords, s.path.orEmpty())
                     } else {
                         stringResource(R.string.settings_backup_saved_to, s.path.orEmpty())
@@ -175,7 +175,7 @@ fun BackupScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 DoneKind.RESTORED -> Column {
                     Text(pluralStringResource(R.plurals.settings_backup_restored, s.items, s.items), style = MaterialTheme.typography.bodyLarge, color = colors.primary)
                     Text(stringResource(R.string.settings_backup_restore_resync), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                    if (s.passwordsOmitted) {
+                    if (s.fileUnencrypted) {
                         Text(stringResource(R.string.settings_backup_restore_password_note), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                     }
                     if (s.skippedSources > 0) {

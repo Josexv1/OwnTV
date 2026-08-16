@@ -121,7 +121,7 @@ class SetupViewModel(
             val warnings: List<SyncWarning> = emptyList(),
             val remainder: SyncContentTypes = SyncContentTypes(false, false, false),
             val restoredItems: Int? = null,
-            val passwordsOmitted: Boolean = false,
+            val fileUnencrypted: Boolean = false,
             val skippedSources: Int = 0,
             val invalidLocale: Boolean = false,
         ) : ImportState
@@ -445,7 +445,7 @@ class SetupViewModel(
             onSuccess = { summary ->
                 _state.value = ImportState.Success(
                     restoredItems = summary.items,
-                    passwordsOmitted = password.isNullOrBlank(),
+                    fileUnencrypted = password.isNullOrBlank(),
                     skippedSources = summary.skippedSources,
                     invalidLocale = summary.invalidLocale,
                 )

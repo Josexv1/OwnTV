@@ -86,7 +86,7 @@ class BackupViewModel(
             val kind: DoneKind,
             val path: String? = null,
             val items: Int = 0,
-            val passwordsOmitted: Boolean = false,
+            val fileUnencrypted: Boolean = false,
             val skippedSources: Int = 0,
             val invalidLocale: Boolean = false,
         ) : State
@@ -121,7 +121,7 @@ class BackupViewModel(
             _state.value = State.Working
             backup.export(folder, sections, backupPassword, profileIds).fold(
                 onSuccess = {
-                    _state.value = State.Done(DoneKind.EXPORTED, path = it, passwordsOmitted = backupPassword.isNullOrBlank())
+                    _state.value = State.Done(DoneKind.EXPORTED, path = it, fileUnencrypted = backupPassword.isNullOrBlank())
                 },
                 onFailure = { _state.value = State.Error(BackupError.EXPORT) },
             )
@@ -174,7 +174,7 @@ class BackupViewModel(
                     _state.value = State.Done(
                         DoneKind.RESTORED,
                         items = summary.items,
-                        passwordsOmitted = backupPassword.isNullOrBlank(),
+                        fileUnencrypted = backupPassword.isNullOrBlank(),
                         skippedSources = summary.skippedSources,
                         invalidLocale = summary.invalidLocale,
                     )
