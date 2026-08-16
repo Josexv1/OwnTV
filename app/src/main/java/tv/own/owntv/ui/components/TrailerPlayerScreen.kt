@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -26,6 +28,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +42,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -53,11 +57,16 @@ import tv.own.owntv.R
 import tv.own.owntv.ui.theme.OwnTVTheme
 
 /**
- * In-app YouTube trailer player (plan §7.3 / U4): a fullscreen WebView-backed IFrame player
- * (`android-youtube-player`) under a minimal Compose overlay — just an **Exit** button and a
- * **progress seekbar** (non-navigable for now; display-only, driven by the player's
- * currentSecond/duration callbacks). Focus stays entirely in the Compose overlay; the WebView is
+ * In-app YouTube trailer player (plan §7.3 / U4): a WebView-backed IFrame player
+ * (`android-youtube-player`) under a Compose overlay carrying the four controls a trailer needs —
+ * back 5s, play/pause, forward 5s, exit — plus a progress bar driven by the player's
+ * currentSecond/duration callbacks. Focus stays entirely in the Compose overlay; the WebView is
  * treated as a pure video surface, which sidesteps the classic "iframe steals D-pad focus" problem.
+ *
+ * The transport used to be a key handler on a single Exit button: Left/Right seeked and there was no
+ * way to pause at all. Buttons instead, because on a 10-foot screen a control you cannot see is a
+ * control that does not exist — and Left/Right can then do the obvious thing and move between them.
+ * The remote's own media keys still work as a shortcut.
  *
  * Graceful fallback (required by the plan): if the WebView is missing/ancient or the video errors,
  * we hand off to an external "Open in YouTube" intent and exit — the button always does *something*.
@@ -70,11 +79,34 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
     var currentSec by remember { mutableFloatStateOf(0f) }
     var durationSec by remember { mutableFloatStateOf(0f) }
     var failed by remember { mutableStateOf(false) }
+    var playing by remember { mutableStateOf(true) }
     var player by remember { mutableStateOf<YouTubePlayer?>(null) }
 
-    val exitFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { exitFocus.requestFocus() } }
+    val playPauseFocus = remember { FocusRequester() }
+    // A frame late, or the request runs before the transport row is attached and focus settles on
+    // the last control instead — which puts Exit under the first OK press.
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        runCatching { playPauseFocus.requestFocus() }
+    }
     BackHandler { onExit() }
+
+    fun seekBy(delta: Float) {
+        val p = player ?: return
+        val target = currentSec + delta
+        p.seekTo(
+            when {
+                target < 0f -> 0f
+                durationSec > 0f -> target.coerceAtMost(durationSec - 1f)
+                else -> target
+            },
+        )
+    }
+
+    fun togglePlay() {
+        val p = player ?: return
+        if (playing) p.pause() else p.play()
+    }
 
     // Some no-name boxes ship without a usable System WebView — constructing the player view itself
     // can throw there, so treat construction failure like a playback error (external fallback).
@@ -122,7 +154,14 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
             }
 
             override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                if (state == PlayerConstants.PlayerState.ENDED) onExit()
+                // Track the player's own state rather than a local guess: a buffering stall or a
+                // seek both pass through here, and the button must not claim "paused" for either.
+                when (state) {
+                    PlayerConstants.PlayerState.PLAYING -> playing = true
+                    PlayerConstants.PlayerState.PAUSED -> playing = false
+                    PlayerConstants.PlayerState.ENDED -> onExit()
+                    else -> Unit
+                }
             }
         }
         // Default IFrame options already hide YouTube's own chrome (controls=0) — our overlay is the only UI.
@@ -130,20 +169,17 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
         onDispose { player = null; runCatching { playerView.release() } }
     }
 
-    // Navigable seek (§7.3, additive step): D-pad ◀/▶ on the overlay = seek ±10s. The Exit button is the
-    // only focus target, so its key events bubble up here; consuming Left/Right also stops focus search
-    // from wandering (there is nothing to the button's sides anyway).
-    val onSeekKey: (androidx.compose.ui.input.key.KeyEvent) -> Boolean = onKey@{ e ->
-        if (e.type != KeyEventType.KeyDown) return@onKey false
-        val p = player ?: return@onKey false
-        // Physical by design: left rewinds and right advances trailer time in every locale.
+    // The remote's dedicated transport keys, as a shortcut past the buttons. Left/Right are
+    // deliberately absent now: they move between the controls, which is what a viewer expects of a
+    // row of buttons and what makes the row usable at all.
+    val onTransportKey: (androidx.compose.ui.input.key.KeyEvent) -> Boolean = onKey@{ e ->
+        if (e.type != KeyEventType.KeyDown || player == null) return@onKey false
         when (e.key) {
-            Key.DirectionLeft -> { p.seekTo((currentSec - 10f).coerceAtLeast(0f)); true }
-            Key.DirectionRight -> {
-                val target = currentSec + 10f
-                p.seekTo(if (durationSec > 0f) target.coerceAtMost(durationSec - 1f) else target)
-                true
-            }
+            Key.MediaPlayPause -> { togglePlay(); true }
+            Key.MediaPlay -> { player?.play(); true }
+            Key.MediaPause -> { player?.pause(); true }
+            Key.MediaRewind -> { seekBy(-SEEK_STEP_SECONDS.toFloat()); true }
+            Key.MediaFastForward -> { seekBy(SEEK_STEP_SECONDS.toFloat()); true }
             else -> false
         }
     }
@@ -160,7 +196,7 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .onKeyEvent(onSeekKey)
+            .onKeyEvent(onTransportKey)
             .trapAllFocusExit()
             .focusGroup(),
         contentAlignment = Alignment.Center,
@@ -168,23 +204,30 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(factory = { playerView }, modifier = Modifier.fillMaxSize())
 
-            // Minimal chrome: Exit + progress bar + time, bottom-aligned over the video.
+            // Transport + progress + exit, bottom-aligned over the video.
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Color.Black.copy(alpha = 0.55f))
-                    .padding(horizontal = 24.dp, vertical = 14.dp),
+                    .padding(horizontal = 24.dp, vertical = 14.dp)
+                    .focusGroup(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                OwnTVButton(
-                    stringResource(R.string.player_trailer_exit),
-                    onClick = onExit,
-                    style = OwnTVButtonStyle.SECONDARY,
-                    modifier = Modifier.focusRequester(exitFocus),
+                // "-5 s" / "+5 s" rather than ⏪ ⏩: the arrows say "seek", the labels say how far,
+                // and how far is the only thing a viewer is actually deciding when they press one.
+                SeekButton(
+                    pluralStringResource(R.plurals.player_trailer_seek_back, SEEK_STEP_SECONDS, SEEK_STEP_SECONDS),
+                ) { seekBy(-SEEK_STEP_SECONDS.toFloat()) }
+                TransportButton(
+                    icon = if (playing) OwnTVIcon.PAUSE else OwnTVIcon.PLAY,
+                    modifier = Modifier.focusRequester(playPauseFocus),
+                    onClick = { togglePlay() },
                 )
-                // Display-only progress bar (plan: non-navigable seek first; D-pad seek is a later additive step).
+                SeekButton(
+                    pluralStringResource(R.plurals.player_trailer_seek_forward, SEEK_STEP_SECONDS, SEEK_STEP_SECONDS),
+                ) { seekBy(SEEK_STEP_SECONDS.toFloat()) }
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Box(
                         modifier = Modifier
@@ -208,10 +251,55 @@ fun TrailerPlayerScreen(videoKey: String, onExit: () -> Unit) {
                     color = Color.White,
                     modifier = Modifier.width(120.dp),
                 )
+                OwnTVButton(
+                    stringResource(R.string.player_trailer_exit),
+                    onClick = onExit,
+                    style = OwnTVButtonStyle.SECONDARY,
+                )
             }
         }
     }
 }
+
+/** One round transport control. Sized for a 10-foot read, not for a mouse. */
+@Composable
+private fun TransportButton(icon: OwnTVIcon, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    FocusableSurface(
+        onClick = onClick,
+        modifier = modifier.size(44.dp),
+        shape = CircleShape,
+        unfocusedContainerColor = Color.White.copy(alpha = 0.16f),
+        focusedContainerColor = Color.White.copy(alpha = 0.34f),
+        focusedScale = 1.10f,
+    ) { _ ->
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            OwnTVIcon(icon = icon, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+/** A labelled jump control. Wider than the round buttons because it carries its own distance. */
+@Composable
+private fun SeekButton(label: String, onClick: () -> Unit) {
+    FocusableSurface(
+        onClick = onClick,
+        modifier = Modifier.height(44.dp),
+        shape = RoundedCornerShape(22.dp),
+        unfocusedContainerColor = Color.White.copy(alpha = 0.16f),
+        focusedContainerColor = Color.White.copy(alpha = 0.34f),
+        focusedScale = 1.10f,
+    ) { _ ->
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = Color.White,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+    }
+}
+
+/** Seek step for one press of back/forward, in seconds — and the number those buttons show. */
+private const val SEEK_STEP_SECONDS = 5
 
 /** External fallback: YouTube app if installed, else any browser. Never throws. */
 private fun openInYouTube(context: Context, videoKey: String) {

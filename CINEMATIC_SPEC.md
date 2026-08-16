@@ -25,7 +25,7 @@ El ajuste es nuestro; upstream no lo tiene. Clave DataStore: `movies_layout_mode
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | La pantalla: hero a sangre, póster, textos, acciones | ⏳ |
-| 2 | Carril de películas similares | pendiente |
+| 2 | Carril de películas similares | hecho (fc3bd5a) |
 | 3 | Pills de descubrimiento: géneros y reparto | pendiente |
 | 4 | Normalización de nombres | pendiente |
 
@@ -69,8 +69,10 @@ primer póster (fase 2) — no por el póster que caiga bajo esa columna.
 ## Fase 2 — carril de similares
 
 - Asoma por debajo del hero; al enfocarlo **sube y tapa la parte baja** (Prime-like).
-- Máximo 12 pósters, fila **no perezosa** a propósito: `LazyRow` descartaba el ítem 0
-  al salir de pantalla y dejaba muerto el `FocusRequester` del primero.
+- **Scroll infinito**, no 12 pósters: recomendaciones de TMDB y, al agotarse, su lista
+  `similar`. Obliga a `LazyRow`, con lo que vuelve el problema del `FocusRequester` del
+  ítem 0 al descartarse. Se resuelve rebobinando la fila al perder el foco: así el ítem 0
+  siempre está compuesto mientras el carril no tiene el foco.
 - Pósters algo más pequeños mientras asoma, para que el hero siga dominando.
 - Arriba desde cualquier póster vuelve a la acción principal (Reproducir/Reanudar).
 - Pulsación larga sobre un póster: busca ese título en todas las listas y carpetas

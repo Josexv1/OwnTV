@@ -129,7 +129,6 @@ fun MoviesScreen(
     val notInLibraryMessage = stringResource(R.string.content_not_in_library)
     val railItems by vm.railItems.collectAsStateWithLifecycle()
     val selectedKey by vm.selectedKey.collectAsStateWithLifecycle()
-    val count by vm.count.collectAsStateWithLifecycle()
     val favoriteIds by vm.favoriteIds.collectAsStateWithLifecycle()
     val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
     val sortMode by vm.sortMode.collectAsStateWithLifecycle()
@@ -435,13 +434,16 @@ fun MoviesScreen(
                 .trapVerticalFocusExit()
                 .focusGroup()
         ) {
-            Text(stringResource(R.string.content_section_category, stringResource(R.string.common_nav_movies), selectedLabel), style = MaterialTheme.typography.headlineLarge, color = OwnTVTheme.colors.onSurface)
-            Spacer(Modifier.height(4.dp))
+            // Just the category, once. This used to be a "Movies / |EN| ADVENTURE MOVIES" heading
+            // with "|EN| ADVENTURE MOVIES (1619 movies)" repeated underneath it — the same name
+            // twice, plus a section word the sidebar already highlights, on the screen with the
+            // least room to spare.
             Text(
-                pluralStringResource(R.plurals.content_count_movies, count, selectedLabel, count),
-                style = MaterialTheme.typography.titleMedium,
-                color = OwnTVTheme.colors.primary,
-                fontWeight = FontWeight.Bold,
+                categoryHeading(selectedLabel),
+                style = MaterialTheme.typography.headlineLarge,
+                color = OwnTVTheme.colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -706,44 +708,55 @@ fun MoviesScreen(
                 cache?.tmdbId?.takeIf { it > 0 }?.let { vm.openSimilarRail(it) }
             }
             DisposableEffect(Unit) { onDispose { vm.openSimilarRail(null) } }
-            // Keyed by the film, so picking one from the rail builds a fresh page rather than
-            // recomposing this one. Without it the rail keeps focus across the swap — it is still
-            // the same node — and the new film opens with the D-pad inside the previous film's
-            // suggestions. A remount runs the same first-open path that already puts focus on Play.
-            key(m.id) {
-            MovieCinematicDetail(
-                details = details,
-                resumeLabel = resumeMs?.let {
-                    stringResource(R.string.content_resume_at, tv.own.owntv.ui.components.formatTimestamp(it))
-                },
-                isFavorite = favoriteIds.contains(m.id),
-                canDownload = downloadStates[m.id] == null,
-                trailerKey = if (metadataMode.enrich) cache?.trailerKey else null,
-                similar = similarRail,
-                onNeedMoreSimilar = { vm.loadMoreSimilar() },
-                onSimilarClick = { item ->
-                    scope.launch {
-                        val found = vm.findInLibrary(item.title)
-                        if (found != null) {
-                            // Re-point the page at the picked film. onMovieFocused keeps the metadata
-                            // pane, resume position and favourite state in step with what is shown.
-                            vm.onMovieFocused(found)
-                            detailsMovie = found
-                        } else {
-                            toast.show(notInLibraryMessage)
-                        }
-                    }
-                },
-                onPlay = { detailsMovie = null; vm.play(m, 0); goFullscreen() },
-                onResume = { detailsMovie = null; vm.play(m, resumeMs ?: 0); goFullscreen() },
-                onToggleFavorite = { vm.toggleFavorite(m) },
-                onDownload = {
-                    detailsMovie = null
-                    if (downloadStates[m.id] != null) toast.show(alreadyDownloadedMessage) else vm.download(m)
-                },
-                onPlayTrailer = { videoKey -> detailsMovie = null; trailerVideoKey = videoKey },
-                onExit = { detailsMovie = null },
-            )
+            // The page steps out of the composition while the trailer plays instead of sitting
+            // behind it. Left composed it keeps the focus — the trailer's own controls never get it,
+            // so the D-pad drives the hidden page and you can see it moving behind the video, with
+            // no way to reach the player. `detailsMovie` is untouched, so exiting the trailer brings
+            // the page straight back, and coming back through a fresh composition is also what
+            // re-claims focus for Play.
+            if (trailerVideoKey == null) {
+                // Keyed by the film, so picking one from the rail builds a fresh page rather than
+                // recomposing this one. Without it the rail keeps focus across the swap — it is still
+                // the same node — and the new film opens with the D-pad inside the previous film's
+                // suggestions. A remount runs the same first-open path that already puts focus on Play.
+                key(m.id) {
+                    MovieCinematicDetail(
+                        details = details,
+                        resumeLabel = resumeMs?.let {
+                            stringResource(R.string.content_resume_at, tv.own.owntv.ui.components.formatTimestamp(it))
+                        },
+                        isFavorite = favoriteIds.contains(m.id),
+                        canDownload = downloadStates[m.id] == null,
+                        trailerKey = if (metadataMode.enrich) cache?.trailerKey else null,
+                        similar = similarRail,
+                        onNeedMoreSimilar = { vm.loadMoreSimilar() },
+                        onSimilarClick = { item ->
+                            scope.launch {
+                                val found = vm.findInLibrary(item.title)
+                                if (found != null) {
+                                    // Re-point the page at the picked film. onMovieFocused keeps the metadata
+                                    // pane, resume position and favourite state in step with what is shown.
+                                    vm.onMovieFocused(found)
+                                    detailsMovie = found
+                                } else {
+                                    toast.show(notInLibraryMessage)
+                                }
+                            }
+                        },
+                        onPlay = { detailsMovie = null; vm.play(m, 0); goFullscreen() },
+                        onResume = { detailsMovie = null; vm.play(m, resumeMs ?: 0); goFullscreen() },
+                        onToggleFavorite = { vm.toggleFavorite(m) },
+                        onDownload = {
+                            detailsMovie = null
+                            if (downloadStates[m.id] != null) toast.show(alreadyDownloadedMessage) else vm.download(m)
+                        },
+                        // Note what this does NOT do: clear detailsMovie. Closing the page to show a
+                        // trailer is why "Salir" used to land in the grid, two steps from where the
+                        // viewer was. The page is only hidden, above.
+                        onPlayTrailer = { videoKey -> trailerVideoKey = videoKey },
+                        onExit = { detailsMovie = null },
+                    )
+                }
             }
         } else {
             // Windowed TMDB details popup (§11.1) — read-only, Back exits.
@@ -987,6 +1000,22 @@ private fun MovieDetailsPane(
         )
     }
 }
+
+/**
+ * A provider category name as a heading: without the language tag the panel prefixes it with.
+ *
+ * Only the heading is cleaned. The sidebar keeps the tag because that is where it earns its place —
+ * a catalog carries "|EN| 4K MOVIES" next to "|FR| 4K MOVIES", and stripping it there would leave
+ * two rows reading the same thing. Above the grid there is only ever one category, so the tag is
+ * repeating what the sidebar's own selection already says.
+ *
+ * Deliberately narrow: pipe or square brackets around a short upper-case token, which is the shape
+ * panels use. A leading "(...)" is left alone — parentheses far more often hold real title text.
+ */
+private fun categoryHeading(label: String): String =
+    label.trim().let { CATEGORY_TAG_PREFIX.replaceFirst(it, "").ifBlank { it } }
+
+private val CATEGORY_TAG_PREFIX = Regex("""^(?:\|[A-Z0-9 +/&-]{1,10}\||\[[A-Z0-9 +/&-]{1,10}])\s*""")
 
 @Composable
 private fun metaLine(movie: MovieEntity, meta: tv.own.owntv.core.database.entity.MetadataCacheEntity? = null, tmdbWins: Boolean = false): String {

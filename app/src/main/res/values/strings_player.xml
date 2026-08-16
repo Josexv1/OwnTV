@@ -4,6 +4,16 @@
     <string name="player_trailer_exit">Exit</string>
     <!-- Translators: Time progress display in the trailer player. "current" is the current position and "duration" is the total length, both formatted as mm:ss or h:mm:ss. -->
     <string name="player_trailer_progress"><xliff:g id="current">%1$s</xliff:g> / <xliff:g id="duration">%2$s</xliff:g></string>
+    <!-- Translators: Trailer player button that jumps backwards. "seconds" is how far it jumps; "s" abbreviates seconds. -->
+    <plurals name="player_trailer_seek_back">
+        <item quantity="one">-<xliff:g id="seconds">%1$d</xliff:g> s</item>
+        <item quantity="other">-<xliff:g id="seconds">%1$d</xliff:g> s</item>
+    </plurals>
+    <!-- Translators: Trailer player button that jumps forwards. "seconds" is how far it jumps; "s" abbreviates seconds. -->
+    <plurals name="player_trailer_seek_forward">
+        <item quantity="one">+<xliff:g id="seconds">%1$d</xliff:g> s</item>
+        <item quantity="other">+<xliff:g id="seconds">%1$d</xliff:g> s</item>
+    </plurals>
     <!-- Translators: Zoom mode option in the player's zoom dialog. Scales the video to fit within the screen without cropping. -->
     <string name="player_zoom_fit_screen">Fit Screen</string>
     <!-- Translators: Zoom mode option. Fills the screen and crops edges if the aspect ratio differs. -->
